@@ -106,7 +106,7 @@ export default function PanelliniesPage() {
         </motion.div>
         <h1 className="text-3xl font-black text-white">Πανελλήνιες Simulator</h1>
         <p className="text-slate-400 text-lg max-w-md mx-auto">
-          Εξασκήσου σε ερωτήσεις τύπου Πανελληνίων Γ\' Λυκείου με χρονομέτρηση και πλήρεις λύσεις.
+          Εξασκήσου σε ερωτήσεις τύπου Πανελληνίων Γ' Λυκείου με χρονομέτρηση και πλήρεις λύσεις.
         </p>
         <div className="flex items-center justify-center gap-2">
           <Lock size={16} className="text-amber-400" />
@@ -127,7 +127,7 @@ export default function PanelliniesPage() {
         </div>
         <div>
           <h1 className="text-2xl font-black text-white">Πανελλήνιες Simulator</h1>
-          <p className="text-slate-400 text-sm">Γ\' Λυκείου — Μαθηματικά Θετικής Κατεύθυνσης</p>
+          <p className="text-slate-400 text-sm">Γ' Λυκείου — Μαθηματικά Θετικής Κατεύθυνσης</p>
         </div>
       </div>
 

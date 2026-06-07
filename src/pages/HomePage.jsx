@@ -104,7 +104,7 @@ export default function HomePage() {
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-10">
             <h2 className="text-3xl font-black text-white mb-2">Επέλεξε τάξη</h2>
-            <p className="text-slate-400">Από Α\' Γυμνασίου ως Γ\' Λυκείου — βασισμένο στα επίσημα βιβλία του ΥΠΠΕΘ</p>
+            <p className="text-slate-400">Από Α' Γυμνασίου ως Γ' Λυκείου — βασισμένο στα επίσημα βιβλία του ΥΠΠΕΘ</p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">

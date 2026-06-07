@@ -39,9 +39,9 @@ export default function Modal({ open, onClose, title, children, size = 'md', hid
             transition={{ type: 'spring', stiffness: 300, damping: 25 }}
             className={`relative w-full ${sizes[size]} bg-[#16161f] border border-[#2a2a3a] rounded-2xl shadow-2xl overflow-hidden`}
           >
-            {(title || !hideClose) && (
+            {title && (
               <div className="flex items-center justify-between p-5 border-b border-[#2a2a3a]">
-                {title && <h2 className="text-lg font-semibold text-white">{title}</h2>}
+                <h2 className="text-lg font-semibold text-white">{title}</h2>
                 {!hideClose && (
                   <button
                     onClick={onClose}
@@ -51,6 +51,14 @@ export default function Modal({ open, onClose, title, children, size = 'md', hid
                   </button>
                 )}
               </div>
+            )}
+            {!title && !hideClose && (
+              <button
+                onClick={onClose}
+                className="absolute right-3 top-3 z-10 p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
+              >
+                <X size={18} />
+              </button>
             )}
             <div className="p-5">{children}</div>
           </motion.div>
