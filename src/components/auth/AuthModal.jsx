@@ -92,7 +92,7 @@ export default function AuthModal() {
       <div className="space-y-6">
         {/* Header */}
         <div className="text-center">
-          <div className="text-3xl font-bold text-gradient font-display mb-1">MathAxiom</div>
+          <div className="text-3xl font-bold text-gradient font-display mb-1">MathAxion</div>
           <p className="text-slate-400 text-sm">{TITLES[mode]}</p>
         </div>
 

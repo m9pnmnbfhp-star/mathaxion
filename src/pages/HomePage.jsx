@@ -45,7 +45,7 @@ export default function HomePage() {
             transition={{ duration: 0.5 }}
           >
             <Badge color="violet" size="md" dot className="mb-6 inline-flex">
-              ✨ MathAxiom · AI-Powered · Για Γυμνάσιο & Λύκειο
+              ✨ MathAxion · AI-Powered · Για Γυμνάσιο & Λύκειο
             </Badge>
 
             <h1 className="text-5xl sm:text-7xl font-black text-white mb-6 leading-[0.95] tracking-tight">
@@ -126,7 +126,7 @@ export default function HomePage() {
       <section className="px-4 py-16">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-black text-white mb-2">Γιατί MathAxiom;</h2>
+            <h2 className="text-3xl font-black text-white mb-2">Γιατί MathAxion;</h2>
             <p className="text-slate-400">Δεν είναι άλλη μία πλατφόρμα. Είναι το AI που ήθελες να έχεις δίπλα σου.</p>
           </div>
 
@@ -207,7 +207,7 @@ export default function HomePage() {
           <p className="text-slate-600 text-sm text-center">
             Powered by Claude AI · Βασισμένο στα βιβλία ΥΠΠΕΘ
           </p>
-          <p className="text-slate-600 text-xs">© 2026 MathAxiom</p>
+          <p className="text-slate-600 text-xs">© 2026 MathAxion</p>
         </div>
       </footer>
     </div>

@@ -86,7 +86,7 @@ const useStore = create(
         })),
     }),
     {
-      name: 'mathaxiom-store',
+      name: 'mathaxion-store',
       partialize: (state) => ({
         selectedGrade: state.selectedGrade,
         progress: state.progress,
