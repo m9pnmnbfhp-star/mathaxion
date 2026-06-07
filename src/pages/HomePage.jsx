@@ -24,11 +24,15 @@ const STATS = [
 
 export default function HomePage() {
   const navigate = useNavigate()
-  const { setSelectedGrade, setAuthModal, setUpgradeModal, user } = useStore()
+  const { setSelectedGrade, setAuthModal, setUpgradeModal, user, isPro } = useStore()
 
   const handleGradeSelect = (grade) => {
     setSelectedGrade(grade)
     navigate(`/grade/${grade.id}`)
+  }
+
+  const scrollToGrades = () => {
+    document.getElementById('grade-selector')?.scrollIntoView({ behavior: 'smooth' })
   }
 
   return (
@@ -62,20 +66,22 @@ export default function HomePage() {
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <Button
                 size="xl"
-                onClick={() => !user ? setAuthModal(true, 'signup') : setUpgradeModal(true)}
+                onClick={() => !user ? setAuthModal(true, 'signup') : scrollToGrades()}
                 iconRight={<ArrowRight size={20} />}
                 className="glow-purple"
               >
                 Ξεκίνα τώρα
               </Button>
-              <Button
-                variant="secondary"
-                size="xl"
-                onClick={() => setUpgradeModal(true)}
-                icon={<Crown size={18} />}
-              >
-                Pro — €2/μήνα
-              </Button>
+              {!isPro && (
+                <Button
+                  variant="secondary"
+                  size="xl"
+                  onClick={() => setUpgradeModal(true)}
+                  icon={<Crown size={18} />}
+                >
+                  Pro — €2/μήνα
+                </Button>
+              )}
             </div>
           </motion.div>
         </div>
@@ -190,9 +196,15 @@ export default function HomePage() {
                   <li key={f} className="flex gap-2"><span className="text-violet-400">✓</span>{f}</li>
                 ))}
               </ul>
-              <Button variant="gold" size="lg" className="w-full" onClick={() => setUpgradeModal(true)} icon={<Crown size={16} />}>
-                Ξεκίνα — €2/μήνα
-              </Button>
+              {isPro ? (
+                <Button variant="secondary" size="lg" className="w-full" disabled icon={<Crown size={16} />}>
+                  Είσαι ήδη Pro ✓
+                </Button>
+              ) : (
+                <Button variant="gold" size="lg" className="w-full" onClick={() => setUpgradeModal(true)} icon={<Crown size={16} />}>
+                  Ξεκίνα — €2/μήνα
+                </Button>
+              )}
             </div>
           </div>
         </div>
