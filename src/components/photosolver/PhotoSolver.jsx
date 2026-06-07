@@ -9,6 +9,8 @@ import { solvePhotoExercise } from '../../lib/anthropic'
 import useStore from '../../store/useStore'
 import toast from 'react-hot-toast'
 
+const SHIMMER_WIDTHS = [92, 74, 88, 65, 80]
+
 export default function PhotoSolver() {
   const { isPro, setUpgradeModal, user, setAuthModal } = useStore()
   const [image, setImage] = useState(null)
@@ -48,7 +50,7 @@ export default function PhotoSolver() {
       const base64 = await fileToBase64(image)
       const result = await solvePhotoExercise(base64, image.type)
       setSolution(result)
-    } catch (err) {
+    } catch {
       toast.error('Σφάλμα επεξεργασίας. Δοκίμασε πάλι.')
     } finally {
       setLoading(false)
@@ -149,8 +151,8 @@ export default function PhotoSolver() {
               <p className="text-sm text-violet-300">Το Axi AI διαβάζει την άσκηση...</p>
             </div>
             <div className="space-y-2">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <div key={i} className="shimmer h-4 rounded" style={{ width: `${60 + Math.random() * 40}%` }} />
+              {SHIMMER_WIDTHS.map((width, i) => (
+                <div key={i} className="shimmer h-4 rounded" style={{ width: `${width}%` }} />
               ))}
             </div>
           </motion.div>

@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Timer, Trophy, Play, Lock, BookOpen, Target, RotateCcw, ChevronRight } from 'lucide-react'
+import { Timer, Play, Lock, BookOpen, RotateCcw, ChevronRight } from 'lucide-react'
 import Button from '../components/ui/Button'
 import Card from '../components/ui/Card'
 import Badge from '../components/ui/Badge'

@@ -129,7 +129,7 @@ export default function Header() {
                 Σύνδεση
               </Button>
               <Button variant="primary" size="sm" onClick={() => setAuthModal(true, 'signup')}>
-                Εγγραφή δωρεάν
+                Εγγραφή
               </Button>
             </>
           )}

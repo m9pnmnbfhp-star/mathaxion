@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
-import { ArrowRight, Zap, Brain, Camera, Swords, Target, Flame, Star, Crown, BookOpen } from 'lucide-react'
+import { ArrowRight, Zap, Brain, Camera, Swords, Target, Flame, Crown } from 'lucide-react'
 import { GRADES } from '../data/curriculum'
 import Button from '../components/ui/Button'
 import Badge from '../components/ui/Badge'
@@ -19,7 +19,7 @@ const STATS = [
   { value: '6', label: 'Τάξεις' },
   { value: '40+', label: 'Κεφάλαια' },
   { value: '∞', label: 'AI Ασκήσεις' },
-  { value: '€2', label: 'το μήνα' },
+  { value: '€2', label: 'Μόνο/μήνα' },
 ]
 
 export default function HomePage() {
@@ -62,11 +62,11 @@ export default function HomePage() {
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <Button
                 size="xl"
-                onClick={() => !user ? setAuthModal(true, 'signup') : document.getElementById('grade-selector')?.scrollIntoView({ behavior: 'smooth' })}
+                onClick={() => !user ? setAuthModal(true, 'signup') : setUpgradeModal(true)}
                 iconRight={<ArrowRight size={20} />}
                 className="glow-purple"
               >
-                Ξεκίνα δωρεάν
+                Ξεκίνα τώρα
               </Button>
               <Button
                 variant="secondary"
@@ -77,8 +77,6 @@ export default function HomePage() {
                 Pro — €2/μήνα
               </Button>
             </div>
-
-            <p className="text-slate-600 text-sm mt-4">Δωρεάν για πάντα · Χωρίς πιστωτική κάρτα</p>
           </motion.div>
         </div>
       </section>
@@ -163,27 +161,11 @@ export default function HomePage() {
             <p className="text-slate-400">Απλή και δίκαιη</p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {/* Free */}
-            <div className="p-6 bg-[#16161f] rounded-2xl border border-[#2a2a3a] space-y-4">
-              <div>
-                <div className="text-lg font-bold text-white">Δωρεάν</div>
-                <div className="text-4xl font-black text-white mt-1">€0</div>
-              </div>
-              <ul className="space-y-2 text-sm text-slate-400">
-                {['Θεωρία & simplicity slider', 'Επίπεδα 1 & 2 ασκήσεων', '3 AI μηνύματα/ημέρα', 'Βασικό progress tracking'].map(f => (
-                  <li key={f} className="flex gap-2"><span className="text-emerald-400">✓</span>{f}</li>
-                ))}
-              </ul>
-              <Button variant="secondary" className="w-full" onClick={() => setAuthModal(true, 'signup')}>
-                Εγγραφή δωρεάν
-              </Button>
-            </div>
-
+          <div className="max-w-sm mx-auto">
             {/* Pro */}
-            <div className="relative p-6 bg-gradient-to-br from-violet-900/30 to-violet-600/10 rounded-2xl border border-violet-500/30 space-y-4">
+            <div className="relative p-8 bg-gradient-to-br from-violet-900/30 to-violet-600/10 rounded-2xl border border-violet-500/30 space-y-5">
               <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                <Badge color="violet" size="md">⭐ Πιο δημοφιλές</Badge>
+                <Badge color="violet" size="md">⭐ Πλήρης πρόσβαση</Badge>
               </div>
               <div>
                 <div className="flex items-center gap-2">
@@ -191,14 +173,15 @@ export default function HomePage() {
                   <Crown size={16} className="text-amber-400" />
                 </div>
                 <div className="flex items-end gap-1 mt-1">
-                  <span className="text-4xl font-black text-white">€2</span>
+                  <span className="text-5xl font-black text-white">€2</span>
                   <span className="text-slate-400 mb-1">/μήνα</span>
                 </div>
+                <p className="text-xs text-slate-500 mt-1">Ακύρωση οποιαδήποτε στιγμή</p>
               </div>
-              <ul className="space-y-2 text-sm text-slate-300">
+              <ul className="space-y-2.5 text-sm text-slate-300">
                 {[
                   'Απεριόριστο Axi AI',
-                  'Όλα τα επίπεδα (1-4)',
+                  'Όλα τα επίπεδα ασκήσεων (1-4)',
                   'Photo Solver',
                   'Study Battles & Leaderboard',
                   'Πανελλήνιες Simulator',
@@ -207,8 +190,8 @@ export default function HomePage() {
                   <li key={f} className="flex gap-2"><span className="text-violet-400">✓</span>{f}</li>
                 ))}
               </ul>
-              <Button variant="gold" className="w-full" onClick={() => setUpgradeModal(true)} icon={<Crown size={16} />}>
-                Αναβάθμιση — €2/μήνα
+              <Button variant="gold" size="lg" className="w-full" onClick={() => setUpgradeModal(true)} icon={<Crown size={16} />}>
+                Ξεκίνα — €2/μήνα
               </Button>
             </div>
           </div>

@@ -1,6 +1,6 @@
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { ArrowLeft, ArrowRight, Clock, CheckCircle, Lock } from 'lucide-react'
+import { ArrowLeft, ArrowRight, Clock } from 'lucide-react'
 import { GRADES, getGrade } from '../data/curriculum'
 import Badge from '../components/ui/Badge'
 import ProgressBar from '../components/ui/ProgressBar'
@@ -12,7 +12,7 @@ const DIFFICULTY_COLORS = { 1: 'green', 2: 'blue', 3: 'violet', 4: 'amber', 5: '
 export default function GradePage() {
   const { gradeId } = useParams()
   const navigate = useNavigate()
-  const { getChapterProgress, isPro, setUpgradeModal } = useStore()
+  const { getChapterProgress, isPro, setUpgradeModal, user, setAuthModal } = useStore()
 
   const grade = getGrade(gradeId)
   if (!grade) return <NotFound />
@@ -76,7 +76,11 @@ export default function GradePage() {
             >
               <div
                 className="group p-5 bg-[#16161f] rounded-2xl border border-[#2a2a3a] hover:border-[#3a3a50] transition-all cursor-pointer"
-                onClick={() => navigate(`/grade/${grade.id}/chapter/${chapter.id}`)}
+                onClick={() => {
+                  if (!user) { setAuthModal(true, 'signup'); return }
+                  if (!isPro) { setUpgradeModal(true); return }
+                  navigate(`/grade/${grade.id}/chapter/${chapter.id}`)
+                }}
               >
                 <div className="flex items-start gap-4">
                   {/* Chapter number + emoji */}

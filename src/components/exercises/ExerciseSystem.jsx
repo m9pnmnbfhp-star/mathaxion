@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { CheckCircle, XCircle, Lightbulb, ChevronRight, RefreshCw, Lock, Star, Zap } from 'lucide-react'
+import { CheckCircle, XCircle, Lightbulb, RefreshCw, Lock } from 'lucide-react'
 import Button from '../ui/Button'
 import Card from '../ui/Card'
 import AIResponse from '../ui/AIResponse'
@@ -13,7 +13,7 @@ const XP_PER_CORRECT = { 1: 10, 2: 20, 3: 35, 4: 60 }
 const REQUIRED_CORRECT_TO_ADVANCE = 3
 
 export default function ExerciseSystem({ grade, chapter, topic, onXPGained }) {
-  const { isPro, user, addXP, setAuthModal, setUpgradeModal, addWrongAnswer } = useStore()
+  const { isPro, addXP, setUpgradeModal, addWrongAnswer } = useStore()
   const [currentLevel, setCurrentLevel] = useState(1)
   const [exercise, setExercise] = useState(null)
   const [loading, setLoading] = useState(false)
@@ -31,13 +31,8 @@ export default function ExerciseSystem({ grade, chapter, topic, onXPGained }) {
   const [similarExercises, setSimilarExercises] = useState([])
   const [showConfetti, setShowConfetti] = useState(false)
 
-  const canAccessLevel = (level) => {
-    if (level <= 2) return true
-    return isPro
-  }
-
   const loadExercise = useCallback(async (level = currentLevel) => {
-    if (!canAccessLevel(level)) {
+    if (!isPro) {
       setUpgradeModal(true)
       return
     }
@@ -55,12 +50,12 @@ export default function ExerciseSystem({ grade, chapter, topic, onXPGained }) {
       const json = extractJSON(raw)
       setExercise(json)
       setUsedExercises(prev => [...prev, json.question].slice(-10))
-    } catch (err) {
+    } catch {
       toast.error('Σφάλμα φόρτωσης άσκησης')
     } finally {
       setLoading(false)
     }
-  }, [currentLevel, topic, chapter, grade, usedExercises, isPro])
+  }, [currentLevel, topic, chapter, grade, usedExercises, isPro, setUpgradeModal])
 
   const handleSubmit = async () => {
     if (!answer.trim() || !exercise) return
@@ -107,7 +102,7 @@ export default function ExerciseSystem({ grade, chapter, topic, onXPGained }) {
 
       setExplanationLoading(true)
       try {
-        const exp = await explainWrongAnswer(exercise.question, answer, exercise.answer, topic)
+        const exp = await explainWrongAnswer(exercise.question, answer, exercise.answer)
         setExplanation(exp)
       } catch { /* silent */ } finally {
         setExplanationLoading(false)
@@ -131,7 +126,7 @@ export default function ExerciseSystem({ grade, chapter, topic, onXPGained }) {
       <div className="grid grid-cols-4 gap-2">
         {[1, 2, 3, 4].map((level) => {
           const info = LEVEL_DESCRIPTIONS[level]
-          const locked = !canAccessLevel(level)
+          const locked = !isPro
           const active = currentLevel === level
           return (
             <motion.button
@@ -158,11 +153,6 @@ export default function ExerciseSystem({ grade, chapter, topic, onXPGained }) {
               )}
               <div className="text-lg">{info.icon}</div>
               <div className="text-[10px] text-slate-400 mt-0.5 truncate">{info.sub}</div>
-              {level > 2 && !locked && (
-                <div className="absolute -top-1 -right-1">
-                  <span className="text-[9px] bg-amber-500 text-black font-bold px-1 rounded-full">PRO</span>
-                </div>
-              )}
             </motion.button>
           )
         })}

@@ -8,13 +8,6 @@ import { loadStripe } from '@stripe/stripe-js'
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY)
 
-const FREE_FEATURES = [
-  'Θεωρία με simplicity slider',
-  'Επίπεδα 1 & 2 ασκήσεων',
-  '3 μηνύματα AI/ημέρα',
-  'Βασική πρόοδος',
-]
-
 const PRO_FEATURES = [
   { icon: Zap, text: 'Απεριόριστο Axi AI' },
   { icon: BookOpen, text: 'Όλα τα επίπεδα ασκήσεων (1-4)' },

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Zap, AlertTriangle, Clock, RefreshCw } from 'lucide-react'
 import Button from '../ui/Button'
@@ -6,16 +6,25 @@ import AIResponse from '../ui/AIResponse'
 import { panicMode } from '../../lib/anthropic'
 import toast from 'react-hot-toast'
 
-export default function PanicMode({ grade, chapter, topic }) {
+const SHIMMER_WIDTHS = [88, 76, 94, 70, 85, 79]
+
+export default function PanicMode({ chapter, topic }) {
   const [content, setContent] = useState(null)
   const [loading, setLoading] = useState(false)
   const [startTime, setStartTime] = useState(null)
+  const [elapsed, setElapsed] = useState(0)
+
+  useEffect(() => {
+    if (!startTime) return
+    const interval = setInterval(() => setElapsed(Math.round((Date.now() - startTime) / 1000)), 1000)
+    return () => clearInterval(interval)
+  }, [startTime])
 
   const activate = async () => {
     setLoading(true)
     setStartTime(Date.now())
     try {
-      const result = await panicMode(topic, chapter.title, grade)
+      const result = await panicMode(topic, chapter.title)
       setContent(result)
     } catch {
       toast.error('Σφάλμα')
@@ -82,7 +91,7 @@ export default function PanicMode({ grade, chapter, topic }) {
               animate={{ opacity: 1 }}
               transition={{ delay: i * 0.15 }}
               className="shimmer h-5 rounded"
-              style={{ width: `${70 + Math.random() * 30}%` }}
+              style={{ width: `${SHIMMER_WIDTHS[i]}%` }}
             />
           ))}
         </div>
@@ -110,7 +119,7 @@ export default function PanicMode({ grade, chapter, topic }) {
           {startTime && (
             <div className="flex items-center gap-1 text-xs text-slate-500">
               <Clock size={12} />
-              <span>Πριν {Math.round((Date.now() - startTime) / 1000)}δ</span>
+              <span>Πριν {elapsed}δ</span>
             </div>
           )}
         </div>

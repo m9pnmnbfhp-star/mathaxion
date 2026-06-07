@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
-import { supabase } from './lib/supabase'
+import { supabase, getProfile } from './lib/supabase'
 import useStore from './store/useStore'
 import Header from './components/layout/Header'
 import AuthModal from './components/auth/AuthModal'
@@ -13,19 +13,31 @@ import ProfilePage from './pages/ProfilePage'
 import PanelliniesPage from './pages/PanelliniesPage'
 
 export default function App() {
-  const { setUser, setProfile } = useStore()
+  const { setUser, setProfile, setAuthModal } = useStore()
 
   useEffect(() => {
+    const loadUser = (user) => {
+      setUser(user)
+      if (user) {
+        getProfile(user.id).then(({ data }) => setProfile(data))
+      } else {
+        setProfile(null)
+      }
+    }
+
     supabase.auth.getSession().then(({ data }) => {
-      setUser(data?.session?.user ?? null)
+      loadUser(data?.session?.user ?? null)
     }).catch(() => setUser(null))
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      loadUser(session?.user ?? null)
+      if (event === 'PASSWORD_RECOVERY') {
+        setAuthModal(true, 'reset')
+      }
     })
 
     return () => subscription.unsubscribe()
-  }, [setUser])
+  }, [setUser, setProfile, setAuthModal])
 
   return (
     <BrowserRouter>

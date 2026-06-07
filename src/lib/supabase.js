@@ -16,6 +16,8 @@ try {
       signInWithPassword: () => Promise.resolve({ error: { message: 'Supabase δεν είναι ρυθμισμένο' } }),
       signInWithOAuth: () => Promise.resolve({ error: null }),
       signOut: () => Promise.resolve({ error: null }),
+      resetPasswordForEmail: () => Promise.resolve({ error: { message: 'Supabase δεν είναι ρυθμισμένο' } }),
+      updateUser: () => Promise.resolve({ error: { message: 'Supabase δεν είναι ρυθμισμένο' } }),
     },
     from: () => ({ select: () => ({ eq: () => ({ single: () => Promise.resolve({ data: null, error: null }), data: null, error: null }) }), upsert: () => ({ select: () => ({ single: () => Promise.resolve({ data: null, error: null }) }) }), insert: () => Promise.resolve({ error: null }), order: () => ({ limit: () => Promise.resolve({ data: [], error: null }) }) }),
     rpc: () => Promise.resolve({ error: null }),
@@ -48,6 +50,18 @@ export async function signInWithGoogle() {
 
 export async function signOut() {
   const { error } = await supabase.auth.signOut()
+  return { error }
+}
+
+export async function resetPasswordForEmail(email) {
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: window.location.origin,
+  })
+  return { error }
+}
+
+export async function updatePassword(newPassword) {
+  const { error } = await supabase.auth.updateUser({ password: newPassword })
   return { error }
 }
 

@@ -1,10 +1,7 @@
 import { useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import {
-  ArrowLeft, BookOpen, Dumbbell, Zap, Camera, Swords,
-  MessageSquare, ChevronDown, ChevronUp, RefreshCw, Sparkles
-} from 'lucide-react'
+import { ArrowLeft, RefreshCw, Sparkles } from 'lucide-react'
 import { getGrade, getChapter, SIMPLICITY_LABELS, SIMPLICITY_DESCRIPTIONS } from '../data/curriculum'
 import Button from '../components/ui/Button'
 import Badge from '../components/ui/Badge'
@@ -40,8 +37,7 @@ export default function ChapterPage() {
   const [simplicity, setSimplicity] = useState(2)
   const [theoryContent, setTheoryContent] = useState(null)
   const [theoryLoading, setTheoryLoading] = useState(false)
-  const [conceptOpen, setConceptOpen] = useState(null)
-  const { canUseAI, useAIMessage, user, setAuthModal, addXP, updateStreak } = useStore()
+  const { user, isPro, setAuthModal, setUpgradeModal, addXP, updateStreak } = useStore()
 
   if (!grade || !chapter) {
     return (
@@ -55,6 +51,7 @@ export default function ChapterPage() {
 
   const loadTheory = async (concept = selectedConcept) => {
     if (!user) { setAuthModal(true); return }
+    if (!isPro) { setUpgradeModal(true); return }
 
     setTheoryLoading(true)
     setTheoryContent(null)
@@ -142,7 +139,6 @@ export default function ChapterPage() {
         >
           {activeTab === 'theory' && (
             <TheoryTab
-              grade={grade}
               chapter={chapter}
               selectedConcept={selectedConcept}
               setSelectedConcept={setSelectedConcept}
@@ -173,7 +169,7 @@ export default function ChapterPage() {
           )}
 
           {activeTab === 'panic' && (
-            <PanicMode grade={grade} chapter={chapter} topic={selectedConcept} />
+            <PanicMode chapter={chapter} topic={selectedConcept} />
           )}
 
           {activeTab === 'photo' && <PhotoSolver />}
@@ -187,7 +183,7 @@ export default function ChapterPage() {
   )
 }
 
-function TheoryTab({ grade, chapter, selectedConcept, setSelectedConcept, simplicity, setSimplicity, content, loading, onLoad, onReload }) {
+function TheoryTab({ chapter, selectedConcept, setSelectedConcept, simplicity, setSimplicity, content, loading, onLoad, onReload }) {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
       {/* Left: Concept selector + controls */}

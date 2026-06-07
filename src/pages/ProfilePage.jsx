@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { Flame, Star, Trophy, Target, BookOpen, Clock, TrendingUp, Crown, Brain } from 'lucide-react'
+import { Flame, Star, Trophy, Target, BookOpen, TrendingUp, Crown, Brain } from 'lucide-react'
 import { Link } from 'react-router-dom'
-import { GRADES, getGrade } from '../data/curriculum'
+import { GRADES } from '../data/curriculum'
 import Button from '../components/ui/Button'
 import Card from '../components/ui/Card'
 import ProgressBar from '../components/ui/ProgressBar'
@@ -12,7 +12,7 @@ import { generateAdaptiveQuiz } from '../lib/anthropic'
 import toast from 'react-hot-toast'
 
 export default function ProfilePage() {
-  const { user, profile, streak, xp, totalXP, progress, wrongAnswers, isPro, setUpgradeModal } = useStore()
+  const { user, profile, streak, xp, progress, wrongAnswers, isPro, setUpgradeModal } = useStore()
   const [adaptiveQuiz, setAdaptiveQuiz] = useState(null)
   const [quizLoading, setQuizLoading] = useState(false)
 

@@ -10,7 +10,7 @@ async function callAI(messages, systemPrompt, maxTokens = 1024) {
       'anthropic-dangerous-direct-browser-access': 'true',
     },
     body: JSON.stringify({
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-sonnet-4-6',
       max_tokens: maxTokens,
       system: systemPrompt,
       messages,
@@ -75,7 +75,7 @@ export async function generateExercise(topic, chapterTitle, grade, level, previo
   )
 }
 
-export async function explainWrongAnswer(question, studentAnswer, correctAnswer, topic) {
+export async function explainWrongAnswer(question, studentAnswer, correctAnswer) {
   return callAI(
     [{ role: 'user', content: `Έλυσα αυτήν την άσκηση:\n"${question}"\n\nΈδωσα απάντηση: "${studentAnswer}"\nΑλλά η σωστή είναι: "${correctAnswer}"\n\nΠού έκανα λάθος; Εξήγησέ μου βήμα-βήμα.` }],
     `${BASE_SYSTEM}\n\nΟ μαθητής έκανε λάθος. Εξήγησε ΠΟΥ ακριβώς έκανε λάθος (μην τον κρίνεις), μετά δείξε τη σωστή λύση βήμα-βήμα. Στο τέλος δώσε ένα tip για να μην ξαναγίνει το ίδιο λάθος.`,
@@ -99,7 +99,7 @@ export async function generateFlashcards(topic, chapterTitle, grade, count = 6) 
   )
 }
 
-export async function panicMode(topic, chapterTitle, grade) {
+export async function panicMode(topic, chapterTitle) {
   return callAI(
     [{ role: 'user', content: `ΕΧΩ ΤΕΣΤ ΑΥΡΙΟ για "${topic}" (${chapterTitle}). Δώσε μου τα 5 πιο κρίσιμα πράγματα να θυμάμαι, τις 3 κυριότερες φόρμουλες, και 2 συνηθισμένα λάθη που κάνουν οι μαθητές.` }],
     `${BASE_SYSTEM}\n\nΟ μαθητής έχει τεστ αύριο! Δώσε συμπυκνωμένες πληροφορίες. Χρησιμοποίησε emojis και bullet points. Μορφή:\n\n🔑 **5 Κρίσιμα Σημεία:**\n\n📐 **3 Βασικές Φόρμουλες:**\n\n⚠️ **2 Συνηθισμένα Λάθη:**`,
@@ -107,7 +107,7 @@ export async function panicMode(topic, chapterTitle, grade) {
   )
 }
 
-export async function solveProblem(problemDescription, gradeId) {
+export async function solveProblem(problemDescription) {
   return callAI(
     [{ role: 'user', content: `Λύσε αυτό το πρόβλημα βήμα-βήμα: ${problemDescription}` }],
     `${BASE_SYSTEM}\n\nΛύνεις μαθηματικά προβλήματα. Εξήγησε ΚΑΘΕ βήμα αναλυτικά. Χρησιμοποίησε ✅ για κάθε ολοκληρωμένο βήμα. Στο τέλος, δώσε τη γενική αρχή που εφαρμόστηκε.`,
@@ -125,7 +125,7 @@ export async function solvePhotoExercise(imageBase64, mimeType = 'image/jpeg') {
       'anthropic-dangerous-direct-browser-access': 'true',
     },
     body: JSON.stringify({
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-sonnet-4-6',
       max_tokens: 2000,
       system: `${BASE_SYSTEM}\n\nΛύνεις μαθηματικές ασκήσεις από φωτογραφίες. Βλέπεις μια χειρόγραφη ή τυπωμένη άσκηση. Λύσε την βήμα-βήμα, εξηγώντας κάθε κίνηση.`,
       messages: [

@@ -1,8 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { Send, Sparkles, Lock, MessageSquare } from 'lucide-react'
+import { motion } from 'framer-motion'
+import { Send, Sparkles } from 'lucide-react'
 import Button from '../ui/Button'
-import AIResponse from '../ui/AIResponse'
 import useStore from '../../store/useStore'
 import { chatWithTutor } from '../../lib/anthropic'
 import toast from 'react-hot-toast'
@@ -16,7 +15,7 @@ const QUICK_QUESTIONS = [
 ]
 
 export default function PythagorasTutor({ grade, topic, compact = false }) {
-  const { user, isPro, canUseAI, useAIMessage, remainingAIMessages, setAuthModal, setUpgradeModal } = useStore()
+  const { user, isPro, setAuthModal, setUpgradeModal } = useStore()
   const [messages, setMessages] = useState([
     {
       role: 'assistant',
@@ -32,9 +31,6 @@ export default function PythagorasTutor({ grade, topic, compact = false }) {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
-  const remaining = remainingAIMessages()
-  const blocked = !canUseAI()
-
   const sendMessage = async (content) => {
     if (!content.trim()) return
 
@@ -43,7 +39,7 @@ export default function PythagorasTutor({ grade, topic, compact = false }) {
       return
     }
 
-    if (blocked) {
+    if (!isPro) {
       setUpgradeModal(true)
       return
     }
@@ -52,12 +48,11 @@ export default function PythagorasTutor({ grade, topic, compact = false }) {
     setMessages(prev => [...prev, userMsg])
     setInput('')
     setLoading(true)
-    useAIMessage()
 
     try {
       const response = await chatWithTutor([...messages, userMsg], grade, topic)
       setMessages(prev => [...prev, { role: 'assistant', content: response }])
-    } catch (err) {
+    } catch {
       toast.error('Σφάλμα επικοινωνίας με το Axi AI')
       setMessages(prev => [...prev, {
         role: 'assistant',
@@ -108,9 +103,6 @@ export default function PythagorasTutor({ grade, topic, compact = false }) {
             onChange={setInput}
             onSend={() => sendMessage(input)}
             loading={loading}
-            blocked={blocked}
-            remaining={remaining}
-            isPro={isPro}
             inputRef={inputRef}
           />
         </div>
@@ -132,12 +124,6 @@ export default function PythagorasTutor({ grade, topic, compact = false }) {
             </div>
           </div>
         </div>
-        {!isPro && (
-          <div className="flex items-center gap-1.5 text-xs text-slate-400">
-            <MessageSquare size={12} />
-            <span>{remaining} μηνύματα σήμερα</span>
-          </div>
-        )}
       </div>
 
       {/* Messages */}
@@ -174,24 +160,13 @@ export default function PythagorasTutor({ grade, topic, compact = false }) {
 
       {/* Input */}
       <div className="px-4 pb-4">
-        {blocked && !isPro ? (
-          <div className="flex items-center gap-3 p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl">
-            <Lock size={16} className="text-amber-400 shrink-0" />
-            <p className="text-xs text-amber-200">Εξάντλησες τα δωρεάν μηνύματα σήμερα.</p>
-            <Button variant="gold" size="sm" onClick={() => setUpgradeModal(true)} className="shrink-0">Pro</Button>
-          </div>
-        ) : (
-          <ChatInput
-            value={input}
-            onChange={setInput}
-            onSend={() => sendMessage(input)}
-            loading={loading}
-            blocked={false}
-            remaining={remaining}
-            isPro={isPro}
-            inputRef={inputRef}
-          />
-        )}
+        <ChatInput
+          value={input}
+          onChange={setInput}
+          onSend={() => sendMessage(input)}
+          loading={loading}
+          inputRef={inputRef}
+        />
       </div>
     </div>
   )
@@ -223,7 +198,7 @@ function MessageBubble({ msg }) {
   )
 }
 
-function ChatInput({ value, onChange, onSend, loading, blocked, remaining, isPro, inputRef }) {
+function ChatInput({ value, onChange, onSend, loading, inputRef }) {
   return (
     <div className="flex gap-2">
       <input
@@ -232,13 +207,13 @@ function ChatInput({ value, onChange, onSend, loading, blocked, remaining, isPro
         value={value}
         onChange={(e) => onChange(e.target.value)}
         onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && onSend()}
-        placeholder={blocked ? 'Αναβάθμιση για περισσότερα μηνύματα' : 'Ρώτα το Axi AI...'}
-        disabled={blocked || loading}
+        placeholder="Ρώτα το Axi AI..."
+        disabled={loading}
         className="flex-1 bg-[#1c1c28] border border-[#2a2a3a] rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-500 outline-none focus:border-violet-500/50 transition-colors disabled:opacity-50"
       />
       <Button
         onClick={onSend}
-        disabled={!value.trim() || loading || blocked}
+        disabled={!value.trim() || loading}
         loading={loading}
         icon={!loading && <Send size={16} />}
         className="shrink-0"

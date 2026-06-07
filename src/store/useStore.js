@@ -60,31 +60,9 @@ const useStore = create(
         totalXP: state.totalXP + amount,
       })),
 
-      // Daily AI usage (free tier)
-      aiUsageToday: { date: null, count: 0 },
-      canUseAI: () => {
-        const { isPro, aiUsageToday } = get()
-        if (isPro) return true
-        const today = new Date().toDateString()
-        if (aiUsageToday.date !== today) return true
-        return aiUsageToday.count < 3
-      },
-      useAIMessage: () => {
-        const today = new Date().toDateString()
-        set((state) => ({
-          aiUsageToday: {
-            date: today,
-            count: state.aiUsageToday.date === today ? state.aiUsageToday.count + 1 : 1,
-          },
-        }))
-      },
-      remainingAIMessages: () => {
-        const { isPro, aiUsageToday } = get()
-        if (isPro) return Infinity
-        const today = new Date().toDateString()
-        if (aiUsageToday.date !== today) return 3
-        return Math.max(0, 3 - aiUsageToday.count)
-      },
+      canUseAI: () => get().isPro,
+      useAIMessage: () => {},
+      remainingAIMessages: () => get().isPro ? Infinity : 0,
 
       // Wrong answers (for adaptive quiz)
       wrongAnswers: [],
@@ -115,7 +93,6 @@ const useStore = create(
         streak: state.streak,
         xp: state.xp,
         totalXP: state.totalXP,
-        aiUsageToday: state.aiUsageToday,
         wrongAnswers: state.wrongAnswers,
       }),
     }

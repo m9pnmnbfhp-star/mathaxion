@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { Swords, Trophy, Clock, Lock, Zap, Share2, Copy } from 'lucide-react'
+import { useState, useRef } from 'react'
+import { motion } from 'framer-motion'
+import { Swords, Clock, Lock, Zap, Share2, Copy } from 'lucide-react'
 import Button from '../ui/Button'
 import Card from '../ui/Card'
 import useStore from '../../store/useStore'
@@ -9,6 +9,7 @@ import toast from 'react-hot-toast'
 
 const BATTLE_DURATION = 120
 const QUESTIONS_PER_BATTLE = 10
+const randomDifficultyLevel = () => Math.ceil(Math.random() * 3)
 
 export default function StudyBattle({ grade, chapter }) {
   const { isPro, user, setUpgradeModal, setAuthModal, addXP } = useStore()
@@ -46,7 +47,7 @@ export default function StudyBattle({ grade, chapter }) {
       const qs = []
       for (let i = 0; i < Math.min(5, QUESTIONS_PER_BATTLE); i++) {
         const topic = chapterTopics[i % chapterTopics.length]
-        const raw = await generateExercise(topic, chapter.title, grade, Math.ceil(Math.random() * 3))
+        const raw = await generateExercise(topic, chapter.title, grade, randomDifficultyLevel())
         const json = extractJSON(raw)
         qs.push({ ...json, topic })
       }

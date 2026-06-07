@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { RotateCcw, ChevronLeft, ChevronRight, Shuffle, RefreshCw } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Shuffle, RefreshCw } from 'lucide-react'
 import Button from '../ui/Button'
 import { generateFlashcards } from '../../lib/anthropic'
 import toast from 'react-hot-toast'
@@ -37,7 +37,6 @@ export default function FlashcardDeck({ grade, chapter, topic }) {
   }
 
   const current = cards[currentIndex]
-  const progress = cards.length ? Math.round((known.size / cards.length) * 100) : 0
 
   if (loading) {
     return (
