@@ -93,6 +93,9 @@ export default function ProfilePage() {
           sub={`από ${totalChapters}`} />
         <StatCard icon={Trophy} value={masteredChapters} label="Κατακτημένα" color="#fbbf24" />
       </div>
+      <p className="text-xs text-slate-500 -mt-2">
+        💡 Κερδίζεις <span className="text-violet-300 font-medium">XP</span> διαβάζοντας θεωρία, λύνοντας ασκήσεις και παίζοντας Study Battles — όσο πιο πολλά συγκεντρώνεις, τόσο ανεβαίνεις στο leaderboard της τάξης σου.
+      </p>
 
       {/* Progress per grade */}
       <Card>

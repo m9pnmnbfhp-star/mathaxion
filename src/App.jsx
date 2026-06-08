@@ -10,6 +10,7 @@ import HomePage from './pages/HomePage'
 import GradePage from './pages/GradePage'
 import ChapterPage from './pages/ChapterPage'
 import ProfilePage from './pages/ProfilePage'
+import SettingsPage from './pages/SettingsPage'
 import PanelliniesPage from './pages/PanelliniesPage'
 
 export default function App() {
@@ -50,6 +51,7 @@ export default function App() {
             <Route path="/grade/:gradeId" element={<GradePage />} />
             <Route path="/grade/:gradeId/chapter/:chapterId" element={<ChapterPage />} />
             <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/settings" element={<SettingsPage />} />
             <Route path="/panellinies" element={<PanelliniesPage />} />
             <Route path="/auth/callback" element={<AuthCallback />} />
           </Routes>

@@ -1,6 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { Flame, Star, User, LogOut, Crown, ChevronDown } from 'lucide-react'
+import { Flame, Star, User, Settings, LogOut, Crown, ChevronDown } from 'lucide-react'
 import { useState } from 'react'
 import useStore from '../../store/useStore'
 import Button from '../ui/Button'
@@ -37,22 +37,26 @@ export default function Header() {
           {user ? (
             <>
               {/* Streak */}
-              <motion.div
-                whileHover={{ scale: 1.05 }}
-                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-[#1c1c28] border border-[#2a2a3a] cursor-default"
-              >
-                <Flame size={14} className={streak.current > 0 ? 'text-orange-400' : 'text-slate-500'} />
-                <span className="text-sm font-semibold text-white">{streak.current}</span>
-              </motion.div>
+              <Link to="/profile" title="Δες την πρόοδό σου">
+                <motion.div
+                  whileHover={{ scale: 1.05 }}
+                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-[#1c1c28] border border-[#2a2a3a] hover:border-violet-500/40 transition-colors cursor-pointer"
+                >
+                  <Flame size={14} className={streak.current > 0 ? 'text-orange-400' : 'text-slate-500'} />
+                  <span className="text-sm font-semibold text-white">{streak.current}</span>
+                </motion.div>
+              </Link>
 
               {/* XP */}
-              <motion.div
-                whileHover={{ scale: 1.05 }}
-                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-[#1c1c28] border border-[#2a2a3a] cursor-default hidden sm:flex"
-              >
-                <Star size={14} className="text-amber-400" />
-                <span className="text-sm font-semibold text-amber-300">{xp.toLocaleString('el')}</span>
-              </motion.div>
+              <Link to="/profile" title="Πόντοι εμπειρίας — δες πώς τους κερδίζεις">
+                <motion.div
+                  whileHover={{ scale: 1.05 }}
+                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-[#1c1c28] border border-[#2a2a3a] hover:border-violet-500/40 transition-colors cursor-pointer hidden sm:flex"
+                >
+                  <Star size={14} className="text-amber-400" />
+                  <span className="text-sm font-semibold text-amber-300">{xp.toLocaleString('el')}</span>
+                </motion.div>
+              </Link>
 
               {/* PRO badge or upgrade */}
               {!isPro && (
@@ -101,6 +105,14 @@ export default function Header() {
                       >
                         <User size={14} />
                         Προφίλ
+                      </Link>
+                      <Link
+                        to="/settings"
+                        onClick={() => setDropdownOpen(false)}
+                        className="flex items-center gap-2 px-3 py-2 text-sm text-slate-300 hover:text-white hover:bg-white/5 transition-colors"
+                      >
+                        <Settings size={14} />
+                        Ρυθμίσεις
                       </Link>
                       {!isPro && (
                         <button
