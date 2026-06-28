@@ -149,6 +149,16 @@ body {
 /* Select none for game elements */
 .no-select { user-select: none; }
 
+/* Respect reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 /* Prose for AI responses */
 .ai-prose { line-height: 1.8; }
 .ai-prose strong { color: #a855f7; }

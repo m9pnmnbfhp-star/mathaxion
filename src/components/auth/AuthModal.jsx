@@ -81,9 +81,10 @@ export default function AuthModal() {
 
   const handleGoogle = async () => {
     try {
-      await signInWithGoogle()
-    } catch {
-      toast.error('Σφάλμα σύνδεσης με Google')
+      const { error } = await signInWithGoogle()
+      if (error) throw error
+    } catch (err) {
+      toast.error(err.message || 'Σφάλμα σύνδεσης με Google')
     }
   }
 

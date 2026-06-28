@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ArrowLeft, RefreshCw, Sparkles } from 'lucide-react'
+import { ArrowLeft, RefreshCw, Sparkles, BookOpen, Pencil, Layers, Bot, Zap, Camera, Swords, Search } from 'lucide-react'
 import { getGrade, getChapter, SIMPLICITY_LABELS, SIMPLICITY_DESCRIPTIONS } from '../data/curriculum'
 import Button from '../components/ui/Button'
 import Badge from '../components/ui/Badge'
@@ -18,13 +18,13 @@ import useStore from '../store/useStore'
 import toast from 'react-hot-toast'
 
 const TABS = [
-  { id: 'theory', label: 'Θεωρία', icon: '📖' },
-  { id: 'exercises', label: 'Ασκήσεις', icon: '✏️' },
-  { id: 'flashcards', label: 'Flashcards', icon: '🃏' },
-  { id: 'tutor', label: 'Axi AI', icon: '🤖' },
-  { id: 'panic', label: 'Panic Mode', icon: '⚡' },
-  { id: 'photo', label: 'Photo', icon: '📷' },
-  { id: 'battle', label: 'Battle', icon: '⚔️' },
+  { id: 'theory', label: 'Θεωρία', icon: BookOpen },
+  { id: 'exercises', label: 'Ασκήσεις', icon: Pencil },
+  { id: 'flashcards', label: 'Flashcards', icon: Layers },
+  { id: 'tutor', label: 'Axi AI', icon: Bot },
+  { id: 'panic', label: 'Panic Mode', icon: Zap },
+  { id: 'photo', label: 'Photo', icon: Camera },
+  { id: 'battle', label: 'Battle', icon: Swords },
 ]
 
 export default function ChapterPage() {
@@ -42,9 +42,9 @@ export default function ChapterPage() {
   if (!grade || !chapter) {
     return (
       <div className="flex flex-col items-center justify-center py-20">
-        <p className="text-6xl mb-4">🔍</p>
+        <Search size={48} className="text-slate-700 mb-4" />
         <p className="text-white font-bold text-xl">Κεφάλαιο δεν βρέθηκε</p>
-        <Link to="/" className="mt-4 text-violet-400">Αρχική</Link>
+        <Link to="/" className="mt-4 text-violet-400 hover:text-violet-300 transition-colors">Αρχική</Link>
       </div>
     )
   }
@@ -104,7 +104,8 @@ export default function ChapterPage() {
         </div>
         <Link
           to={`/grade/${grade.id}`}
-          className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-white/5 transition-colors"
+          aria-label="Πίσω στην τάξη"
+          className="p-3 rounded-xl text-slate-400 hover:text-white hover:bg-white/5 transition-colors"
         >
           <ArrowLeft size={20} />
         </Link>
@@ -122,7 +123,7 @@ export default function ChapterPage() {
                 : 'text-slate-400 hover:text-white hover:bg-white/5'
             }`}
           >
-            <span>{tab.icon}</span>
+            <tab.icon size={15} />
             <span className="hidden sm:inline">{tab.label}</span>
           </button>
         ))}
@@ -244,10 +245,13 @@ function TheoryTab({ chapter, selectedConcept, setSelectedConcept, simplicity, s
       {/* Right: Theory content */}
       <div className="lg:col-span-2 space-y-4">
         {!content && !loading && (
-          <div className="flex flex-col items-center justify-center py-16 space-y-4 bg-[#16161f] rounded-2xl border border-[#2a2a3a]">
-            <div className="text-5xl">{chapter.emoji}</div>
-            <p className="text-slate-400 text-center text-sm max-w-xs">
-              Επέλεξε ένα θέμα και το Axi AI θα σου εξηγήσει στο επίπεδο που θέλεις
+          <div className="flex flex-col items-center justify-center py-20 bg-[#16161f] rounded-2xl border border-dashed border-[#2a2a3a]">
+            <div className="w-16 h-16 rounded-2xl bg-violet-600/10 border border-violet-500/20 flex items-center justify-center text-3xl mb-5">
+              {chapter.emoji}
+            </div>
+            <p className="font-semibold text-white mb-2">Διάλεξε θέμα για να ξεκινήσεις</p>
+            <p className="text-slate-500 text-sm text-center max-w-xs leading-relaxed">
+              Το Axi AI εξηγεί στο επίπεδο που εσύ ορίζεις — από «απλά» μέχρι πλήρη ορολογία.
             </p>
           </div>
         )}

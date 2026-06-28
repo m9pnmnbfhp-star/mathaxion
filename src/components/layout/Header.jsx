@@ -21,14 +21,14 @@ export default function Header() {
 
   return (
     <header className="sticky top-0 z-40 bg-[#0a0a0f]/90 backdrop-blur-xl border-b border-[#2a2a3a]">
-      <div className="max-w-6xl mx-auto px-4 h-32 flex items-center justify-between">
+      <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
         {/* Logo */}
         <Link to="/" className="flex items-center group">
           <motion.img
             whileHover={{ scale: 1.05 }}
             src="/logo.png"
             alt="MathAxion"
-            className="h-28 w-auto"
+            className="h-10 w-auto"
           />
         </Link>
 

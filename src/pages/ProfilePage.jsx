@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { Flame, Star, Trophy, Target, BookOpen, TrendingUp, Crown, Brain } from 'lucide-react'
+import { Flame, Star, Trophy, Target, BookOpen, TrendingUp, Crown, Brain, User, Lightbulb } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { GRADES } from '../data/curriculum'
 import Button from '../components/ui/Button'
@@ -19,7 +19,9 @@ export default function ProfilePage() {
   if (!user) {
     return (
       <div className="flex flex-col items-center justify-center py-20 px-4">
-        <div className="text-6xl mb-4">👤</div>
+        <div className="w-20 h-20 rounded-2xl bg-[#1c1c28] border border-[#2a2a3a] flex items-center justify-center mb-4">
+          <User size={36} className="text-slate-600" />
+        </div>
         <h2 className="text-xl font-bold text-white mb-2">Συνδέσου για να δεις το προφίλ σου</h2>
         <p className="text-slate-400 text-sm mb-6">Παρακολούθησε την πρόοδό σου, τα streaks και τα XP σου</p>
         <Link to="/">
@@ -93,8 +95,9 @@ export default function ProfilePage() {
           sub={`από ${totalChapters}`} />
         <StatCard icon={Trophy} value={masteredChapters} label="Κατακτημένα" color="#fbbf24" />
       </div>
-      <p className="text-xs text-slate-500 -mt-2">
-        💡 Κερδίζεις <span className="text-violet-300 font-medium">XP</span> διαβάζοντας θεωρία, λύνοντας ασκήσεις και παίζοντας Study Battles — όσο πιο πολλά συγκεντρώνεις, τόσο ανεβαίνεις στο leaderboard της τάξης σου.
+      <p className="text-xs text-slate-500 -mt-2 flex items-start gap-1.5">
+        <Lightbulb size={13} className="text-violet-400 shrink-0 mt-0.5" />
+        <span>Κερδίζεις <span className="text-violet-300 font-medium">XP</span> διαβάζοντας θεωρία, λύνοντας ασκήσεις και παίζοντας Study Battles — όσο πιο πολλά συγκεντρώνεις, τόσο ανεβαίνεις στο leaderboard της τάξης σου.</span>
       </p>
 
       {/* Progress per grade */}

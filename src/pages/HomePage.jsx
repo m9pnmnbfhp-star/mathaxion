@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
-import { ArrowRight, Zap, Brain, Camera, Swords, Target, Flame, Crown } from 'lucide-react'
+import { ArrowRight, Zap, Brain, Camera, Swords, Target, Flame, Crown, Sparkles } from 'lucide-react'
 import { GRADES } from '../data/curriculum'
 import Button from '../components/ui/Button'
 import Badge from '../components/ui/Badge'
@@ -214,7 +214,7 @@ export default function HomePage() {
       <footer className="border-t border-[#2a2a3a] px-4 py-8">
         <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center">
-            <img src="/logo.png" alt="MathAxion" className="h-36 w-auto" />
+            <img src="/logo.png" alt="MathAxion" className="h-10 w-auto" />
           </div>
           <p className="text-slate-600 text-sm text-center">
             Powered by Claude AI · Βασισμένο στα βιβλία ΥΠΠΕΘ
@@ -243,7 +243,7 @@ function GradeCard({ grade, onClick }) {
         </div>
         <div className="flex items-center gap-1">
           {grade.isPanellinies && (
-            <Badge color="red" size="xs">🔥 Πανελλήνιες</Badge>
+            <Badge color="red" size="xs"><Flame size={10} />Πανελλήνιες</Badge>
           )}
           <Badge color="slate" size="xs">{grade.level === 'gymnasio' ? 'Γυμνάσιο' : 'Λύκειο'}</Badge>
         </div>
@@ -260,12 +260,12 @@ function GradeCard({ grade, onClick }) {
       {/* Chapter preview */}
       <div className="flex gap-1 mt-3 flex-wrap">
         {grade.chapters.slice(0, 3).map(c => (
-          <span key={c.id} className="text-[10px] px-2 py-0.5 rounded-full bg-[#1c1c28] border border-[#2a2a3a] text-slate-500">
+          <span key={c.id} className="text-xs px-2 py-0.5 rounded-full bg-[#1c1c28] border border-[#2a2a3a] text-slate-500">
             {c.emoji} {c.title}
           </span>
         ))}
         {grade.chapters.length > 3 && (
-          <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#1c1c28] border border-[#2a2a3a] text-slate-600">
+          <span className="text-xs px-2 py-0.5 rounded-full bg-[#1c1c28] border border-[#2a2a3a] text-slate-600">
             +{grade.chapters.length - 3}
           </span>
         )}

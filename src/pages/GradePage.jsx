@@ -1,6 +1,6 @@
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { ArrowLeft, ArrowRight, Clock } from 'lucide-react'
+import { ArrowLeft, ArrowRight, Clock, Search, CheckCircle2, Flame } from 'lucide-react'
 import { GRADES, getGrade } from '../data/curriculum'
 import Badge from '../components/ui/Badge'
 import ProgressBar from '../components/ui/ProgressBar'
@@ -43,7 +43,7 @@ export default function GradePage() {
           <div>
             <div className="flex items-center gap-2">
               <h1 className="text-3xl font-black text-white">{grade.label}</h1>
-              {grade.isPanellinies && <Badge color="red" size="sm">🔥 Πανελλήνιες</Badge>}
+              {grade.isPanellinies && <Badge color="red" size="sm"><Flame size={11} />Πανελλήνιες</Badge>}
             </div>
             <p className="text-slate-400">{grade.description}</p>
           </div>
@@ -97,7 +97,7 @@ export default function GradePage() {
                       <h2 className="font-bold text-white group-hover:text-violet-300 transition-colors">
                         {chapter.title}
                       </h2>
-                      {isMastered && <span className="text-xs text-emerald-400">✓ Κατακτημένο</span>}
+                      {isMastered && <span className="inline-flex items-center gap-1 text-xs text-emerald-400"><CheckCircle2 size={12} />Κατακτημένο</span>}
                       <Badge color={DIFFICULTY_COLORS[chapter.difficulty] || 'slate'} size="xs">
                         {DIFFICULTY_LABELS[chapter.difficulty]}
                       </Badge>
@@ -108,7 +108,7 @@ export default function GradePage() {
                     {/* Concepts */}
                     <div className="flex gap-1 flex-wrap mb-3">
                       {chapter.concepts.map(c => (
-                        <span key={c} className="text-[10px] px-2 py-0.5 rounded-full bg-[#1c1c28] border border-[#2a2a3a] text-slate-500">
+                        <span key={c} className="text-xs px-2 py-0.5 rounded-full bg-[#1c1c28] border border-[#2a2a3a] text-slate-500">
                           {c}
                         </span>
                       ))}
@@ -158,7 +158,7 @@ export default function GradePage() {
 function NotFound() {
   return (
     <div className="flex flex-col items-center justify-center py-20">
-      <p className="text-6xl mb-4">🔍</p>
+      <Search size={48} className="text-slate-700 mb-4" />
       <p className="text-white font-bold text-xl">Η τάξη δεν βρέθηκε</p>
       <Link to="/" className="mt-4 text-violet-400 hover:text-violet-300 transition-colors">
         Επιστροφή στην αρχική
