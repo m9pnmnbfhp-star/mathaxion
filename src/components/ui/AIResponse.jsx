@@ -31,6 +31,9 @@ export default function AIResponse({ text, loading = false, compact = false }) {
       </div>
       <div className="flex-1 ai-prose text-slate-200 text-sm leading-relaxed space-y-2">
         {parts}
+        <p className="text-[11px] pt-2 mt-2 border-t border-white/5" style={{ color: 'var(--fg-3)' }}>
+          Το AI μπορεί να κάνει λάθη. Επιβεβαίωσε πάντα με τον καθηγητή ή το σχολικό βιβλίο.
+        </p>
       </div>
     </motion.div>
   )
