@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Flame, Star, User, Settings, LogOut, Crown, ChevronDown, Menu, X, Trophy } from 'lucide-react'
+import { Flame, Star, User, Settings, LogOut, Crown, ChevronDown, Menu, X } from 'lucide-react'
 import useStore from '../../store/useStore'
 import { signOut } from '../../lib/supabase'
 import toast from 'react-hot-toast'

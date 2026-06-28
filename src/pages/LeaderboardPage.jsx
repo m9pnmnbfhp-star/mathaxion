@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Trophy, Star, Crown } from 'lucide-react'
+import { Trophy, Star } from 'lucide-react'
 import { GRADES } from '../data/curriculum'
 import { getLeaderboard, getGlobalLeaderboard } from '../lib/supabase'
 import useStore from '../store/useStore'
@@ -17,7 +17,7 @@ const TABS = [
 ]
 
 export default function LeaderboardPage() {
-  const { user, xp } = useStore()
+  const { user, xp, setAuthModal } = useStore()
   const [activeTab, setActiveTab] = useState('global')
   const [entries, setEntries] = useState([])
   const [loading, setLoading] = useState(true)
@@ -184,7 +184,7 @@ export default function LeaderboardPage() {
       {/* Not logged in prompt */}
       {!user && !loading && (
         <p className="text-center text-sm mt-6" style={{ color: 'var(--fg-2)' }}>
-          <span className="text-violet-400 font-bold cursor-pointer hover:text-violet-300">Συνδέσου</span> για να εμφανιστείς στο leaderboard
+          <span className="text-violet-400 font-bold cursor-pointer hover:text-violet-300" onClick={() => setAuthModal(true, 'signup')}>Συνδέσου</span> για να εμφανιστείς στο leaderboard
         </p>
       )}
     </div>
