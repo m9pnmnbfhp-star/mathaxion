@@ -90,12 +90,25 @@ export default function App() {
 function AuthCallback() {
   const [error, setError] = useState(null)
   useEffect(() => {
-    supabase.auth.exchangeCodeForSession(window.location.search)
-      .then(({ error }) => {
-        if (error) { setError(error.message); return }
-        window.location.href = '/'
+    const code = new URLSearchParams(window.location.search).get('code')
+    if (code) {
+      // PKCE flow: exchange the code for a session
+      supabase.auth.exchangeCodeForSession(window.location.search)
+        .then(({ error }) => {
+          if (error) { setError(error.message); return }
+          window.location.href = '/'
+        })
+        .catch((err) => setError(err.message))
+    } else {
+      // Implicit flow: Supabase JS already consumed the hash and set the session
+      supabase.auth.getSession().then(({ data }) => {
+        if (data?.session) {
+          window.location.href = '/'
+        } else {
+          setError('Αποτυχία σύνδεσης — δοκίμασε ξανά')
+        }
       })
-      .catch((err) => setError(err.message))
+    }
   }, [])
   if (error) return (
     <div className="flex flex-col items-center justify-center min-h-screen gap-4">
