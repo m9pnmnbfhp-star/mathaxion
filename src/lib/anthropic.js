@@ -1,3 +1,5 @@
+import { searchBookChunks } from './supabase'
+
 const ANTHROPIC_API_URL = 'https://api.anthropic.com/v1/messages'
 
 async function callAI(messages, systemPrompt, maxTokens = 1024) {
@@ -159,15 +161,25 @@ export async function solvePhotoExercise(imageBase64, mimeType = 'image/jpeg') {
 }
 
 export async function chatWithTutor(messages, grade, topic) {
-  const history = messages.slice(-8).map(m => ({
-    role: m.role,
-    content: m.content,
-  }))
+  const history = messages.slice(-8).map(m => ({ role: m.role, content: m.content }))
+
+  // Search school book for relevant context
+  const lastUserMsg = [...messages].reverse().find(m => m.role === 'user')
+  const query = lastUserMsg?.content || topic || ''
+  let bookContext = ''
+  if (grade?.id && query) {
+    const { data } = await searchBookChunks(query, grade.id, 4)
+    if (data?.length) {
+      bookContext = `\n\n---\nΑΠΟΣΠΑΣΜΑΤΑ ΑΠΟ ΤΟ ΣΧΟΛΙΚΟ ΒΙΒΛΙΟ (${grade.label}):\n` +
+        data.map((c, i) => `[${i + 1}] ${c.content.slice(0, 600)}`).join('\n\n') +
+        `\n---\nΒΑΣΙΣΟΥ ΚΥΡΙΩΣ ΣΤΑ ΠΑΡΑΠΑΝΩ ΑΠΟΣΠΑΣΜΑΤΑ. Αν η απάντηση δεν βρίσκεται σε αυτά, πες το ειλικρινά.`
+    }
+  }
 
   return callAI(
     history,
-    `${BASE_SYSTEM}\n\nΟ μαθητής είναι στην τάξη ${grade?.label || 'Γυμνάσιο'} και συζητά για "${topic || 'μαθηματικά'}".\nΑπάντα φιλικά και παροτρυντικά. Αν δεν ξέρεις κάτι, πες το ειλικρινά.`,
-    1000
+    `${BASE_SYSTEM}\n\nΟ μαθητής είναι στην τάξη ${grade?.label || 'Γυμνάσιο'} και συζητά για "${topic || 'μαθηματικά'}".\nΑπάντα φιλικά και παροτρυντικά.${bookContext}`,
+    1200
   )
 }
 

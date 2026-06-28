@@ -194,3 +194,14 @@ export async function logXP(userId, amount, reason) {
   const { error } = await supabase.rpc('add_xp', { user_id: userId, amount, reason })
   return { error }
 }
+
+export async function searchBookChunks(query, gradeId, limit = 5) {
+  if (!query?.trim()) return { data: [] }
+  const { data, error } = await supabase
+    .from('book_chunks')
+    .select('content, book_type, page_number')
+    .eq('grade_id', gradeId)
+    .textSearch('fts', query, { config: 'greek', type: 'plain' })
+    .limit(limit)
+  return { data: data || [], error }
+}
