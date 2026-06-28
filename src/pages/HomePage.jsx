@@ -107,7 +107,7 @@ function HeroSection({ user, setAuthModal, navigate }) {
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-violet-400 opacity-75" />
             <span className="relative inline-flex rounded-full h-2 w-2 bg-violet-500" />
           </span>
-          AI Math Tutor για Ελληνικά Σχολεία
+          Βασισμένο στα βιβλία του ΥΠΠΕΘ — όχι γενικό AI
         </div>
       </motion.div>
 
@@ -128,7 +128,7 @@ function HeroSection({ user, setAuthModal, navigate }) {
         className="text-lg sm:text-xl leading-relaxed mb-10 max-w-lg"
         style={{ color: 'var(--fg-2)' }}
       >
-        AI καθηγητής για Γυμνάσιο &amp; Λύκειο — πάντα διαθέσιμος.
+        Απαντάει από τα σχολικά σου βιβλία — ακριβώς η ύλη που θέλει ο καθηγητής σου.
       </motion.p>
 
       <motion.div
@@ -155,6 +155,22 @@ function HeroSection({ user, setAuthModal, navigate }) {
         >
           Δες πώς λειτουργεί
         </motion.button>
+      </motion.div>
+
+      {/* Trust differentiators */}
+      <motion.div
+        custom={3.5} variants={FADE_UP} initial="hidden" animate={inView ? 'visible' : 'hidden'}
+        className="flex flex-wrap justify-center gap-x-6 gap-y-2 mb-12 text-sm"
+        style={{ color: 'var(--fg-3)' }}
+      >
+        {[
+          '📚 Ύλη από τα βιβλία ΥΠΠΕΘ',
+          '🇬🇷 Στα Ελληνικά πάντα',
+          '✅ Χωρίς rate limit',
+          '💸 2€/μήνα — όχι 20€',
+        ].map(item => (
+          <span key={item}>{item}</span>
+        ))}
       </motion.div>
 
       {/* Stats bar */}
