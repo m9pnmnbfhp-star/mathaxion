@@ -31,18 +31,51 @@ function useCounter(target, duration = 1400, active = false) {
   return val
 }
 
+/* Floating mathematical notation — the signature element */
+const MATH_SYMBOLS = [
+  { char: 'π',  x: '7%',  y: '12%', size: 5.5, delay: 0,  dur: 24 },
+  { char: 'Σ',  x: '87%', y: '7%',  size: 4.5, delay: 3,  dur: 30 },
+  { char: 'Δ',  x: '72%', y: '42%', size: 6,   delay: 7,  dur: 22 },
+  { char: '∫',  x: '18%', y: '68%', size: 7,   delay: 1,  dur: 28 },
+  { char: '∞',  x: '52%', y: '78%', size: 4,   delay: 5,  dur: 32 },
+  { char: '√',  x: '91%', y: '65%', size: 3.5, delay: 9,  dur: 20 },
+  { char: 'θ',  x: '33%', y: '18%', size: 5,   delay: 2,  dur: 26 },
+  { char: 'φ',  x: '62%', y: '28%', size: 4.5, delay: 6,  dur: 28 },
+  { char: '∂',  x: '80%', y: '22%', size: 6,   delay: 11, dur: 18 },
+  { char: '≡',  x: '44%', y: '62%', size: 3.5, delay: 8,  dur: 24 },
+  { char: 'λ',  x: '26%', y: '84%', size: 5,   delay: 4,  dur: 22 },
+  { char: 'α²', x: '12%', y: '40%', size: 3,   delay: 10, dur: 26 },
+]
+
+function MathAtmosphere() {
+  return (
+    <div className="fixed inset-0 pointer-events-none overflow-hidden" style={{ zIndex: 0 }}>
+      {MATH_SYMBOLS.map(({ char, x, y, size, delay, dur }) => (
+        <div key={char + x} className="absolute font-display select-none"
+          style={{
+            left: x, top: y,
+            fontSize: `${size}rem`,
+            opacity: 0.028,
+            color: '#c4b5fd',
+            animation: `math-drift ${dur}s ease-in-out ${delay}s infinite`,
+            willChange: 'transform',
+          }}>
+          {char}
+        </div>
+      ))}
+      {/* Residual depth: one soft violet bloom, one emerald */}
+      <div className="blob blob-violet" style={{ width: 560, height: 560, top: -160, left: -160, opacity: 0.55 }} />
+      <div className="blob blob-emerald" style={{ width: 380, height: 380, bottom: -80, right: -80, opacity: 0.45 }} />
+    </div>
+  )
+}
+
 export default function HomePage() {
   const { user, setAuthModal, setUpgradeModal, isPro } = useStore()
   const navigate = useNavigate()
   return (
     <div className="relative overflow-x-hidden">
-      {/* Ambient orbs */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden" style={{ zIndex: 0 }}>
-        <div className="blob blob-violet" style={{ width: 700, height: 700, top: -200, left: -200 }} />
-        <div className="blob blob-emerald" style={{ width: 500, height: 500, bottom: -100, right: -100 }} />
-        <div className="blob blob-amber" style={{ width: 400, height: 400, top: '40%', right: '20%' }} />
-        <div className="blob blob-rose" style={{ width: 350, height: 350, top: '70%', left: '10%' }} />
-      </div>
+      <MathAtmosphere />
       <div className="relative" style={{ zIndex: 1 }}>
         <HeroSection user={user} setAuthModal={setAuthModal} navigate={navigate} />
         <GradesSection user={user} setAuthModal={setAuthModal} navigate={navigate} />
@@ -74,19 +107,19 @@ function HeroSection({ user, setAuthModal, navigate }) {
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-violet-400 opacity-75" />
             <span className="relative inline-flex rounded-full h-2 w-2 bg-violet-500" />
           </span>
-          Η #1 πλατφόρμα μαθηματικών στην Ελλάδα
+          AI Math Tutor για Ελληνικά Σχολεία
         </div>
       </motion.div>
 
       <motion.h1
         custom={1} variants={FADE_UP} initial="hidden" animate={inView ? 'visible' : 'hidden'}
-        className="font-display font-black leading-[0.88] tracking-tight mb-6 max-w-5xl"
-        style={{ fontSize: 'clamp(3rem, 9vw, 7rem)' }}
+        className="font-display font-black leading-[0.9] tracking-tight mb-6 max-w-4xl"
+        style={{ fontSize: 'clamp(2.8rem, 8.5vw, 6.5rem)' }}
       >
-        <span className="text-white">Κατέκτησε</span>{' '}
-        <span className="text-gradient">τα μαθηματικά</span>
+        <span className="text-white">Τα μαθηματικά</span>
         <br />
-        <span className="text-white">με AI.</span>
+        <span className="text-gradient">επιτέλους</span>{' '}
+        <span className="text-white">κάνουν νόημα.</span>
       </motion.h1>
 
       <motion.p
@@ -94,8 +127,8 @@ function HeroSection({ user, setAuthModal, navigate }) {
         className="text-lg sm:text-xl leading-relaxed mb-10 max-w-lg"
         style={{ color: 'var(--fg-2)' }}
       >
-        Θεωρία προσαρμοσμένη στο επίπεδό σου, ασκήσεις AI, flashcards
-        και PvP battles — για Γυμνάσιο &amp; Λύκειο.
+        AI που εξηγεί με τη δική σου λογική — όχι απλά τύπους.
+        Ασκήσεις, flashcards &amp; battles για Γυμνάσιο &amp; Λύκειο.
       </motion.p>
 
       <motion.div
