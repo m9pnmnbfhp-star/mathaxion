@@ -135,7 +135,7 @@ function HeroSection({ user, setAuthModal, navigate }) {
           { val: '6',               label: 'Τάξεις',       color: '#10b981' },
           { val: `${chapters}+`,    label: 'Κεφάλαια',     color: '#f59e0b' },
           { val: '∞',               label: 'AI Ασκήσεις',  color: '#06b6d4' },
-          { val: '2€',              label: 'τον μήνα',     color: '#ec4899' },
+          { val: '2€',              label: 'πλήρης πρόσβαση', color: '#ec4899' },
         ].map(({ val, label, color }, i) => (
           <div key={i} className="flex flex-col items-center px-5 py-4 sm:px-8" style={{ borderColor: 'rgba(255,255,255,0.07)' }}>
             <span className="text-2xl font-black font-display tabular-nums" style={{ color }}>{val}</span>
@@ -490,89 +490,100 @@ function TestimonialsSection() {
 }
 
 /* ─── PRICING ─────────────────────────────────────────────────────── */
-const FREE_FEATURES = ['Θεωρία AI (3/μέρα)', 'Ασκήσεις (5/μέρα)', 'Flashcards', 'Πρόοδος & XP']
-const PRO_FEATURES  = ['Θεωρία AI Απεριόριστη', 'Ασκήσεις Απεριόριστες', 'Flashcards', 'Axi AI Tutor', 'Study Battles', 'Photo Solver', 'Panic Mode', 'Adaptive Quiz', 'Leaderboard']
+const PRO_FEATURES = [
+  { icon: Bot,    color: '#7c3aed', label: 'Θεωρία AI Απεριόριστη' },
+  { icon: Pencil, color: '#10b981', label: 'Ασκήσεις AI Απεριόριστες' },
+  { icon: Layers, color: '#3b82f6', label: 'Flashcards' },
+  { icon: Bot,    color: '#8b5cf6', label: 'Axi AI Tutor' },
+  { icon: Swords, color: '#ec4899', label: 'Study Battles 1v1' },
+  { icon: Camera, color: '#06b6d4', label: 'Photo Solver' },
+  { icon: Zap,    color: '#ef4444', label: 'Panic Mode' },
+  { icon: Star,   color: '#f59e0b', label: 'Adaptive Quiz' },
+  { icon: Crown,  color: '#fbbf24', label: 'Leaderboard & XP' },
+]
 
 function PricingSection({ user, setAuthModal, setUpgradeModal, isPro }) {
   const ref = useRef(null)
   const inView = useInView(ref, { once: true, margin: '-60px' })
   return (
-    <section ref={ref} className="max-w-4xl mx-auto px-4 py-24">
-      <motion.div custom={0} variants={FADE_UP} initial="hidden" animate={inView ? 'visible' : 'hidden'} className="text-center mb-14">
+    <section ref={ref} className="max-w-2xl mx-auto px-4 py-24">
+      <motion.div custom={0} variants={FADE_UP} initial="hidden" animate={inView ? 'visible' : 'hidden'} className="text-center mb-12">
         <p className="text-sm font-bold tracking-widest text-pink-400 uppercase mb-3">Τιμολόγηση</p>
-        <h2 className="font-display font-black text-4xl sm:text-5xl text-white mb-4">Απλό και δίκαιο</h2>
-        <p className="text-lg max-w-sm mx-auto" style={{ color: 'var(--fg-2)' }}>Ξεκίνα δωρεάν. Αναβάθμισε όταν είσαι έτοιμος.</p>
+        <h2 className="font-display font-black text-4xl sm:text-5xl text-white mb-4">Ένα πλάνο. Τα πάντα.</h2>
+        <p className="text-lg max-w-sm mx-auto" style={{ color: 'var(--fg-2)' }}>Πλήρης πρόσβαση σε όλες τις λειτουργίες για μόλις 2€ τον μήνα.</p>
       </motion.div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-        {/* Free */}
-        <motion.div custom={1} variants={FADE_UP} initial="hidden" animate={inView ? 'visible' : 'hidden'}>
-          <div className="p-6 rounded-2xl border border-white/[0.07] h-full" style={{ background: '#16161f' }}>
-            <p className="text-xs font-bold tracking-wider text-slate-500 uppercase mb-3">Δωρεάν</p>
-            <div className="flex items-end gap-1 mb-1">
-              <span className="text-5xl font-black font-display text-white">0€</span>
+      <motion.div custom={1} variants={FADE_UP} initial="hidden" animate={inView ? 'visible' : 'hidden'}>
+        <div className="relative rounded-3xl overflow-hidden"
+          style={{
+            background: 'linear-gradient(160deg, #1e1530 0%, #16161f 40%, #0f1620 100%)',
+            border: '1px solid rgba(124,58,237,0.35)',
+            boxShadow: '0 0 80px rgba(124,58,237,0.12), 0 0 0 1px rgba(124,58,237,0.08)',
+          }}>
+
+          {/* Top glow line */}
+          <div className="absolute top-0 left-12 right-12 h-px"
+            style={{ background: 'linear-gradient(90deg, transparent, rgba(124,58,237,0.9), rgba(139,92,246,0.6), transparent)' }} />
+
+          {/* Background decoration */}
+          <div className="absolute top-0 right-0 w-64 h-64 rounded-full pointer-events-none"
+            style={{ background: 'radial-gradient(circle, rgba(124,58,237,0.08) 0%, transparent 70%)', transform: 'translate(30%, -30%)' }} />
+
+          <div className="relative p-8 sm:p-10">
+            {/* Header */}
+            <div className="flex items-start justify-between mb-8">
+              <div>
+                <div className="inline-flex items-center gap-1.5 text-xs font-black text-violet-400 uppercase tracking-widest mb-3">
+                  <Crown size={12} className="text-amber-400" />
+                  MathAxion Pro
+                </div>
+                <div className="flex items-end gap-2">
+                  <span className="text-7xl font-black font-display text-white leading-none">2€</span>
+                  <div className="mb-2">
+                    <p className="text-base" style={{ color: 'var(--fg-2)' }}>/μήνα</p>
+                    <p className="text-xs text-violet-400">Ακύρωση ανά πάσα στιγμή</p>
+                  </div>
+                </div>
+              </div>
+              <div className="shrink-0 mt-1">
+                <span className="inline-flex items-center gap-1 text-[11px] font-black text-amber-300 px-3 py-1.5 rounded-full"
+                  style={{ background: 'rgba(245,158,11,0.12)', border: '1px solid rgba(245,158,11,0.25)' }}>
+                  <Star size={11} fill="#fbbf24" stroke="none" />
+                  ΠΛΗΡΗΣ ΠΡΟΣΒΑΣΗ
+                </span>
+              </div>
             </div>
-            <p className="text-sm mb-6" style={{ color: 'var(--fg-2)' }}>για πάντα</p>
-            <ul className="space-y-2.5 mb-6">
-              {FREE_FEATURES.map(feat => (
-                <li key={feat} className="flex items-center gap-2.5 text-sm" style={{ color: '#8892a4' }}>
-                  <CheckCircle2 size={14} className="text-slate-600 shrink-0" />{feat}
-                </li>
+
+            {/* Features grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mb-8">
+              {PRO_FEATURES.map(({ icon: Icon, color, label }) => (
+                <div key={label} className="flex items-center gap-3 p-3 rounded-xl"
+                  style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)' }}>
+                  <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
+                    style={{ background: `${color}18` }}>
+                    <Icon size={13} style={{ color }} />
+                  </div>
+                  <span className="text-sm font-medium text-slate-200">{label}</span>
+                </div>
               ))}
-            </ul>
-            <button
-              onClick={() => !user && setAuthModal(true, 'signup')}
-              className="w-full py-3 rounded-xl text-sm font-bold text-white/60 hover:text-white transition-colors cursor-pointer"
-              style={{ border: '1px solid rgba(255,255,255,0.1)' }}
-            >
-              Ξεκίνα τώρα
-            </button>
-          </div>
-        </motion.div>
-
-        {/* Pro */}
-        <motion.div custom={2} variants={FADE_UP} initial="hidden" animate={inView ? 'visible' : 'hidden'}>
-          <div className="relative p-6 rounded-2xl h-full overflow-hidden"
-            style={{
-              background: 'linear-gradient(145deg, #1a1428, #16161f)',
-              border: '1px solid rgba(124,58,237,0.3)',
-              boxShadow: '0 0 50px rgba(124,58,237,0.1), inset 0 1px 0 rgba(255,255,255,0.04)',
-            }}>
-            <div className="absolute top-0 left-8 right-8 h-px"
-              style={{ background: 'linear-gradient(90deg, transparent, rgba(124,58,237,0.8), transparent)' }} />
-            <div className="absolute top-4 right-4">
-              <span className="inline-flex items-center gap-1 text-[10px] font-black text-amber-300 px-2 py-1 rounded-full"
-                style={{ background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.2)' }}>
-                <Crown size={10} />ΔΗΜΟΦΙΛΕΣ
-              </span>
             </div>
 
-            <p className="text-xs font-bold tracking-wider text-violet-400 uppercase mb-3">Pro</p>
-            <div className="flex items-end gap-1 mb-1">
-              <span className="text-5xl font-black font-display text-white">2€</span>
-              <span className="text-base mb-2" style={{ color: 'var(--fg-2)' }}>/μήνα</span>
-            </div>
-            <p className="text-sm text-violet-400 mb-6">Ακύρωση ανά πάσα στιγμή</p>
-
-            <ul className="space-y-2.5 mb-6">
-              {PRO_FEATURES.map(feat => (
-                <li key={feat} className="flex items-center gap-2.5 text-sm text-slate-200">
-                  <CheckCircle2 size={14} className="text-violet-400 shrink-0" />{feat}
-                </li>
-              ))}
-            </ul>
-
+            {/* CTA */}
             <motion.button
               whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
               onClick={() => user ? setUpgradeModal(true) : setAuthModal(true, 'signup')}
-              className="w-full py-3 rounded-xl font-bold text-sm text-white cursor-pointer"
-              style={{ background: 'linear-gradient(135deg, #7c3aed, #6d28d9)', boxShadow: '0 0 20px rgba(124,58,237,0.4)' }}
+              className="w-full py-4 rounded-2xl font-black text-base text-white cursor-pointer"
+              style={{ background: 'linear-gradient(135deg, #7c3aed, #6d28d9)', boxShadow: '0 0 30px rgba(124,58,237,0.5), 0 4px 20px rgba(0,0,0,0.4)' }}
             >
-              {isPro ? '✓ Ήδη Pro' : 'Αναβάθμιση σε Pro'}
+              {isPro ? '✓ Ήδη Pro — Ευχαριστούμε!' : 'Αποκτήσε πλήρη πρόσβαση — 2€/μήνα'}
             </motion.button>
+
+            <p className="text-center text-xs mt-3" style={{ color: 'var(--fg-3)' }}>
+              Ακύρωση οποιαδήποτε στιγμή · Χωρίς δεσμεύσεις
+            </p>
           </div>
-        </motion.div>
-      </div>
+        </div>
+      </motion.div>
     </section>
   )
 }
