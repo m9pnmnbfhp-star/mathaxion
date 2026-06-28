@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ArrowLeft, RefreshCw, Sparkles, BookOpen, Pencil, Layers, Bot, Zap, Camera, Swords, Search } from 'lucide-react'
+import { ArrowLeft, RefreshCw, Sparkles, BookOpen, Pencil, Layers, Bot, Zap, Camera, Swords, Search, Clock } from 'lucide-react'
 import { getGrade, getChapter, SIMPLICITY_LABELS, SIMPLICITY_DESCRIPTIONS } from '../data/curriculum'
 import Button from '../components/ui/Button'
 import Badge from '../components/ui/Badge'
@@ -18,13 +18,13 @@ import useStore from '../store/useStore'
 import toast from 'react-hot-toast'
 
 const TABS = [
-  { id: 'theory', label: 'Θεωρία', icon: BookOpen },
-  { id: 'exercises', label: 'Ασκήσεις', icon: Pencil },
-  { id: 'flashcards', label: 'Flashcards', icon: Layers },
-  { id: 'tutor', label: 'Axi AI', icon: Bot },
-  { id: 'panic', label: 'Panic Mode', icon: Zap },
-  { id: 'photo', label: 'Photo', icon: Camera },
-  { id: 'battle', label: 'Battle', icon: Swords },
+  { id: 'theory',    label: 'Θεωρία',     icon: BookOpen, color: '#7c3aed' },
+  { id: 'exercises', label: 'Ασκήσεις',   icon: Pencil,   color: '#10b981' },
+  { id: 'flashcards',label: 'Flashcards', icon: Layers,   color: '#3b82f6' },
+  { id: 'tutor',     label: 'Axi AI',     icon: Bot,      color: '#8b5cf6' },
+  { id: 'panic',     label: 'Panic Mode', icon: Zap,      color: '#ef4444' },
+  { id: 'photo',     label: 'Photo',      icon: Camera,   color: '#06b6d4' },
+  { id: 'battle',    label: 'Battle',     icon: Swords,   color: '#ec4899' },
 ]
 
 export default function ChapterPage() {
@@ -49,10 +49,11 @@ export default function ChapterPage() {
     )
   }
 
+  const activeTabData = TABS.find(t => t.id === activeTab)
+
   const loadTheory = async (concept = selectedConcept) => {
     if (!user) { setAuthModal(true); return }
     if (!isPro) { setUpgradeModal(true); return }
-
     setTheoryLoading(true)
     setTheoryContent(null)
     try {
@@ -83,60 +84,76 @@ export default function ChapterPage() {
   return (
     <div className="max-w-5xl mx-auto px-4 py-6">
       {/* Breadcrumb */}
-      <div className="flex items-center gap-2 text-sm text-slate-500 mb-6">
-        <Link to="/" className="hover:text-white transition-colors">Αρχική</Link>
+      <div className="flex items-center gap-2 text-sm text-slate-600 mb-6">
+        <Link to="/" className="hover:text-slate-300 transition-colors">Αρχική</Link>
         <span>/</span>
-        <Link to={`/grade/${grade.id}`} className="hover:text-white transition-colors">{grade.label}</Link>
+        <Link to={`/grade/${grade.id}`} className="hover:text-slate-300 transition-colors">{grade.label}</Link>
         <span>/</span>
-        <span className="text-white">{chapter.title}</span>
+        <span className="text-slate-300 font-medium">{chapter.title}</span>
       </div>
 
       {/* Chapter header */}
-      <div className="flex items-start justify-between mb-6">
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-xl bg-[#1c1c28] border border-[#2a2a3a] flex items-center justify-center text-2xl">
+      <div className="flex items-start justify-between mb-6 p-5 bg-[#16161f] rounded-2xl border border-[#2a2a3a]">
+        <div className="flex items-center gap-4">
+          <div
+            className="w-14 h-14 rounded-xl flex items-center justify-center text-3xl shrink-0"
+            style={{ background: `${grade.color}18`, border: `2px solid ${grade.color}30` }}
+          >
             {chapter.emoji}
           </div>
           <div>
-            <h1 className="text-2xl font-black text-white">{chapter.title}</h1>
-            <p className="text-slate-400 text-sm">{grade.label} · {chapter.estimatedHours}h εκτιμώμενος χρόνος</p>
+            <h1 className="text-xl font-black text-white mb-0.5">{chapter.title}</h1>
+            <div className="flex items-center gap-3 text-xs text-slate-500">
+              <span style={{ color: grade.color }}>{grade.label}</span>
+              <span>·</span>
+              <span className="flex items-center gap-1"><Clock size={10} />{chapter.estimatedHours}h</span>
+              <span>·</span>
+              <span>{chapter.concepts.length} θέματα</span>
+            </div>
           </div>
         </div>
         <Link
           to={`/grade/${grade.id}`}
           aria-label="Πίσω στην τάξη"
-          className="p-3 rounded-xl text-slate-400 hover:text-white hover:bg-white/5 transition-colors"
+          className="p-2.5 rounded-xl text-slate-500 hover:text-white hover:bg-white/5 transition-colors shrink-0"
         >
-          <ArrowLeft size={20} />
+          <ArrowLeft size={18} />
         </Link>
       </div>
 
       {/* Tab navigation */}
       <div className="flex gap-1 p-1 bg-[#16161f] rounded-2xl border border-[#2a2a3a] mb-6 overflow-x-auto">
-        {TABS.map(tab => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-all ${
-              activeTab === tab.id
-                ? 'bg-violet-600 text-white shadow-lg'
-                : 'text-slate-400 hover:text-white hover:bg-white/5'
-            }`}
-          >
-            <tab.icon size={15} />
-            <span className="hidden sm:inline">{tab.label}</span>
-          </button>
-        ))}
+        {TABS.map(tab => {
+          const isActive = activeTab === tab.id
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-all ${
+                isActive ? 'text-white shadow-lg' : 'text-slate-500 hover:text-white hover:bg-white/5'
+              }`}
+              style={isActive ? { background: `${tab.color}30`, boxShadow: `0 0 16px ${tab.color}25` } : {}}
+            >
+              <tab.icon size={14} style={isActive ? { color: tab.color } : {}} />
+              <span className="hidden sm:inline">{tab.label}</span>
+            </button>
+          )
+        })}
       </div>
+
+      {/* Active tab indicator line */}
+      {activeTabData && (
+        <div className="h-0.5 mb-6 rounded-full transition-all duration-300" style={{ background: `linear-gradient(90deg, ${activeTabData.color}60, transparent)` }} />
+      )}
 
       {/* Tab content */}
       <AnimatePresence mode="wait">
         <motion.div
           key={activeTab}
-          initial={{ opacity: 0, y: 10 }}
+          initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -10 }}
-          transition={{ duration: 0.2 }}
+          exit={{ opacity: 0, y: -8 }}
+          transition={{ duration: 0.18, ease: 'easeOut' }}
         >
           {activeTab === 'theory' && (
             <TheoryTab
@@ -151,33 +168,16 @@ export default function ChapterPage() {
               onReload={reloadTheory}
             />
           )}
-
           {activeTab === 'exercises' && (
-            <ExerciseSystem
-              grade={grade}
-              chapter={chapter}
-              topic={selectedConcept}
-              onXPGained={(xp) => { addXP(xp); updateStreak() }}
-            />
+            <ExerciseSystem grade={grade} chapter={chapter} topic={selectedConcept} onXPGained={(xp) => { addXP(xp); updateStreak() }} />
           )}
-
           {activeTab === 'flashcards' && (
             <FlashcardDeck grade={grade} chapter={chapter} topic={selectedConcept} />
           )}
-
-          {activeTab === 'tutor' && (
-            <PythagorasTutor grade={grade} topic={selectedConcept} />
-          )}
-
-          {activeTab === 'panic' && (
-            <PanicMode chapter={chapter} topic={selectedConcept} />
-          )}
-
+          {activeTab === 'tutor' && <PythagorasTutor grade={grade} topic={selectedConcept} />}
+          {activeTab === 'panic' && <PanicMode chapter={chapter} topic={selectedConcept} />}
           {activeTab === 'photo' && <PhotoSolver />}
-
-          {activeTab === 'battle' && (
-            <StudyBattle grade={grade} chapter={chapter} />
-          )}
+          {activeTab === 'battle' && <StudyBattle grade={grade} chapter={chapter} />}
         </motion.div>
       </AnimatePresence>
     </div>
@@ -186,25 +186,22 @@ export default function ChapterPage() {
 
 function TheoryTab({ chapter, selectedConcept, setSelectedConcept, simplicity, setSimplicity, content, loading, onLoad, onReload }) {
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      {/* Left: Concept selector + controls */}
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+      {/* Left panel */}
       <div className="space-y-4">
-        {/* Concept list */}
         <div className="bg-[#16161f] rounded-2xl border border-[#2a2a3a] overflow-hidden">
-          <div className="px-4 py-3 border-b border-[#2a2a3a]">
-            <p className="text-sm font-medium text-slate-300">Θέματα κεφαλαίου</p>
+          <div className="px-4 py-3 border-b border-[#2a2a3a] flex items-center gap-2">
+            <BookOpen size={13} className="text-violet-400" />
+            <p className="text-sm font-semibold text-slate-300">Θέματα</p>
           </div>
           <div className="p-2 space-y-1">
             {chapter.concepts.map((concept) => (
               <button
                 key={concept}
-                onClick={() => {
-                  setSelectedConcept(concept)
-                  onLoad(concept)
-                }}
+                onClick={() => { setSelectedConcept(concept); onLoad(concept) }}
                 className={`w-full text-left px-3 py-2.5 rounded-xl text-sm transition-all ${
                   selectedConcept === concept
-                    ? 'bg-violet-600/20 border border-violet-500/30 text-violet-300'
+                    ? 'bg-violet-600/20 border border-violet-500/30 text-violet-300 font-medium'
                     : 'text-slate-400 hover:text-white hover:bg-white/5'
                 }`}
               >
@@ -214,35 +211,21 @@ function TheoryTab({ chapter, selectedConcept, setSelectedConcept, simplicity, s
           </div>
         </div>
 
-        {/* Simplicity slider */}
         <div className="bg-[#16161f] rounded-2xl border border-[#2a2a3a] p-4 space-y-3">
           <div className="flex items-center justify-between">
-            <p className="text-sm font-medium text-slate-300">Επίπεδο εξήγησης</p>
+            <p className="text-sm font-semibold text-slate-300">Επίπεδο εξήγησης</p>
             <Badge color="violet" size="xs">{SIMPLICITY_LABELS[simplicity]}</Badge>
           </div>
-          <Slider
-            value={simplicity}
-            onChange={setSimplicity}
-            min={0}
-            max={4}
-            labels={['10χρονο', 'Απλά', 'Κανονικά', 'Αναλυτικά', 'Ορολογία']}
-          />
-          <p className="text-[11px] text-slate-600">{SIMPLICITY_DESCRIPTIONS[simplicity]}</p>
+          <Slider value={simplicity} onChange={setSimplicity} min={0} max={4} labels={['10χρονο', 'Απλά', 'Κανονικά', 'Αναλυτικά', 'Ορολογία']} />
+          <p className="text-[11px] text-slate-600 leading-relaxed">{SIMPLICITY_DESCRIPTIONS[simplicity]}</p>
         </div>
 
-        {/* Load button */}
-        <Button
-          className="w-full"
-          onClick={() => onLoad(selectedConcept)}
-          loading={loading}
-          icon={!loading && <Sparkles size={16} />}
-          size="lg"
-        >
+        <Button className="w-full" onClick={() => onLoad(selectedConcept)} loading={loading} icon={!loading && <Sparkles size={16} />} size="lg">
           {content ? 'Ανανέωση' : `Εξήγησε: ${selectedConcept}`}
         </Button>
       </div>
 
-      {/* Right: Theory content */}
+      {/* Right panel */}
       <div className="lg:col-span-2 space-y-4">
         {!content && !loading && (
           <div className="flex flex-col items-center justify-center py-20 bg-[#16161f] rounded-2xl border border-dashed border-[#2a2a3a]">
@@ -264,34 +247,25 @@ function TheoryTab({ chapter, selectedConcept, setSelectedConcept, simplicity, s
                 <p className="text-xs text-slate-500 mt-0.5">{SIMPLICITY_LABELS[simplicity]}</p>
               </div>
               {content && (
-                <div className="flex gap-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={onReload}
-                    loading={loading}
-                    icon={!loading && <RefreshCw size={14} />}
-                    title="Δεν κατάλαβα — εξήγησε διαφορετικά"
-                  >
-                    <span className="hidden sm:inline text-xs">Δεν κατάλαβα</span>
-                  </Button>
-                </div>
+                <Button variant="ghost" size="sm" onClick={onReload} loading={loading} icon={!loading && <RefreshCw size={14} />} title="Εξήγησε διαφορετικά">
+                  <span className="hidden sm:inline text-xs">Δεν κατάλαβα</span>
+                </Button>
               )}
             </div>
-
             <AIResponse text={content} loading={loading} />
           </div>
         )}
 
         {content && !loading && (
-          <div className="p-4 bg-violet-500/5 border border-violet-500/20 rounded-2xl">
-            <p className="text-sm text-violet-300 font-medium mb-2">💡 Δεν κατάλαβες;</p>
-            <p className="text-xs text-slate-400 mb-3">
-              Κάνε κλικ στο «Δεν κατάλαβα» και το Axi AI θα εξηγήσει με εντελώς νέα παραδείγματα.
-            </p>
-            <Button variant="outline" size="sm" onClick={onReload} loading={loading} icon={<RefreshCw size={14} />}>
-              Δεν κατάλαβα — εξήγησε αλλιώς
-            </Button>
+          <div className="p-4 bg-violet-500/5 border border-violet-500/20 rounded-2xl flex items-start gap-3">
+            <Sparkles size={16} className="text-violet-400 shrink-0 mt-0.5" />
+            <div>
+              <p className="text-sm text-violet-300 font-semibold mb-1">Δεν κατάλαβες;</p>
+              <p className="text-xs text-slate-400 mb-3">Το Axi AI θα εξηγήσει με εντελώς νέα παραδείγματα.</p>
+              <Button variant="outline" size="sm" onClick={onReload} loading={loading} icon={<RefreshCw size={14} />}>
+                Εξήγησε αλλιώς
+              </Button>
+            </div>
           </div>
         )}
       </div>
