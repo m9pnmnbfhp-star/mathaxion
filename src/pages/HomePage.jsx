@@ -116,10 +116,11 @@ function HeroSection({ user, setAuthModal, navigate }) {
         className="font-display font-black leading-[0.9] tracking-tight mb-6 max-w-4xl"
         style={{ fontSize: 'clamp(2.8rem, 8.5vw, 6.5rem)' }}
       >
-        <span className="text-white">Τα μαθηματικά</span>
+        <span className="text-white">Λιγότερο από</span>
         <br />
-        <span className="text-gradient">επιτέλους</span>{' '}
-        <span className="text-white">κάνουν νόημα.</span>
+        <span className="text-gradient">έναν καφέ.</span>
+        <br />
+        <span className="text-white">Καλύτερο από φροντιστήριο.</span>
       </motion.h1>
 
       <motion.p
@@ -127,7 +128,7 @@ function HeroSection({ user, setAuthModal, navigate }) {
         className="text-lg sm:text-xl leading-relaxed mb-10 max-w-lg"
         style={{ color: 'var(--fg-2)' }}
       >
-        Λιγότερο από έναν καφέ. Καλύτερο από φροντιστήριο.
+        AI καθηγητής για Γυμνάσιο &amp; Λύκειο — πάντα διαθέσιμος.
       </motion.p>
 
       <motion.div
