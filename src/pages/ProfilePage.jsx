@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { Flame, Star, Trophy, Target, BookOpen, TrendingUp, Crown, Brain, User, Lightbulb, Zap, ChevronRight } from 'lucide-react'
+import { Flame, Star, Trophy, Target, BookOpen, TrendingUp, Crown, Brain, User, Lightbulb, Zap, ChevronRight, Share2 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { GRADES } from '../data/curriculum'
 import RadarChart from '../components/profile/RadarChart'
+import ShareCardModal from '../components/profile/ShareCard'
 import Button from '../components/ui/Button'
 import Card from '../components/ui/Card'
 import ProgressBar from '../components/ui/ProgressBar'
@@ -24,6 +25,7 @@ export default function ProfilePage() {
   const { user, profile, streak, xp, progress, wrongAnswers, isPro, setUpgradeModal } = useStore()
   const [adaptiveQuiz, setAdaptiveQuiz] = useState(null)
   const [quizLoading, setQuizLoading] = useState(false)
+  const [shareOpen, setShareOpen] = useState(false)
 
   if (!user) {
     return (
@@ -49,6 +51,25 @@ export default function ProfilePage() {
   const totalChapters = GRADES.reduce((acc, g) => acc + g.chapters.length, 0)
   const startedChapters = Object.keys(progress).length
   const masteredChapters = Object.values(progress).filter(p => (p.completedExercises || 0) >= 8).length
+
+  const overallMastery = (() => {
+    const allChapters = GRADES.flatMap(g => g.chapters.map(ch => {
+      const p = progress[`${g.id}/${ch.id}`]
+      return Math.min(100, (p?.completedExercises || 0) * 10)
+    }))
+    if (allChapters.length === 0) return 0
+    return Math.round(allChapters.reduce((a, b) => a + b, 0) / allChapters.length)
+  })()
+
+  const shareStats = {
+    name: displayName,
+    initial: displayName[0].toUpperCase(),
+    level,
+    xp,
+    streak: streak.current,
+    masteredChapters,
+    overallMastery,
+  }
 
   const weakConcepts = [...new Map(
     wrongAnswers.slice(0, 20).map(w => [w.concept, w])
@@ -169,6 +190,20 @@ export default function ProfilePage() {
       >
         <RadarChart progress={progress} />
       </motion.div>
+
+      {/* Share button */}
+      <motion.button
+        whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
+        onClick={() => setShareOpen(true)}
+        className="w-full py-3 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 cursor-pointer transition-colors"
+        style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: 'var(--fg-2)' }}
+        onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(124,58,237,0.3)'; e.currentTarget.style.color = 'white' }}
+        onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'; e.currentTarget.style.color = 'var(--fg-2)' }}
+      >
+        <Share2 size={15} />Μοιράσου την πρόοδό σου
+      </motion.button>
+
+      <ShareCardModal open={shareOpen} onClose={() => setShareOpen(false)} stats={shareStats} />
 
       {/* XP hint */}
       <p className="text-xs text-slate-600 flex items-start gap-1.5 -mt-1">
