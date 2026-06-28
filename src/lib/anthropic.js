@@ -1,29 +1,17 @@
 import { searchBookChunks } from './supabase'
 
-const ANTHROPIC_API_URL = 'https://api.anthropic.com/v1/messages'
-
 async function callAI(messages, systemPrompt, maxTokens = 1024) {
-  const res = await fetch(ANTHROPIC_API_URL, {
+  const res = await fetch('/api/ai', {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': import.meta.env.VITE_ANTHROPIC_API_KEY,
-      'anthropic-version': '2023-06-01',
-      'anthropic-dangerous-direct-browser-access': 'true',
-    },
-    body: JSON.stringify({
-      model: 'claude-sonnet-4-6',
-      max_tokens: maxTokens,
-      system: systemPrompt,
-      messages,
-    }),
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ messages, system: systemPrompt, max_tokens: maxTokens }),
   })
   if (!res.ok) {
     const err = await res.json().catch(() => ({}))
-    throw new Error(err.error?.message || `API error ${res.status}`)
+    throw new Error(err.error || `API error ${res.status}`)
   }
   const data = await res.json()
-  return data.content[0].text
+  return data.text
 }
 
 const BASE_SYSTEM = `Είσαι το Axi AI, ο έξυπνος βοηθός μαθηματικών της πλατφόρμας MathAxion.
