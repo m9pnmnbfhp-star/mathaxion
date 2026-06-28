@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import { logXP } from '../lib/supabase'
 
 const useStore = create(
   persist(
@@ -55,10 +56,17 @@ const useStore = create(
       // XP
       xp: 0,
       totalXP: 0,
-      addXP: (amount) => set((state) => ({
-        xp: state.xp + amount,
-        totalXP: state.totalXP + amount,
-      })),
+      addXP: (amount) => {
+        set((state) => ({
+          xp: state.xp + amount,
+          totalXP: state.totalXP + amount,
+        }))
+        // Fire-and-forget sync to Supabase for leaderboard
+        const userId = get().user?.id
+        if (userId) {
+          logXP(userId, amount, 'addXP').catch(() => {})
+        }
+      },
 
       canUseAI: () => get().isPro,
       useAIMessage: () => {},

@@ -140,6 +140,15 @@ export async function getLeaderboard(gradeId) {
   return { data, error }
 }
 
+export async function getGlobalLeaderboard() {
+  const { data, error } = await supabase
+    .from('leaderboard')
+    .select('*, profiles(display_name)')
+    .order('xp', { ascending: false })
+    .limit(50)
+  return { data, error }
+}
+
 export async function createBattle(challengerId, opponentId, gradeId, chapterId) {
   const { data, error } = await supabase
     .from('battles')
