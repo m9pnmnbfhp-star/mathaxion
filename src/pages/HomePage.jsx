@@ -1,119 +1,575 @@
-import { motion } from 'framer-motion'
-import { useNavigate } from 'react-router-dom'
-import { ArrowRight, Zap, Brain, Camera, Swords, Target, Flame, Crown, Sparkles, ChevronRight, BookOpen, Layers } from 'lucide-react'
+import { useState, useEffect, useRef } from 'react'
+import { useNavigate, Link } from 'react-router-dom'
+import { motion, useInView } from 'framer-motion'
+import {
+  ArrowRight, Sparkles, Zap, BookOpen, Pencil, Layers,
+  Bot, Camera, Swords, Crown, Flame, Star,
+  CheckCircle2, ChevronRight, GraduationCap
+} from 'lucide-react'
 import { GRADES } from '../data/curriculum'
-import Button from '../components/ui/Button'
-import Badge from '../components/ui/Badge'
 import useStore from '../store/useStore'
 
+const SPRING = { ease: [0.16, 1, 0.3, 1], duration: 0.55 }
+const FADE_UP = {
+  hidden: { opacity: 0, y: 24 },
+  visible: (i = 0) => ({ opacity: 1, y: 0, transition: { ...SPRING, delay: i * 0.08 } }),
+}
+
+function useCounter(target, duration = 1400, active = false) {
+  const [val, setVal] = useState(0)
+  useEffect(() => {
+    if (!active || target === 0) return
+    let cur = 0
+    const step = target / (duration / 16)
+    const id = setInterval(() => {
+      cur = Math.min(cur + step, target)
+      setVal(Math.floor(cur))
+      if (cur >= target) clearInterval(id)
+    }, 16)
+    return () => clearInterval(id)
+  }, [active, target, duration])
+  return val
+}
+
 export default function HomePage() {
+  const { user, setAuthModal, setUpgradeModal, isPro } = useStore()
   const navigate = useNavigate()
-  const { setSelectedGrade, setAuthModal, setUpgradeModal, user, isPro } = useStore()
-
-  const handleGradeSelect = (grade) => {
-    setSelectedGrade(grade)
-    navigate(`/grade/${grade.id}`)
-  }
-
-  const scrollToGrades = () => {
-    document.getElementById('grade-selector')?.scrollIntoView({ behavior: 'smooth' })
-  }
-
   return (
-    <div className="min-h-screen bg-[#0a0a0f]">
-      <HeroSection user={user} isPro={isPro} setAuthModal={setAuthModal} setUpgradeModal={setUpgradeModal} scrollToGrades={scrollToGrades} />
-      <GradeSection grades={GRADES} onSelect={handleGradeSelect} />
-      <FeaturesSection />
-      <PricingSection isPro={isPro} setUpgradeModal={setUpgradeModal} />
-      <Footer />
+    <div className="relative overflow-x-hidden">
+      {/* Ambient orbs */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden" style={{ zIndex: 0 }}>
+        <div className="blob blob-violet" style={{ width: 700, height: 700, top: -200, left: -200 }} />
+        <div className="blob blob-emerald" style={{ width: 500, height: 500, bottom: -100, right: -100 }} />
+        <div className="blob blob-amber" style={{ width: 400, height: 400, top: '40%', right: '20%' }} />
+        <div className="blob blob-rose" style={{ width: 350, height: 350, top: '70%', left: '10%' }} />
+      </div>
+      <div className="relative" style={{ zIndex: 1 }}>
+        <HeroSection user={user} setAuthModal={setAuthModal} navigate={navigate} />
+        <GradesSection user={user} setAuthModal={setAuthModal} navigate={navigate} />
+        <FeaturesSection />
+        <TestimonialsSection />
+        <PricingSection user={user} setAuthModal={setAuthModal} setUpgradeModal={setUpgradeModal} isPro={isPro} />
+        <CtaSection user={user} setAuthModal={setAuthModal} navigate={navigate} />
+        <Footer />
+      </div>
     </div>
   )
 }
 
-function HeroSection({ user, isPro, setAuthModal, setUpgradeModal, scrollToGrades }) {
+/* ─── HERO ────────────────────────────────────────────────────────── */
+function HeroSection({ user, setAuthModal, navigate }) {
+  const ref = useRef(null)
+  const inView = useInView(ref, { once: true, margin: '-100px' })
+  const students = useCounter(1400, 1600, inView)
+  const chapters = useCounter(44, 1200, inView)
+
   return (
-    <section className="relative min-h-[88vh] flex items-center overflow-hidden px-4 py-20">
-      {/* Background glows */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-1/4 left-1/5 w-[600px] h-[600px] bg-violet-600/15 rounded-full blur-[160px]" />
-        <div className="absolute top-1/3 right-1/5 w-[400px] h-[400px] bg-emerald-600/10 rounded-full blur-[130px]" />
-        <div className="absolute bottom-1/4 left-1/2 w-[300px] h-[300px] bg-amber-600/08 rounded-full blur-[110px]" />
-      </div>
-      <div className="absolute inset-0 bg-grid opacity-40 pointer-events-none" />
+    <section ref={ref} className="relative min-h-[92vh] flex flex-col items-center justify-center px-4 pt-8 pb-20 text-center overflow-hidden">
+      <div className="absolute inset-0 bg-grid opacity-60 pointer-events-none" />
 
-      <div className="max-w-5xl mx-auto w-full relative">
-        <motion.div
-          initial={{ opacity: 0, y: 40 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-          className="text-center"
+      <motion.div custom={0} variants={FADE_UP} initial="hidden" animate={inView ? 'visible' : 'hidden'} className="mb-8">
+        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-violet-300 text-sm font-medium backdrop-blur-sm"
+          style={{ background: 'rgba(124,58,237,0.1)', border: '1px solid rgba(124,58,237,0.2)' }}>
+          <span className="relative flex h-2 w-2">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-violet-400 opacity-75" />
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-violet-500" />
+          </span>
+          Η #1 πλατφόρμα μαθηματικών στην Ελλάδα
+        </div>
+      </motion.div>
+
+      <motion.h1
+        custom={1} variants={FADE_UP} initial="hidden" animate={inView ? 'visible' : 'hidden'}
+        className="font-display font-black leading-[0.88] tracking-tight mb-6 max-w-5xl"
+        style={{ fontSize: 'clamp(3rem, 9vw, 7rem)' }}
+      >
+        <span className="text-white">Κατέκτησε</span>{' '}
+        <span className="text-gradient">τα μαθηματικά</span>
+        <br />
+        <span className="text-white">με AI.</span>
+      </motion.h1>
+
+      <motion.p
+        custom={2} variants={FADE_UP} initial="hidden" animate={inView ? 'visible' : 'hidden'}
+        className="text-lg sm:text-xl leading-relaxed mb-10 max-w-lg"
+        style={{ color: 'var(--fg-2)' }}
+      >
+        Θεωρία προσαρμοσμένη στο επίπεδό σου, ασκήσεις AI, flashcards
+        και PvP battles — για Γυμνάσιο &amp; Λύκειο.
+      </motion.p>
+
+      <motion.div
+        custom={3} variants={FADE_UP} initial="hidden" animate={inView ? 'visible' : 'hidden'}
+        className="flex flex-col sm:flex-row items-center gap-3 mb-16"
+      >
+        <motion.button
+          whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
+          onClick={() => user ? navigate('/grade/a-gymnasiou') : setAuthModal(true, 'signup')}
+          className="group relative inline-flex items-center gap-2 px-8 py-4 rounded-2xl font-bold text-base text-white overflow-hidden cursor-pointer"
+          style={{ background: 'linear-gradient(135deg, #7c3aed, #6d28d9)', boxShadow: '0 0 30px rgba(124,58,237,0.4), 0 4px 24px rgba(0,0,0,0.4)' }}
         >
-          {/* Pill badge */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.1, duration: 0.5 }}
-            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-violet-500/10 border border-violet-500/25 text-violet-300 text-sm font-medium mb-8"
-          >
-            <Zap size={13} className="text-amber-400" />
-            AI-Powered · Γυμνάσιο & Λύκειο · Βασισμένο ΥΠΠΕΘ
-          </motion.div>
+          <span className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+            style={{ background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)' }} />
+          <span className="relative">Ξεκίνα δωρεάν</span>
+          <ArrowRight size={17} className="relative group-hover:translate-x-0.5 transition-transform duration-200" />
+        </motion.button>
 
-          {/* Main heading */}
-          <h1 className="text-5xl sm:text-7xl lg:text-[88px] font-black text-white mb-6 leading-[0.88] tracking-tight">
-            Level up<br />
-            <span className="text-gradient">τα μαθηματικά</span><br />
-            σου.
-          </h1>
+        <motion.button
+          whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
+          onClick={() => document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })}
+          className="inline-flex items-center gap-2 px-8 py-4 rounded-2xl font-medium text-base text-white/60 hover:text-white transition-all cursor-pointer"
+          style={{ border: '1px solid rgba(255,255,255,0.1)' }}
+        >
+          Δες πώς λειτουργεί
+        </motion.button>
+      </motion.div>
 
-          <p className="text-slate-300 text-lg sm:text-xl max-w-2xl mx-auto mb-10 leading-relaxed">
-            Το <strong className="text-violet-400 font-bold">Axi AI</strong> εξηγεί κάθε θέμα με τον τρόπο που εσύ καταλαβαίνεις.
-            Exercises, battles, photo solver —{' '}
-            <strong className="text-white">όλα στα Ελληνικά.</strong>
-          </p>
+      {/* Stats bar */}
+      <motion.div
+        custom={4} variants={FADE_UP} initial="hidden" animate={inView ? 'visible' : 'hidden'}
+        className="flex flex-wrap justify-center items-stretch divide-x rounded-2xl border overflow-hidden backdrop-blur-md"
+        style={{ background: 'rgba(16,16,24,0.7)', borderColor: 'rgba(255,255,255,0.07)', divideColor: 'rgba(255,255,255,0.07)' }}
+      >
+        {[
+          { val: `${students.toLocaleString('el')}+`, label: 'Μαθητές',    color: '#7c3aed' },
+          { val: '6',               label: 'Τάξεις',       color: '#10b981' },
+          { val: `${chapters}+`,    label: 'Κεφάλαια',     color: '#f59e0b' },
+          { val: '∞',               label: 'AI Ασκήσεις',  color: '#06b6d4' },
+          { val: '2€',              label: 'τον μήνα',     color: '#ec4899' },
+        ].map(({ val, label, color }, i) => (
+          <div key={i} className="flex flex-col items-center px-5 py-4 sm:px-8" style={{ borderColor: 'rgba(255,255,255,0.07)' }}>
+            <span className="text-2xl font-black font-display tabular-nums" style={{ color }}>{val}</span>
+            <span className="text-[11px] mt-0.5 font-medium" style={{ color: 'var(--fg-2)' }}>{label}</span>
+          </div>
+        ))}
+      </motion.div>
 
-          {/* CTAs */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-16">
-            <Button
-              size="xl"
-              onClick={() => !user ? setAuthModal(true, 'signup') : scrollToGrades()}
-              iconRight={<ArrowRight size={20} />}
-              className="glow-purple min-w-[220px]"
-            >
-              {user ? 'Επέλεξε τάξη' : 'Ξεκίνα δωρεάν'}
-            </Button>
-            {!isPro && (
-              <Button
-                variant="secondary"
-                size="xl"
-                onClick={() => setUpgradeModal(true)}
-                icon={<Crown size={18} />}
-                className="min-w-[220px]"
-              >
-                Pro — €2/μήνα
-              </Button>
-            )}
+      <motion.div
+        initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.4 }}
+        className="absolute bottom-6 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1.5"
+        style={{ color: 'var(--fg-3)' }}
+      >
+        <span className="text-[10px] tracking-widest uppercase font-medium">Scroll</span>
+        <div className="w-px h-8 bg-gradient-to-b from-white/20 to-transparent" />
+      </motion.div>
+    </section>
+  )
+}
+
+/* ─── GRADES ──────────────────────────────────────────────────────── */
+function GradesSection({ user, setAuthModal, navigate }) {
+  const ref = useRef(null)
+  const inView = useInView(ref, { once: true, margin: '-80px' })
+
+  return (
+    <section ref={ref} className="max-w-6xl mx-auto px-4 py-24">
+      <motion.div custom={0} variants={FADE_UP} initial="hidden" animate={inView ? 'visible' : 'hidden'} className="text-center mb-14">
+        <p className="text-sm font-bold tracking-widest text-violet-400 uppercase mb-3">Πρόγραμμα σπουδών</p>
+        <h2 className="font-display font-black text-4xl sm:text-5xl text-white mb-4">Διάλεξε την τάξη σου</h2>
+        <p className="text-lg max-w-lg mx-auto" style={{ color: 'var(--fg-2)' }}>
+          Από Α' Γυμνασίου έως Γ' Λυκείου — όλη η ύλη, οργανωμένη και αναλυτική.
+        </p>
+      </motion.div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {GRADES.map((grade, i) => (
+          <GradeCard key={grade.id} grade={grade} index={i} inView={inView}
+            user={user} setAuthModal={setAuthModal} navigate={navigate} />
+        ))}
+      </div>
+    </section>
+  )
+}
+
+function GradeCard({ grade, index, inView, user, setAuthModal, navigate }) {
+  const [hovered, setHovered] = useState(false)
+  const handleClick = () => {
+    if (!user) { setAuthModal(true, 'signup'); return }
+    navigate(`/grade/${grade.id}`)
+  }
+  return (
+    <motion.div custom={index + 1} variants={FADE_UP} initial="hidden" animate={inView ? 'visible' : 'hidden'}>
+      <motion.div
+        whileHover={{ y: -4 }} whileTap={{ scale: 0.98 }}
+        transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+        onHoverStart={() => setHovered(true)}
+        onHoverEnd={() => setHovered(false)}
+        onClick={handleClick}
+        className="relative group p-5 rounded-2xl border overflow-hidden cursor-pointer h-full"
+        style={{
+          background: '#16161f',
+          borderColor: hovered ? `${grade.color}35` : 'rgba(255,255,255,0.07)',
+          boxShadow: hovered ? `0 24px 60px rgba(0,0,0,0.5), 0 0 0 1px ${grade.color}18` : 'none',
+          transition: 'border-color 0.22s, box-shadow 0.22s',
+        }}
+      >
+        {/* Top color bar */}
+        <div className="absolute top-0 left-0 right-0 h-[2px] transition-opacity duration-300"
+          style={{ background: grade.color, opacity: hovered ? 1 : 0.35 }} />
+
+        {/* Hover glow */}
+        <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
+          style={{ background: `radial-gradient(ellipse at top left, ${grade.color}07, transparent 65%)` }} />
+
+        <div className="relative flex items-start gap-4">
+          <div className="shrink-0 flex flex-col items-center gap-1.5">
+            <div className="w-14 h-14 rounded-xl flex items-center justify-center text-3xl"
+              style={{ background: `${grade.color}12`, border: `1.5px solid ${grade.color}22` }}>
+              {grade.icon}
+            </div>
+            <span className="text-[9px] font-mono font-black tracking-widest" style={{ color: grade.color }}>
+              LVL {String(GRADES.indexOf(grade) + 1).padStart(2, '0')}
+            </span>
           </div>
 
-          {/* Stats row */}
-          <div className="flex items-center justify-center gap-8 sm:gap-14">
-            {[
-              { value: '6', label: 'Τάξεις', color: '#a855f7' },
-              { value: '40+', label: 'Κεφάλαια', color: '#10b981' },
-              { value: '∞', label: 'AI Ασκήσεις', color: '#f59e0b' },
-              { value: '€2', label: 'Μόνο/μήνα', color: '#ec4899' },
-            ].map(({ value, label, color }, i) => (
-              <motion.div
-                key={label}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4 + i * 0.08 }}
-                className="text-center"
-              >
-                <div className="text-3xl sm:text-4xl font-black leading-none mb-1" style={{ color }}>{value}</div>
-                <div className="text-xs text-slate-500 font-medium">{label}</div>
-              </motion.div>
-            ))}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-1 flex-wrap">
+              <h3 className="font-display font-bold text-white text-lg leading-tight">{grade.label}</h3>
+              {grade.isPanellinies && (
+                <span className="inline-flex items-center gap-1 text-[10px] font-bold text-red-400 px-1.5 py-0.5 rounded-full"
+                  style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)' }}>
+                  <Flame size={9} />Πανελλήνιες
+                </span>
+              )}
+            </div>
+            <p className="text-sm leading-relaxed mb-3" style={{ color: 'var(--fg-2)' }}>{grade.description}</p>
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-medium" style={{ color: 'var(--fg-3)' }}>
+                {grade.chapters.length} κεφάλαια
+              </span>
+              <span className="flex items-center gap-1 text-xs font-semibold transition-colors duration-200"
+                style={{ color: hovered ? grade.color : 'var(--fg-3)' }}>
+                Πήγαινε <ChevronRight size={13} />
+              </span>
+            </div>
+          </div>
+        </div>
+      </motion.div>
+    </motion.div>
+  )
+}
+
+/* ─── FEATURES ────────────────────────────────────────────────────── */
+const FEATURES = [
+  {
+    id: 'ai', icon: Bot, color: '#7c3aed', size: 'large',
+    title: 'AI Εξήγηση',
+    desc: 'Το Axi AI εξηγεί κάθε θέμα στο δικό σου επίπεδο — από «σαν 10χρονο» μέχρι πλήρη ορολογία. Απεριόριστες εξηγήσεις.',
+    preview: (
+      <div className="mt-4 space-y-2 text-left">
+        <div className="flex gap-2">
+          <div className="w-6 h-6 rounded-full flex items-center justify-center shrink-0" style={{ background: 'rgba(124,58,237,0.25)', border: '1px solid rgba(124,58,237,0.3)' }}>
+            <Bot size={11} className="text-violet-400" />
+          </div>
+          <div className="px-3 py-2 rounded-xl rounded-tl-sm text-xs text-slate-300 leading-relaxed max-w-xs" style={{ background: '#1c1c28', border: '1px solid rgba(255,255,255,0.07)' }}>
+            Η παράγωγος <span className="text-violet-300 font-medium">f'(x) = 2x</span> δείχνει τον ρυθμό αλλαγής. Φαντάσου ότι οδηγάς και μετράς επιτάχυνση...
+          </div>
+        </div>
+        <div className="flex justify-end">
+          <div className="px-3 py-2 rounded-xl rounded-tr-sm text-xs text-violet-200" style={{ background: 'rgba(124,58,237,0.18)', border: '1px solid rgba(124,58,237,0.2)' }}>
+            Εξήγησε με παράδειγμα
+          </div>
+        </div>
+        <div className="flex gap-2">
+          <div className="w-6 h-6 rounded-full flex items-center justify-center shrink-0" style={{ background: 'rgba(124,58,237,0.25)', border: '1px solid rgba(124,58,237,0.3)' }}>
+            <Bot size={11} className="text-violet-400" />
+          </div>
+          <div className="px-3 py-2 rounded-xl rounded-tl-sm text-xs text-slate-300" style={{ background: '#1c1c28', border: '1px solid rgba(255,255,255,0.07)' }}>
+            Αν <span className="text-emerald-400">x = ταχύτητα</span>, τότε <span className="text-violet-300">f'(x)</span> = επιτάχυνση!
+          </div>
+        </div>
+      </div>
+    ),
+  },
+  {
+    id: 'exercises', icon: Pencil, color: '#10b981', size: 'small',
+    title: 'Ασκήσεις AI',
+    desc: 'Απεριόριστες ασκήσεις παραγόμενες από AI, με step-by-step λύσεις και βαθμολόγηση.',
+    preview: (
+      <div className="mt-3 p-3 rounded-xl text-xs" style={{ background: '#1c1c28', border: '1px solid rgba(255,255,255,0.06)' }}>
+        <p className="text-slate-500 mb-2">Λύσε:</p>
+        <p className="text-white font-mono text-sm mb-2">3x² − 12 = 0</p>
+        <div className="flex gap-1 flex-wrap">
+          {['x = ±2', 'x = 4', 'x = ±4', 'x = 2'].map((opt, i) => (
+            <span key={i} className="px-2 py-1 rounded-lg text-[10px] font-medium"
+              style={i === 0
+                ? { border: '1px solid rgba(16,185,129,0.4)', background: 'rgba(16,185,129,0.1)', color: '#10b981' }
+                : { border: '1px solid rgba(255,255,255,0.07)', color: '#4a5568' }}>
+              {opt}
+            </span>
+          ))}
+        </div>
+      </div>
+    ),
+  },
+  {
+    id: 'flashcards', icon: Layers, color: '#3b82f6', size: 'small',
+    title: 'Flashcards',
+    desc: 'Spaced repetition — θυμάσαι περισσότερα σε λιγότερο χρόνο.',
+    preview: (
+      <div className="mt-3 relative h-16">
+        <div className="absolute inset-0 rounded-xl flex items-center justify-center"
+          style={{ transform: 'rotate(-2.5deg)', background: 'rgba(59,130,246,0.06)', border: '1px solid rgba(59,130,246,0.15)' }}>
+          <span className="text-xs text-blue-400 font-medium">Πυθαγόρειο Θεώρημα</span>
+        </div>
+        <div className="absolute inset-0 rounded-xl flex items-center justify-center"
+          style={{ background: 'rgba(59,130,246,0.09)', border: '1px solid rgba(59,130,246,0.2)' }}>
+          <span className="text-sm font-mono text-blue-300 font-bold">a² + b² = c²</span>
+        </div>
+      </div>
+    ),
+  },
+  {
+    id: 'battle', icon: Swords, color: '#ec4899', size: 'small',
+    title: 'Study Battle',
+    desc: 'Πρόκλεσε συμμαθητές σε real-time μαθηματικό 1v1.',
+    preview: (
+      <div className="mt-3 flex items-center justify-between p-3 rounded-xl" style={{ background: '#1c1c28', border: '1px solid rgba(236,72,153,0.12)' }}>
+        <div className="flex flex-col items-center gap-1">
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center text-sm" style={{ background: 'rgba(124,58,237,0.2)', border: '1px solid rgba(124,58,237,0.25)' }}>🎯</div>
+          <span className="text-[10px] text-slate-500">Εσύ</span>
+          <span className="text-sm font-black text-white">850</span>
+        </div>
+        <div className="flex flex-col items-center">
+          <Swords size={14} className="text-pink-400" />
+          <span className="text-[9px] text-pink-400 font-bold mt-0.5">VS</span>
+        </div>
+        <div className="flex flex-col items-center gap-1">
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center text-sm" style={{ background: 'rgba(16,185,129,0.2)', border: '1px solid rgba(16,185,129,0.25)' }}>⚡</div>
+          <span className="text-[10px] text-slate-500">Αντίπαλος</span>
+          <span className="text-sm font-black text-white">720</span>
+        </div>
+      </div>
+    ),
+  },
+  {
+    id: 'photo', icon: Camera, color: '#06b6d4', size: 'small',
+    title: 'Photo Solver',
+    desc: 'Φωτογράφισε άσκηση και λάβε αναλυτική λύση σε δευτερόλεπτα.',
+    preview: (
+      <div className="mt-3 flex items-center gap-2 p-3 rounded-xl" style={{ background: '#1c1c28', border: '1px solid rgba(6,182,212,0.12)' }}>
+        <Camera size={16} className="text-cyan-400 shrink-0" />
+        <div className="flex-1">
+          <div className="h-1.5 rounded-full mb-1.5" style={{ background: 'rgba(6,182,212,0.3)' }} />
+          <div className="h-1.5 rounded-full w-2/3" style={{ background: 'rgba(6,182,212,0.15)' }} />
+        </div>
+        <span className="text-[10px] text-cyan-400 font-bold">Ανάλυση...</span>
+      </div>
+    ),
+  },
+  {
+    id: 'panic', icon: Zap, color: '#ef4444', size: 'small',
+    title: 'Panic Mode',
+    desc: 'Εξεταστική αύριο; Τα 5 πιο κρίσιμα σημεία, σε 10 λεπτά.',
+    preview: (
+      <div className="mt-3 flex items-center gap-2 p-3 rounded-xl" style={{ background: '#1c1c28', border: '1px solid rgba(239,68,68,0.12)' }}>
+        <div className="w-6 h-6 rounded-lg flex items-center justify-center shrink-0" style={{ background: 'rgba(239,68,68,0.2)' }}>
+          <Zap size={11} className="text-red-400" />
+        </div>
+        <div>
+          <p className="text-[10px] text-red-300 font-bold">PANIC MODE</p>
+          <p className="text-[9px] text-slate-600">5 πιθανά θέματα εξετάσεων</p>
+        </div>
+      </div>
+    ),
+  },
+]
+
+function FeaturesSection() {
+  const ref = useRef(null)
+  const inView = useInView(ref, { once: true, margin: '-60px' })
+  const large = FEATURES.find(f => f.size === 'large')
+  const small = FEATURES.filter(f => f.size === 'small')
+
+  return (
+    <section id="features" ref={ref} className="max-w-6xl mx-auto px-4 py-24">
+      <motion.div custom={0} variants={FADE_UP} initial="hidden" animate={inView ? 'visible' : 'hidden'} className="text-center mb-14">
+        <p className="text-sm font-bold tracking-widest text-emerald-400 uppercase mb-3">Λειτουργίες</p>
+        <h2 className="font-display font-black text-4xl sm:text-5xl text-white mb-4">Ό,τι χρειάζεσαι σε ένα μέρος</h2>
+        <p className="text-lg max-w-md mx-auto" style={{ color: 'var(--fg-2)' }}>
+          Μελέτη, εξάσκηση, επανάληψη — όλα powered by AI.
+        </p>
+      </motion.div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <motion.div className="lg:col-span-2" custom={1} variants={FADE_UP} initial="hidden" animate={inView ? 'visible' : 'hidden'}>
+          <FeatureCard feature={large} />
+        </motion.div>
+        {small.map((f, i) => (
+          <motion.div key={f.id} custom={i + 2} variants={FADE_UP} initial="hidden" animate={inView ? 'visible' : 'hidden'}>
+            <FeatureCard feature={f} />
+          </motion.div>
+        ))}
+      </div>
+    </section>
+  )
+}
+
+function FeatureCard({ feature: f }) {
+  const [hovered, setHovered] = useState(false)
+  return (
+    <motion.div
+      whileHover={{ y: -3 }} transition={{ duration: 0.2, ease: [0.16,1,0.3,1] }}
+      onHoverStart={() => setHovered(true)}
+      onHoverEnd={() => setHovered(false)}
+      className="relative group p-5 rounded-2xl border overflow-hidden h-full"
+      style={{
+        background: '#16161f',
+        borderColor: hovered ? `${f.color}30` : 'rgba(255,255,255,0.07)',
+        boxShadow: hovered ? `0 20px 50px rgba(0,0,0,0.5), 0 0 0 1px ${f.color}15` : 'none',
+        transition: 'border-color 0.2s, box-shadow 0.2s',
+      }}
+    >
+      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
+        style={{ background: `radial-gradient(ellipse at top left, ${f.color}07, transparent 60%)` }} />
+      <div className="relative">
+        <div className="inline-flex items-center justify-center w-10 h-10 rounded-xl mb-3"
+          style={{ background: `${f.color}14`, border: `1px solid ${f.color}22` }}>
+          <f.icon size={18} style={{ color: f.color }} />
+        </div>
+        <h3 className="font-display font-bold text-white text-lg mb-1.5">{f.title}</h3>
+        <p className="text-sm leading-relaxed" style={{ color: 'var(--fg-2)' }}>{f.desc}</p>
+        {f.preview}
+      </div>
+    </motion.div>
+  )
+}
+
+/* ─── TESTIMONIALS ────────────────────────────────────────────────── */
+const TESTIMONIALS = [
+  {
+    name: 'Αλέξανδρος Π.', grade: 'Γ\' Λυκείου', avatar: 'Α', color: '#7c3aed',
+    text: 'Πέρυσι κόπηκα στα Μαθηματικά. Φέτος με το MathAxion πήρα 18.5. Το AI εξηγεί με τρόπο που καταλαβαίνω απόλυτα.',
+    stars: 5,
+  },
+  {
+    name: 'Μαρία Κ.', grade: 'Β\' Γυμνασίου', avatar: 'Μ', color: '#10b981',
+    text: 'Τα Study Battles με κάνουν να θέλω να μελετάω κάθε μέρα! Είναι σαν παιχνίδι αλλά μαθαίνεις πραγματικά.',
+    stars: 5,
+  },
+  {
+    name: 'Δημήτρης Σ.', grade: 'Α\' Λυκείου', avatar: 'Δ', color: '#f59e0b',
+    text: 'Ο Photo Solver είναι απίστευτος — φωτογραφίζω την άσκηση από το βιβλίο και παίρνω αναλυτική λύση.',
+    stars: 5,
+  },
+]
+
+function TestimonialsSection() {
+  const ref = useRef(null)
+  const inView = useInView(ref, { once: true, margin: '-60px' })
+  return (
+    <section ref={ref} className="max-w-6xl mx-auto px-4 py-20">
+      <motion.div custom={0} variants={FADE_UP} initial="hidden" animate={inView ? 'visible' : 'hidden'} className="text-center mb-12">
+        <p className="text-sm font-bold tracking-widest text-amber-400 uppercase mb-3">Τι λένε οι μαθητές</p>
+        <h2 className="font-display font-black text-4xl sm:text-5xl text-white">Αληθινά αποτελέσματα</h2>
+      </motion.div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {TESTIMONIALS.map((t, i) => (
+          <motion.div key={i} custom={i + 1} variants={FADE_UP} initial="hidden" animate={inView ? 'visible' : 'hidden'}>
+            <div className="p-5 rounded-2xl border border-white/[0.07] h-full" style={{ background: '#16161f' }}>
+              <div className="flex gap-0.5 mb-3">
+                {Array(t.stars).fill(0).map((_, s) => <Star key={s} size={12} fill="#f59e0b" stroke="none" />)}
+              </div>
+              <p className="text-sm leading-relaxed mb-5" style={{ color: 'var(--fg-2)' }}>"{t.text}"</p>
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl flex items-center justify-center text-sm font-black"
+                  style={{ background: `${t.color}15`, color: t.color }}>
+                  {t.avatar}
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-white">{t.name}</p>
+                  <p className="text-[11px]" style={{ color: 'var(--fg-3)' }}>{t.grade}</p>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        ))}
+      </div>
+    </section>
+  )
+}
+
+/* ─── PRICING ─────────────────────────────────────────────────────── */
+const FREE_FEATURES = ['Θεωρία AI (3/μέρα)', 'Ασκήσεις (5/μέρα)', 'Flashcards', 'Πρόοδος & XP']
+const PRO_FEATURES  = ['Θεωρία AI Απεριόριστη', 'Ασκήσεις Απεριόριστες', 'Flashcards', 'Axi AI Tutor', 'Study Battles', 'Photo Solver', 'Panic Mode', 'Adaptive Quiz', 'Leaderboard']
+
+function PricingSection({ user, setAuthModal, setUpgradeModal, isPro }) {
+  const ref = useRef(null)
+  const inView = useInView(ref, { once: true, margin: '-60px' })
+  return (
+    <section ref={ref} className="max-w-4xl mx-auto px-4 py-24">
+      <motion.div custom={0} variants={FADE_UP} initial="hidden" animate={inView ? 'visible' : 'hidden'} className="text-center mb-14">
+        <p className="text-sm font-bold tracking-widest text-pink-400 uppercase mb-3">Τιμολόγηση</p>
+        <h2 className="font-display font-black text-4xl sm:text-5xl text-white mb-4">Απλό και δίκαιο</h2>
+        <p className="text-lg max-w-sm mx-auto" style={{ color: 'var(--fg-2)' }}>Ξεκίνα δωρεάν. Αναβάθμισε όταν είσαι έτοιμος.</p>
+      </motion.div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+        {/* Free */}
+        <motion.div custom={1} variants={FADE_UP} initial="hidden" animate={inView ? 'visible' : 'hidden'}>
+          <div className="p-6 rounded-2xl border border-white/[0.07] h-full" style={{ background: '#16161f' }}>
+            <p className="text-xs font-bold tracking-wider text-slate-500 uppercase mb-3">Δωρεάν</p>
+            <div className="flex items-end gap-1 mb-1">
+              <span className="text-5xl font-black font-display text-white">0€</span>
+            </div>
+            <p className="text-sm mb-6" style={{ color: 'var(--fg-2)' }}>για πάντα</p>
+            <ul className="space-y-2.5 mb-6">
+              {FREE_FEATURES.map(feat => (
+                <li key={feat} className="flex items-center gap-2.5 text-sm" style={{ color: '#8892a4' }}>
+                  <CheckCircle2 size={14} className="text-slate-600 shrink-0" />{feat}
+                </li>
+              ))}
+            </ul>
+            <button
+              onClick={() => !user && setAuthModal(true, 'signup')}
+              className="w-full py-3 rounded-xl text-sm font-bold text-white/60 hover:text-white transition-colors cursor-pointer"
+              style={{ border: '1px solid rgba(255,255,255,0.1)' }}
+            >
+              Ξεκίνα τώρα
+            </button>
+          </div>
+        </motion.div>
+
+        {/* Pro */}
+        <motion.div custom={2} variants={FADE_UP} initial="hidden" animate={inView ? 'visible' : 'hidden'}>
+          <div className="relative p-6 rounded-2xl h-full overflow-hidden"
+            style={{
+              background: 'linear-gradient(145deg, #1a1428, #16161f)',
+              border: '1px solid rgba(124,58,237,0.3)',
+              boxShadow: '0 0 50px rgba(124,58,237,0.1), inset 0 1px 0 rgba(255,255,255,0.04)',
+            }}>
+            <div className="absolute top-0 left-8 right-8 h-px"
+              style={{ background: 'linear-gradient(90deg, transparent, rgba(124,58,237,0.8), transparent)' }} />
+            <div className="absolute top-4 right-4">
+              <span className="inline-flex items-center gap-1 text-[10px] font-black text-amber-300 px-2 py-1 rounded-full"
+                style={{ background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.2)' }}>
+                <Crown size={10} />ΔΗΜΟΦΙΛΕΣ
+              </span>
+            </div>
+
+            <p className="text-xs font-bold tracking-wider text-violet-400 uppercase mb-3">Pro</p>
+            <div className="flex items-end gap-1 mb-1">
+              <span className="text-5xl font-black font-display text-white">2€</span>
+              <span className="text-base mb-2" style={{ color: 'var(--fg-2)' }}>/μήνα</span>
+            </div>
+            <p className="text-sm text-violet-400 mb-6">Ακύρωση ανά πάσα στιγμή</p>
+
+            <ul className="space-y-2.5 mb-6">
+              {PRO_FEATURES.map(feat => (
+                <li key={feat} className="flex items-center gap-2.5 text-sm text-slate-200">
+                  <CheckCircle2 size={14} className="text-violet-400 shrink-0" />{feat}
+                </li>
+              ))}
+            </ul>
+
+            <motion.button
+              whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
+              onClick={() => user ? setUpgradeModal(true) : setAuthModal(true, 'signup')}
+              className="w-full py-3 rounded-xl font-bold text-sm text-white cursor-pointer"
+              style={{ background: 'linear-gradient(135deg, #7c3aed, #6d28d9)', boxShadow: '0 0 20px rgba(124,58,237,0.4)' }}
+            >
+              {isPro ? '✓ Ήδη Pro' : 'Αναβάθμιση σε Pro'}
+            </motion.button>
           </div>
         </motion.div>
       </div>
@@ -121,223 +577,61 @@ function HeroSection({ user, isPro, setAuthModal, setUpgradeModal, scrollToGrade
   )
 }
 
-function SectionDivider({ icon: Icon, label }) {
+/* ─── CTA ─────────────────────────────────────────────────────────── */
+function CtaSection({ user, setAuthModal, navigate }) {
+  const ref = useRef(null)
+  const inView = useInView(ref, { once: true, margin: '-60px' })
   return (
-    <div className="flex items-center gap-4 mb-10">
-      <div className="h-px flex-1 bg-gradient-to-r from-transparent via-[#2a2a3a] to-[#2a2a3a]" />
-      <div className="flex items-center gap-2 text-xs font-bold text-slate-500 tracking-[0.15em] uppercase shrink-0">
-        <Icon size={13} />
-        {label}
-      </div>
-      <div className="h-px flex-1 bg-gradient-to-l from-transparent via-[#2a2a3a] to-[#2a2a3a]" />
-    </div>
-  )
-}
+    <section ref={ref} className="max-w-6xl mx-auto px-4 pb-24">
+      <motion.div
+        custom={0} variants={FADE_UP} initial="hidden" animate={inView ? 'visible' : 'hidden'}
+        className="relative overflow-hidden rounded-3xl p-12 sm:p-16 text-center"
+        style={{
+          background: 'linear-gradient(135deg, rgba(124,58,237,0.14) 0%, #16161f 50%, rgba(16,185,129,0.07) 100%)',
+          border: '1px solid rgba(124,58,237,0.22)',
+          boxShadow: '0 0 80px rgba(124,58,237,0.07)',
+        }}
+      >
+        <div className="absolute top-0 left-1/4 right-1/4 h-px"
+          style={{ background: 'linear-gradient(90deg, transparent, rgba(124,58,237,0.7), transparent)' }} />
 
-function GradeSection({ grades, onSelect }) {
-  return (
-    <section id="grade-selector" className="px-4 py-16">
-      <div className="max-w-5xl mx-auto">
-        <SectionDivider icon={Target} label="Επέλεξε τάξη" />
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {grades.map((grade, i) => (
-            <GradeCard key={grade.id} grade={grade} index={i} onClick={() => onSelect(grade)} />
-          ))}
+        <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-6"
+          style={{ background: 'rgba(124,58,237,0.12)', border: '1px solid rgba(124,58,237,0.25)' }}>
+          <GraduationCap size={28} className="text-violet-400" />
         </div>
-      </div>
-    </section>
-  )
-}
-
-function GradeCard({ grade, index, onClick }) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 24 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.05 * index, ease: [0.16, 1, 0.3, 1] }}
-      whileHover={{ y: -6 }}
-      whileTap={{ scale: 0.97 }}
-      onClick={onClick}
-      className="relative group cursor-pointer rounded-2xl overflow-hidden"
-    >
-      {/* Gradient border wrapper */}
-      <div
-        className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-        style={{ background: `linear-gradient(135deg, ${grade.color}40, transparent 60%)` }}
-      />
-      <div className="absolute inset-[1px] rounded-[15px] bg-[#16161f]" />
-
-      {/* Top color strip */}
-      <div className="absolute top-0 left-0 right-0 h-[2px] rounded-t-2xl" style={{ background: grade.color }} />
-
-      <div className="relative p-5">
-        {/* Level label + badges */}
-        <div className="flex items-center justify-between mb-4">
-          <span className="text-[11px] font-mono font-bold tracking-[0.12em] uppercase" style={{ color: `${grade.color}99` }}>
-            Lvl {String(index + 1).padStart(2, '0')}
-          </span>
-          <div className="flex gap-1 items-center">
-            {grade.isPanellinies && (
-              <Badge color="red" size="xs"><Flame size={10} />Πανελλήνιες</Badge>
-            )}
-            <Badge color="slate" size="xs">{grade.level === 'gymnasio' ? 'Γυμνάσιο' : 'Λύκειο'}</Badge>
-          </div>
-        </div>
-
-        {/* Icon */}
-        <div
-          className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl mb-4 transition-transform duration-300 group-hover:scale-110"
-          style={{ background: `${grade.color}18`, border: `1px solid ${grade.color}35` }}
+        <h2 className="font-display font-black text-4xl sm:text-5xl text-white mb-4">
+          Έτοιμος να ξεκινήσεις;
+        </h2>
+        <p className="text-lg mb-8 max-w-sm mx-auto" style={{ color: 'var(--fg-2)' }}>
+          Εγγραφή δωρεάν. Χωρίς πιστωτική κάρτα.
+        </p>
+        <motion.button
+          whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}
+          onClick={() => user ? navigate('/grade/a-gymnasiou') : setAuthModal(true, 'signup')}
+          className="inline-flex items-center gap-2 px-10 py-4 rounded-2xl font-bold text-white text-lg cursor-pointer"
+          style={{ background: 'linear-gradient(135deg, #7c3aed, #6d28d9)', boxShadow: '0 0 40px rgba(124,58,237,0.5), 0 4px 24px rgba(0,0,0,0.4)' }}
         >
-          {grade.icon}
-        </div>
-
-        {/* Content */}
-        <h3 className="font-black text-white text-lg mb-1 group-hover:text-violet-100 transition-colors">{grade.label}</h3>
-        <p className="text-slate-400 text-xs mb-4 leading-relaxed">{grade.description}</p>
-
-        {/* Footer */}
-        <div className="flex items-center justify-between">
-          <div className="flex gap-1.5 flex-wrap">
-            {grade.chapters.slice(0, 2).map(c => (
-              <span key={c.id} className="text-xs px-2 py-0.5 rounded-full bg-[#1c1c28] border border-[#2a2a3a] text-slate-500">
-                {c.emoji} {c.title}
-              </span>
-            ))}
-            {grade.chapters.length > 2 && (
-              <span className="text-xs px-2 py-0.5 rounded-full bg-[#1c1c28] border border-[#2a2a3a] text-slate-600">
-                +{grade.chapters.length - 2}
-              </span>
-            )}
-          </div>
-          <ChevronRight size={16} className="shrink-0 ml-2 transition-all duration-300 group-hover:translate-x-1" style={{ color: grade.color }} />
-        </div>
-      </div>
-    </motion.div>
-  )
-}
-
-const BENTO_FEATURES = [
-  {
-    icon: Brain, label: 'Axi AI Εξηγήσεις', color: '#7c3aed', span: 'lg:col-span-2',
-    desc: 'Simplicity slider — από «σαν 10χρονο» μέχρι πλήρη ορολογία. Το AI προσαρμόζεται σε σένα.',
-    extra: ['Απλά', 'Κανονικά', 'Αναλυτικά', 'Ορολογία'],
-  },
-  { icon: Target, label: 'Adaptive Exercises', color: '#10b981', desc: '4 επίπεδα δυσκολίας — δεν σε προχωράει πριν κατακτήσεις το τρέχον.' },
-  { icon: Zap, label: 'Panic Mode', color: '#ef4444', desc: '5 κρίσιμα, 3 φόρμουλες, 2 λάθη — για λεπτό πριν το τεστ.' },
-  { icon: Camera, label: 'Photo Solver', color: '#3b82f6', desc: 'Φωτογράφησε άσκηση, πάρε λύση βήμα-βήμα.' },
-  { icon: Swords, label: 'Study Battles', color: '#ec4899', desc: 'Quiz duels με συμμαθητές σε real-time.' },
-  { icon: Flame, label: 'Streak System', color: '#f59e0b', desc: 'Καθημερινές προκλήσεις, leaderboard, XP.' },
-]
-
-function FeaturesSection() {
-  return (
-    <section className="px-4 py-16">
-      <div className="max-w-5xl mx-auto">
-        <SectionDivider icon={Sparkles} label="Features" />
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {BENTO_FEATURES.map(({ icon: Icon, label, color, desc, span, extra }, i) => (
-            <motion.div
-              key={label}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.07 * i, ease: [0.16, 1, 0.3, 1] }}
-              className={`group relative p-6 bg-[#16161f] rounded-2xl border border-[#2a2a3a] overflow-hidden ${span || ''}`}
-            >
-              {/* Hover glow */}
-              <div
-                className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-                style={{ background: `radial-gradient(ellipse at top left, ${color}0c 0%, transparent 65%)` }}
-              />
-              <div className="relative">
-                <div
-                  className="w-11 h-11 rounded-xl flex items-center justify-center mb-4 transition-transform duration-300 group-hover:scale-110"
-                  style={{ background: `${color}18`, border: `1px solid ${color}35` }}
-                >
-                  <Icon size={20} style={{ color }} />
-                </div>
-                <h3 className="font-black text-white text-lg mb-2">{label}</h3>
-                <p className="text-slate-400 text-sm leading-relaxed">{desc}</p>
-                {extra && (
-                  <div className="flex gap-2 mt-4 flex-wrap">
-                    {extra.map(tag => (
-                      <span key={tag} className="text-xs px-2.5 py-1 rounded-lg font-medium" style={{ background: `${color}15`, color: `${color}cc`, border: `1px solid ${color}25` }}>
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </motion.div>
-          ))}
-        </div>
-      </div>
+          <Sparkles size={20} />
+          Ξεκίνα τώρα — δωρεάν
+        </motion.button>
+      </motion.div>
     </section>
   )
 }
 
-function PricingSection({ isPro, setUpgradeModal }) {
-  return (
-    <section className="px-4 py-16">
-      <div className="max-w-md mx-auto">
-        <SectionDivider icon={Crown} label="Pricing" />
-
-        {/* Glow border card */}
-        <div className="relative">
-          <div className="absolute -inset-px rounded-2xl bg-gradient-to-b from-violet-500/40 via-violet-500/10 to-amber-500/20" />
-          <div className="relative p-8 bg-[#16161f] rounded-2xl space-y-5">
-            <div className="text-center">
-              <Badge color="violet" size="md" dot>Pro · Πλήρης πρόσβαση</Badge>
-            </div>
-            <div className="text-center">
-              <div className="flex items-end justify-center gap-1 mb-1">
-                <span className="text-6xl font-black text-white leading-none">€2</span>
-                <span className="text-slate-400 text-lg mb-1">/μήνα</span>
-              </div>
-              <p className="text-xs text-slate-500">Ακύρωση οποιαδήποτε στιγμή</p>
-            </div>
-
-            <ul className="space-y-3 text-sm text-slate-300">
-              {[
-                ['Απεριόριστο Axi AI', '#7c3aed'],
-                ['Όλα τα επίπεδα ασκήσεων (1-4)', '#10b981'],
-                ['Photo Solver', '#3b82f6'],
-                ['Study Battles & Leaderboard', '#ec4899'],
-                ['Πανελλήνιες Simulator', '#ef4444'],
-                ['Adaptive Quiz', '#f59e0b'],
-              ].map(([f, c]) => (
-                <li key={f} className="flex items-center gap-3">
-                  <span className="w-4 h-4 rounded-full flex items-center justify-center shrink-0 text-[10px] font-black" style={{ background: `${c}25`, color: c }}>✓</span>
-                  {f}
-                </li>
-              ))}
-            </ul>
-
-            {isPro ? (
-              <Button variant="secondary" size="lg" className="w-full" disabled icon={<Crown size={16} />}>
-                Είσαι ήδη Pro ✓
-              </Button>
-            ) : (
-              <Button variant="gold" size="lg" className="w-full glow-gold" onClick={() => setUpgradeModal(true)} icon={<Crown size={18} />}>
-                Αναβάθμιση — €2/μήνα
-              </Button>
-            )}
-
-            <p className="text-center text-xs text-slate-600">Ασφαλής πληρωμή μέσω Stripe</p>
-          </div>
-        </div>
-      </div>
-    </section>
-  )
-}
-
+/* ─── FOOTER ──────────────────────────────────────────────────────── */
 function Footer() {
   return (
-    <footer className="border-t border-[#2a2a3a] px-4 py-8 mt-8">
-      <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-        <img src="/logo.png" alt="MathAxion" className="h-10 w-auto" />
-        <p className="text-slate-600 text-sm text-center">Powered by Claude AI · Βασισμένο στα βιβλία ΥΠΠΕΘ</p>
-        <p className="text-slate-600 text-xs">© 2026 MathAxion</p>
+    <footer className="px-4 py-10" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+      <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+        <img src="/logo.png" alt="MathAxion" className="h-8 w-auto" />
+        <p className="text-sm" style={{ color: 'var(--fg-3)' }}>
+          © {new Date().getFullYear()} MathAxion · Μαθηματικά για όλους
+        </p>
+        <div className="flex items-center gap-5 text-sm" style={{ color: 'var(--fg-3)' }}>
+          <Link to="/panellinies" className="hover:text-white transition-colors">Πανελλήνιες</Link>
+          <a href="mailto:support@mathaxion.com" className="hover:text-white transition-colors">Επικοινωνία</a>
+        </div>
       </div>
     </footer>
   )
