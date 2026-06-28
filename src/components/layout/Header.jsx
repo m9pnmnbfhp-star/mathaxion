@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Flame, Star, User, Settings, LogOut, Crown, ChevronDown, Menu, X } from 'lucide-react'
+import { Flame, Star, User, Settings, LogOut, Crown, ChevronDown, Menu, X, Trophy } from 'lucide-react'
 import useStore from '../../store/useStore'
 import { signOut } from '../../lib/supabase'
 import toast from 'react-hot-toast'
@@ -47,6 +47,7 @@ export default function Header() {
             { href: '/grade/a-gymnasiou', label: 'Γυμνάσιο' },
             { href: '/grade/a-lykeiou', label: 'Λύκειο' },
             { href: '/panellinies', label: 'Πανελλήνιες' },
+            { href: '/leaderboard', label: 'Leaderboard' },
           ].map(({ href, label }) => (
             <Link
               key={href}
@@ -240,6 +241,7 @@ export default function Header() {
                 { href: '/grade/a-gymnasiou', label: 'Γυμνάσιο' },
                 { href: '/grade/a-lykeiou', label: 'Λύκειο' },
                 { href: '/panellinies', label: 'Πανελλήνιες' },
+                { href: '/leaderboard', label: 'Leaderboard' },
                 { href: '/profile', label: 'Προφίλ' },
               ].map(({ href, label }) => (
                 <Link key={href} to={href} onClick={() => setMobileOpen(false)}

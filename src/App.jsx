@@ -12,6 +12,7 @@ import ChapterPage from './pages/ChapterPage'
 import ProfilePage from './pages/ProfilePage'
 import SettingsPage from './pages/SettingsPage'
 import PanelliniesPage from './pages/PanelliniesPage'
+import LeaderboardPage from './pages/LeaderboardPage'
 
 export default function App() {
   const { setUser, setProfile, setAuthModal } = useStore()
@@ -55,6 +56,7 @@ export default function App() {
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/settings" element={<SettingsPage />} />
             <Route path="/panellinies" element={<PanelliniesPage />} />
+            <Route path="/leaderboard" element={<LeaderboardPage />} />
             <Route path="/auth/callback" element={<AuthCallback />} />
           </Routes>
         </main>
