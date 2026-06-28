@@ -5,13 +5,11 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' })
   }
 
-  // Verify auth token
   const token = req.headers.authorization?.replace('Bearer ', '')
   if (!token) {
     return res.status(401).json({ error: 'Unauthorized' })
   }
 
-  // Create client with user's token so RLS sees them as authenticated
   const supabase = createClient(
     process.env.VITE_SUPABASE_URL,
     process.env.VITE_SUPABASE_ANON_KEY,
@@ -23,7 +21,6 @@ export default async function handler(req, res) {
     return res.status(401).json({ error: 'Invalid token' })
   }
 
-  // Verify Pro subscription server-side
   const { data: profile } = await supabase
     .from('profiles')
     .select('subscription')
@@ -34,31 +31,61 @@ export default async function handler(req, res) {
     return res.status(403).json({ error: 'Pro subscription required' })
   }
 
-  const { messages, system, max_tokens = 1200 } = req.body
+  const { messages, system, max_tokens = 1200, stream = false } = req.body
   if (!messages || !system) {
     return res.status(400).json({ error: 'Missing messages or system' })
   }
 
-  const response = await fetch('https://api.anthropic.com/v1/messages', {
+  const anthropicRes = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       'x-api-key': process.env.ANTHROPIC_API_KEY,
       'anthropic-version': '2023-06-01',
     },
-    body: JSON.stringify({
-      model: 'claude-sonnet-4-6',
-      max_tokens,
-      system,
-      messages,
-    }),
+    body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens, system, messages, stream }),
   })
 
-  if (!response.ok) {
-    const err = await response.json().catch(() => ({}))
-    return res.status(response.status).json({ error: err.error?.message || 'AI error' })
+  if (!anthropicRes.ok) {
+    const err = await anthropicRes.json().catch(() => ({}))
+    return res.status(anthropicRes.status).json({ error: err.error?.message || 'AI error' })
   }
 
-  const data = await response.json()
+  if (stream) {
+    res.writeHead(200, {
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-cache',
+      'Connection': 'keep-alive',
+    })
+
+    const reader = anthropicRes.body.getReader()
+    const decoder = new TextDecoder()
+    let buffer = ''
+
+    while (true) {
+      const { done, value } = await reader.read()
+      if (done) break
+      buffer += decoder.decode(value, { stream: true })
+      const lines = buffer.split('\n')
+      buffer = lines.pop() ?? ''
+      for (const line of lines) {
+        if (line.startsWith('data: ')) {
+          const data = line.slice(6).trim()
+          if (data === '[DONE]') continue
+          try {
+            const parsed = JSON.parse(data)
+            if (parsed.type === 'content_block_delta' && parsed.delta?.type === 'text_delta') {
+              res.write(`data: ${JSON.stringify(parsed.delta.text)}\n\n`)
+            }
+          } catch {}
+        }
+      }
+    }
+    res.write('data: [DONE]\n\n')
+    res.end()
+    return
+  }
+
+  const data = await anthropicRes.json()
   return res.status(200).json({ text: data.content[0].text })
 }

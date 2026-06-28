@@ -57,13 +57,14 @@ export default function ChapterPage() {
     setTheoryLoading(true)
     setTheoryContent(null)
     try {
-      const result = await explainTheory(concept, grade, simplicity, chapter.title)
-      setTheoryContent(result)
+      await explainTheory(concept, grade, simplicity, chapter.title, (text) => {
+        setTheoryContent(text)
+        setTheoryLoading(false)
+      })
       addXP(5)
       updateStreak()
     } catch {
       toast.error('Σφάλμα φόρτωσης θεωρίας')
-    } finally {
       setTheoryLoading(false)
     }
   }
@@ -72,11 +73,12 @@ export default function ChapterPage() {
     if (!theoryContent) return
     setTheoryLoading(true)
     try {
-      const result = await reExplain(selectedConcept, chapter.title, grade, theoryContent)
-      setTheoryContent(result)
+      await reExplain(selectedConcept, chapter.title, grade, theoryContent, (text) => {
+        setTheoryContent(text)
+        setTheoryLoading(false)
+      })
     } catch {
       toast.error('Σφάλμα')
-    } finally {
       setTheoryLoading(false)
     }
   }

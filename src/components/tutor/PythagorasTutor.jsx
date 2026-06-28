@@ -45,19 +45,27 @@ export default function PythagorasTutor({ grade, topic, compact = false }) {
     }
 
     const userMsg = { role: 'user', content }
-    setMessages(prev => [...prev, userMsg])
+    const allMsgs = [...messages, userMsg]
+    setMessages([...allMsgs, { role: 'assistant', content: '' }])
     setInput('')
     setLoading(true)
 
     try {
-      const response = await chatWithTutor([...messages, userMsg], grade, topic)
-      setMessages(prev => [...prev, { role: 'assistant', content: response }])
+      await chatWithTutor(allMsgs, grade, topic, (text) => {
+        setMessages(prev => {
+          const updated = [...prev]
+          updated[updated.length - 1] = { role: 'assistant', content: text }
+          return updated
+        })
+        setLoading(false)
+      })
     } catch {
       toast.error('Σφάλμα επικοινωνίας με το Axi AI')
-      setMessages(prev => [...prev, {
-        role: 'assistant',
-        content: 'Συγγνώμη, αντιμετώπισα τεχνικό πρόβλημα. Δοκίμασε ξανά! 🔧',
-      }])
+      setMessages(prev => {
+        const updated = [...prev]
+        updated[updated.length - 1] = { role: 'assistant', content: 'Συγγνώμη, αντιμετώπισα τεχνικό πρόβλημα. Δοκίμασε ξανά! 🔧' }
+        return updated
+      })
     } finally {
       setLoading(false)
     }
@@ -70,7 +78,7 @@ export default function PythagorasTutor({ grade, topic, compact = false }) {
           {messages.map((msg, i) => (
             <MessageBubble key={i} msg={msg} />
           ))}
-          {loading && (
+          {loading && messages[messages.length - 1]?.content === '' && (
             <div className="flex gap-2 items-start">
               <div className="w-7 h-7 rounded-full bg-violet-600/20 border border-violet-500/30 flex items-center justify-center shrink-0">
                 <Sparkles size={12} className="text-violet-400" />
@@ -131,7 +139,7 @@ export default function PythagorasTutor({ grade, topic, compact = false }) {
         {messages.map((msg, i) => (
           <MessageBubble key={i} msg={msg} />
         ))}
-        {loading && (
+        {loading && messages[messages.length - 1]?.content === '' && (
           <div className="flex gap-3 items-start">
             <div className="w-8 h-8 rounded-full bg-violet-600/20 border border-violet-500/30 flex items-center justify-center shrink-0">
               <Sparkles size={14} className="text-violet-400 animate-spin" />

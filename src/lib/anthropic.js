@@ -1,6 +1,6 @@
 import { searchBookChunks, supabase } from './supabase'
 
-async function callAI(messages, systemPrompt, maxTokens = 1024) {
+async function callAI(messages, systemPrompt, maxTokens = 1024, onChunk = null) {
   const { data: { session } } = await supabase.auth.getSession()
   const res = await fetch('/api/ai', {
     method: 'POST',
@@ -8,11 +8,36 @@ async function callAI(messages, systemPrompt, maxTokens = 1024) {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${session?.access_token ?? ''}`,
     },
-    body: JSON.stringify({ messages, system: systemPrompt, max_tokens: maxTokens }),
+    body: JSON.stringify({ messages, system: systemPrompt, max_tokens: maxTokens, stream: !!onChunk }),
   })
   if (!res.ok) {
     const err = await res.json().catch(() => ({}))
     throw new Error(err.error || `API error ${res.status}`)
+  }
+  if (onChunk) {
+    const reader = res.body.getReader()
+    const decoder = new TextDecoder()
+    let fullText = ''
+    let buffer = ''
+    while (true) {
+      const { done, value } = await reader.read()
+      if (done) break
+      buffer += decoder.decode(value, { stream: true })
+      const lines = buffer.split('\n')
+      buffer = lines.pop() ?? ''
+      for (const line of lines) {
+        if (line.startsWith('data: ')) {
+          const data = line.slice(6).trim()
+          if (data === '[DONE]') continue
+          try {
+            const chunk = JSON.parse(data)
+            fullText += chunk
+            onChunk(fullText)
+          } catch {}
+        }
+      }
+    }
+    return fullText
   }
   const data = await res.json()
   return data.text
@@ -25,7 +50,7 @@ const BASE_SYSTEM = `Είσαι το Axi AI, ο έξυπνος βοηθός μα
 Ενθαρρύνεις πάντα τον μαθητή.
 ΠΟΤΕ μη γράφεις μαθηματικές εκφράσεις σε LaTeX ή άλλη σύνταξη κώδικα (όχι \\frac, \\sqrt, \\(...\\), \\[...\\], $$...$$, \\in, \\mathbb κ.λπ.) — η εφαρμογή δεν τα μετατρέπει σε σύμβολα και θα εμφανιστούν ως ωμό κείμενο. Γράφε τα μαθηματικά με απλούς, ευανάγνωστους χαρακτήρες: x², √x, ½, π, ≤, ≥, ×, ÷, π.χ. "(α+β)/γ" αντί για "\\frac{α+β}{γ}".`
 
-export async function explainTheory(topic, grade, simplicity, chapterTitle) {
+export async function explainTheory(topic, grade, simplicity, chapterTitle, onChunk) {
   const simplicityMap = {
     0: 'Εξήγησε σαν να μιλάς σε 10χρονο. Χρησιμοποίησε αναλογίες από καθημερινή ζωή (φαγητό, παιχνίδια, αθλητισμός). Μηδέν μαθηματική ορολογία.',
     1: 'Εξήγησε απλά με μικρά βήματα. Λίγη ορολογία αλλά πάντα εξηγείς τι σημαίνει.',
@@ -39,15 +64,17 @@ export async function explainTheory(topic, grade, simplicity, chapterTitle) {
   return callAI(
     [{ role: 'user', content: `Εξήγησέ μου το θέμα "${topic}" από το κεφάλαιο "${chapterTitle}" (${gradeLabel}). ${simplicityMap[simplicity]}` }],
     `${BASE_SYSTEM}\n\nΕπίπεδο εξήγησης: ${simplicityMap[simplicity]}\nΤάξη μαθητή: ${gradeLabel}\n\nΔόμησε την απάντησή σου με:\n1. Σύντομη εισαγωγή (1-2 προτάσεις)\n2. Κύρια εξήγηση με παραδείγματα\n3. Σημαντικά να θυμάσαι (bullet points)\n\nΧρησιμοποίησε markdown για μορφοποίηση.`,
-    1500
+    1500,
+    onChunk
   )
 }
 
-export async function reExplain(topic, chapterTitle, grade, previousExplanation) {
+export async function reExplain(topic, chapterTitle, grade, previousExplanation, onChunk) {
   return callAI(
     [{ role: 'user', content: `Δεν κατάλαβα την εξήγηση για "${topic}". Εξήγησέ μου με εντελώς διαφορετικό τρόπο, με νέα παραδείγματα που δεν χρησιμοποίησες πριν. Η προηγούμενη εξήγηση ήταν: "${previousExplanation.slice(0, 200)}..."` }],
     `${BASE_SYSTEM}\n\nΟ μαθητής δεν κατάλαβε. ΠΡΕΠΕΙ να χρησιμοποιήσεις εντελώς διαφορετικό τρόπο και νέα παραδείγματα. Τάξη: ${grade?.label}`,
-    1500
+    1500,
+    onChunk
   )
 }
 
@@ -152,7 +179,7 @@ export async function solvePhotoExercise(imageBase64, mimeType = 'image/jpeg') {
   return data.content[0].text
 }
 
-export async function chatWithTutor(messages, grade, topic) {
+export async function chatWithTutor(messages, grade, topic, onChunk) {
   const history = messages.slice(-8).map(m => ({ role: m.role, content: m.content }))
 
   // Search school book for relevant context
@@ -171,7 +198,8 @@ export async function chatWithTutor(messages, grade, topic) {
   return callAI(
     history,
     `${BASE_SYSTEM}\n\nΟ μαθητής είναι στην τάξη ${grade?.label || 'Γυμνάσιο'} και συζητά για "${topic || 'μαθηματικά'}".\nΑπάντα φιλικά και παροτρυντικά.${bookContext}`,
-    1200
+    1200,
+    onChunk
   )
 }
 
