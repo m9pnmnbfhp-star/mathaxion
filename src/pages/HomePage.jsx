@@ -127,8 +127,7 @@ function HeroSection({ user, setAuthModal, navigate }) {
         className="text-lg sm:text-xl leading-relaxed mb-10 max-w-lg"
         style={{ color: 'var(--fg-2)' }}
       >
-        AI που εξηγεί με τη δική σου λογική — όχι απλά τύπους.
-        Ασκήσεις, flashcards &amp; battles για Γυμνάσιο &amp; Λύκειο.
+        Λιγότερο από έναν καφέ. Καλύτερο από φροντιστήριο.
       </motion.p>
 
       <motion.div
