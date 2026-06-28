@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
 import { supabase, getProfile } from './lib/supabase'
@@ -88,13 +88,24 @@ export default function App() {
 }
 
 function AuthCallback() {
+  const [error, setError] = useState(null)
   useEffect(() => {
     supabase.auth.exchangeCodeForSession(window.location.search)
-      .then(() => { window.location.href = '/' })
+      .then(({ error }) => {
+        if (error) { setError(error.message); return }
+        window.location.href = '/'
+      })
+      .catch((err) => setError(err.message))
   }, [])
+  if (error) return (
+    <div className="flex flex-col items-center justify-center min-h-screen gap-4">
+      <p className="text-red-400 font-medium">{error}</p>
+      <a href="/" className="text-violet-400 hover:text-violet-300 text-sm">← Αρχική</a>
+    </div>
+  )
   return (
     <div className="flex items-center justify-center min-h-screen">
-      <div className="text-slate-400">Σύνδεση...</div>
+      <div className="text-slate-400">Σύνδεση με Google...</div>
     </div>
   )
 }
