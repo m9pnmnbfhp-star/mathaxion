@@ -88,6 +88,9 @@ const useStore = create(
     {
       name: 'mathaxion-store',
       partialize: (state) => ({
+        user: state.user,
+        profile: state.profile,
+        isPro: state.isPro,
         selectedGrade: state.selectedGrade,
         progress: state.progress,
         streak: state.streak,

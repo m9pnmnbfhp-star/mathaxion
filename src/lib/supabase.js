@@ -5,7 +5,13 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'placeholder'
 
 let _supabase
 try {
-  _supabase = createClient(supabaseUrl, supabaseAnonKey)
+  _supabase = createClient(supabaseUrl, supabaseAnonKey, {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: true,
+    },
+  })
 } catch {
   // Not configured yet — stub client that returns empty data
   _supabase = {

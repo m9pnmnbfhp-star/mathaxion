@@ -28,7 +28,9 @@ export default function App() {
 
     supabase.auth.getSession().then(({ data }) => {
       loadUser(data?.session?.user ?? null)
-    }).catch(() => setUser(null))
+    }).catch(() => {
+      // Network error — don't log the user out, keep cached state
+    })
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       loadUser(session?.user ?? null)
