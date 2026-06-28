@@ -4,6 +4,7 @@ import { ArrowLeft, ArrowRight, Clock, CheckCircle2, Lock, Zap, BookOpen, Target
 import { GRADES, getGrade } from '../data/curriculum'
 import ProgressBar from '../components/ui/ProgressBar'
 import useStore from '../store/useStore'
+import ChapterHeatmap from '../components/profile/ChapterHeatmap'
 
 const DIFFICULTY_LABELS = { 1: 'Εύκολο', 2: 'Μέτριο', 3: 'Δύσκολο', 4: 'Προχωρημένο', 5: 'Εξεταστικό' }
 const DIFFICULTY_COLORS = {
@@ -107,6 +108,9 @@ export default function GradePage() {
             </div>
           </div>
         </motion.div>
+
+        {/* Chapter heatmap */}
+        <ChapterHeatmap grade={grade} getChapterProgress={getChapterProgress} navigate={navigate} />
 
         {/* Chapter list */}
         <div className="space-y-3 mb-12">
