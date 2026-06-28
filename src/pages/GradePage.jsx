@@ -25,6 +25,18 @@ export default function GradePage() {
   const grade = getGrade(gradeId)
   if (!grade) return <NotFound />
 
+  if (grade.comingSoon) return (
+    <div className="flex flex-col items-center justify-center min-h-[60vh] px-4 text-center">
+      <div className="text-6xl mb-6 select-none">{grade.icon}</div>
+      <h1 className="text-3xl font-black text-white font-display mb-2">{grade.label}</h1>
+      <p className="text-sm mb-6" style={{ color: 'var(--fg-2)' }}>Το περιεχόμενο αυτής της τάξης έρχεται σύντομα.</p>
+      <span className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-bold"
+        style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'var(--fg-2)' }}>
+        🚧 Coming Soon
+      </span>
+    </div>
+  )
+
   const otherGrades = GRADES.filter(g => g.id !== gradeId)
   const totalChapters = grade.chapters.length
   const startedCount = grade.chapters.filter(c => {

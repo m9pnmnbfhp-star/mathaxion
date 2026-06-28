@@ -952,6 +952,7 @@ export const GRADES = [
     grade: 6,
     color: '#ef4444',
     icon: '⑥',
+    comingSoon: true,
     isPanellinies: true,
     chapters: [
       // ── ΑΝΑΛΥΣΗ (3 κεφάλαια — Μαθηματικά Προσανατολισμού, Τεύχος Β) ──

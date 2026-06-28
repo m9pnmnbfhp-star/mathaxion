@@ -13,7 +13,7 @@ const SPRING = { ease: [0.16, 1, 0.3, 1], duration: 0.45 }
 
 const TABS = [
   { id: 'global', label: 'Global' },
-  ...GRADES.map(g => ({ id: g.id, label: g.shortLabel, color: g.color })),
+  ...GRADES.filter(g => !g.comingSoon).map(g => ({ id: g.id, label: g.shortLabel, color: g.color })),
 ]
 
 export default function LeaderboardPage() {

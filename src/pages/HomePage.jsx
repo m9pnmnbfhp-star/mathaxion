@@ -217,22 +217,25 @@ function GradesSection({ user, setAuthModal, navigate }) {
 function GradeCard({ grade, index, inView, user, setAuthModal, navigate }) {
   const [hovered, setHovered] = useState(false)
   const handleClick = () => {
+    if (grade.comingSoon) return
     if (!user) { setAuthModal(true, 'signup'); return }
     navigate(`/grade/${grade.id}`)
   }
   return (
     <motion.div custom={index + 1} variants={FADE_UP} initial="hidden" animate={inView ? 'visible' : 'hidden'}>
       <motion.div
-        whileHover={{ y: -4 }} whileTap={{ scale: 0.98 }}
+        whileHover={grade.comingSoon ? {} : { y: -4 }} whileTap={grade.comingSoon ? {} : { scale: 0.98 }}
         transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
         onHoverStart={() => setHovered(true)}
         onHoverEnd={() => setHovered(false)}
         onClick={handleClick}
-        className="relative group p-5 rounded-2xl border overflow-hidden cursor-pointer h-full"
+        className="relative group p-5 rounded-2xl border overflow-hidden h-full"
         style={{
           background: '#16161f',
-          borderColor: hovered ? `${grade.color}35` : 'rgba(255,255,255,0.07)',
-          boxShadow: hovered ? `0 24px 60px rgba(0,0,0,0.5), 0 0 0 1px ${grade.color}18` : 'none',
+          borderColor: hovered && !grade.comingSoon ? `${grade.color}35` : 'rgba(255,255,255,0.07)',
+          boxShadow: hovered && !grade.comingSoon ? `0 24px 60px rgba(0,0,0,0.5), 0 0 0 1px ${grade.color}18` : 'none',
+          cursor: grade.comingSoon ? 'default' : 'pointer',
+          opacity: grade.comingSoon ? 0.55 : 1,
           transition: 'border-color 0.22s, box-shadow 0.22s',
         }}
       >
@@ -258,7 +261,13 @@ function GradeCard({ grade, index, inView, user, setAuthModal, navigate }) {
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1 flex-wrap">
               <h3 className="font-display font-bold text-white text-lg leading-tight">{grade.label}</h3>
-              {grade.isPanellinies && (
+              {grade.comingSoon && (
+                <span className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full"
+                  style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', color: 'var(--fg-3)' }}>
+                  Coming Soon
+                </span>
+              )}
+              {!grade.comingSoon && grade.isPanellinies && (
                 <span className="inline-flex items-center gap-1 text-[10px] font-bold text-red-400 px-1.5 py-0.5 rounded-full"
                   style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)' }}>
                   <Flame size={9} />Πανελλήνιες
