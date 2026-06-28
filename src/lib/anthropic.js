@@ -1,9 +1,13 @@
-import { searchBookChunks } from './supabase'
+import { searchBookChunks, supabase } from './supabase'
 
 async function callAI(messages, systemPrompt, maxTokens = 1024) {
+  const { data: { session } } = await supabase.auth.getSession()
   const res = await fetch('/api/ai', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${session?.access_token ?? ''}`,
+    },
     body: JSON.stringify({ messages, system: systemPrompt, max_tokens: maxTokens }),
   })
   if (!res.ok) {
