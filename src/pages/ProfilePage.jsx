@@ -3,6 +3,7 @@ import { motion } from 'framer-motion'
 import { Flame, Star, Trophy, Target, BookOpen, TrendingUp, Crown, Brain, User, Lightbulb, Zap, ChevronRight } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { GRADES } from '../data/curriculum'
+import RadarChart from '../components/profile/RadarChart'
 import Button from '../components/ui/Button'
 import Card from '../components/ui/Card'
 import ProgressBar from '../components/ui/ProgressBar'
@@ -157,6 +158,17 @@ export default function ProfilePage() {
           </motion.div>
         ))}
       </div>
+
+      {/* Skill radar */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2, ease: [0.16, 1, 0.3, 1], duration: 0.5 }}
+        className="rounded-2xl p-6"
+        style={{ background: '#16161f', border: '1px solid rgba(255,255,255,0.06)' }}
+      >
+        <RadarChart progress={progress} />
+      </motion.div>
 
       {/* XP hint */}
       <p className="text-xs text-slate-600 flex items-start gap-1.5 -mt-1">
