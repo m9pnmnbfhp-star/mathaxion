@@ -277,7 +277,8 @@ export default function ShareCardModal({ open, onClose, stats }) {
             </div>
 
             {/* Card preview */}
-            <div className="px-5 py-4 flex justify-center overflow-hidden">
+            <div className="px-5 py-4 flex justify-center overflow-hidden"
+              style={{ height: format === 'stories' ? 372 : 260, alignItems: 'flex-start' }}>
               <div style={{ transform: format === 'stories' ? 'scale(0.58)' : 'scale(0.72)', transformOrigin: 'top center' }}>
                 {format === 'stories'
                   ? <div ref={storiesRef}><CardStories stats={stats} /></div>
