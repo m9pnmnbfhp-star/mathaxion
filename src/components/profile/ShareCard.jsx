@@ -295,7 +295,7 @@ export default function ShareCardModal({ open, onClose, stats }) {
                 style={{ background: 'linear-gradient(135deg, #7c3aed, #6d28d9)', boxShadow: '0 0 20px rgba(124,58,237,0.3)' }}>
                 {capturing
                   ? 'Δημιουργία...'
-                  : navigator.canShare ? <><Share2 size={15} />Κοινοποίηση</> : <><Download size={15} />Λήψη PNG</>
+                  : <><Share2 size={15} />Κοινοποίηση / Λήψη</>
                 }
               </motion.button>
             </div>

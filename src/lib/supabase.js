@@ -136,7 +136,7 @@ export async function getLeaderboard(gradeId) {
     .select('*, profiles(display_name, avatar_url)')
     .eq('grade_id', gradeId)
     .order('xp', { ascending: false })
-    .limit(20)
+    .limit(50)
   return { data, error }
 }
 
@@ -144,6 +144,7 @@ export async function getGlobalLeaderboard() {
   const { data, error } = await supabase
     .from('leaderboard')
     .select('*, profiles(display_name)')
+    .is('grade_id', null)
     .order('xp', { ascending: false })
     .limit(50)
   return { data, error }

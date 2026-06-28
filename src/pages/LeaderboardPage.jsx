@@ -24,19 +24,27 @@ export default function LeaderboardPage() {
   const [myRank, setMyRank] = useState(null)
 
   useEffect(() => {
+    let cancelled = false
     setLoading(true)
-    const fetch = activeTab === 'global'
+    const fetchPromise = activeTab === 'global'
       ? getGlobalLeaderboard()
       : getLeaderboard(activeTab)
 
-    fetch.then(({ data }) => {
+    fetchPromise.then(({ data }) => {
+      if (cancelled) return
       const rows = data || []
       setEntries(rows)
       if (user) {
         const idx = rows.findIndex(r => r.user_id === user.id)
         setMyRank(idx === -1 ? null : idx + 1)
       }
-    }).finally(() => setLoading(false))
+    }).catch(() => {
+      if (!cancelled) setEntries([])
+    }).finally(() => {
+      if (!cancelled) setLoading(false)
+    })
+
+    return () => { cancelled = true }
   }, [activeTab, user])
 
   const top20 = entries.slice(0, 20)
