@@ -412,6 +412,51 @@ body {
 .stagger > *:nth-child(5) { animation-delay: 240ms; }
 .stagger > *:nth-child(6) { animation-delay: 300ms; }
 
+/* ─── STREAK FIRE ────────────────────────────────────────────────── */
+.streak-fire {
+  display: inline-block;
+  animation: streak-fire 1.9s ease-in-out infinite;
+  transform-origin: bottom center;
+}
+@keyframes streak-fire {
+  0%, 100% { transform: scale(1) rotate(0deg);   filter: drop-shadow(0 0 4px #f97316); }
+  35%       { transform: scale(1.22) rotate(-5deg); filter: drop-shadow(0 0 12px #f97316) drop-shadow(0 0 24px #fb923c); }
+  65%       { transform: scale(1.15) rotate(3deg);  filter: drop-shadow(0 0 8px #f97316); }
+}
+
+/* ─── XP EARNED BADGE ────────────────────────────────────────────── */
+.xp-earned-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  letter-spacing: 0.02em;
+}
+
+/* ─── RESULT POP ─────────────────────────────────────────────────── */
+.result-pop {
+  animation: result-pop 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+@keyframes result-pop {
+  from { transform: scale(0.86) translateY(10px); opacity: 0; }
+  to   { transform: scale(1) translateY(0);       opacity: 1; }
+}
+
+/* ─── CORRECT BANNER ─────────────────────────────────────────────── */
+.correct-text-bounce {
+  animation: correct-text 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+@keyframes correct-text {
+  from { transform: scale(0.5) translateY(20px); opacity: 0; }
+  to   { transform: scale(1) translateY(0);       opacity: 1; }
+}
+
 /* ─── REDUCED MOTION ─────────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
@@ -424,4 +469,6 @@ body {
   .t-tilt-card   { transform: none !important; transition: none !important; }
   .t-shimmer::before { animation: none !important; }
   .t-shake       { animation: none !important; }
+  .streak-fire   { animation: none !important; }
+  .result-pop, .correct-text-bounce { animation: none !important; }
 }

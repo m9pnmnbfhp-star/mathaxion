@@ -165,7 +165,7 @@ function PersonalizedDashboard({ user, onboarding, streak, xp, getChapterProgres
         <div className="flex gap-3">
           <div className="flex items-center gap-2 px-4 py-2.5 rounded-2xl"
             style={{ background: '#16161f', border: '1px solid rgba(245,158,11,0.25)', boxShadow: streak.current > 0 ? '0 0 20px rgba(245,158,11,0.08)' : 'none' }}>
-            <span className="text-xl" style={{ filter: streak.current > 0 ? 'drop-shadow(0 0 6px rgba(245,158,11,0.6))' : 'none' }}>🔥</span>
+            <span className={`text-xl${streak.current > 0 ? ' streak-fire' : ''}`}>🔥</span>
             <div>
               <p key={streak.current} className="font-black text-white text-lg leading-none font-display num-pop">{streak.current}</p>
               <p className="text-[10px]" style={{ color: 'var(--fg-3)' }}>Μέρες streak</p>

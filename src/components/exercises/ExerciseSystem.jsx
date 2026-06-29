@@ -8,6 +8,7 @@ import { LEVEL_DESCRIPTIONS } from '../../data/curriculum'
 import { generateExercise, explainWrongAnswer, generateSimilarExercises } from '../../lib/anthropic'
 import { correctMessage, levelUpMessage, streakMessage } from '../../lib/personalizedMessages'
 import { showXPFloat } from '../../lib/xpFloat'
+import { flashCorrect, flashWrong, levelUpBurst, streakMilestoneBurst } from '../../lib/gsapAnimations'
 import useStore from '../../store/useStore'
 import toast from 'react-hot-toast'
 
@@ -34,14 +35,16 @@ export default function ExerciseSystem({ grade, chapter, topic, onXPGained }) {
   const [showConfetti, setShowConfetti] = useState(false)
   const resultRef = useRef(null)
   const submitBtnRef = useRef(null)
+  const cardRef = useRef(null)
 
-  // Shake animation on wrong answer
+  // Shake + red flash on wrong answer
   useEffect(() => {
     if (submitted && isCorrect === false && resultRef.current) {
       const el = resultRef.current
       el.classList.remove('is-shaking')
       void el.offsetWidth
       el.classList.add('is-shaking')
+      flashWrong(cardRef.current)
       const t = setTimeout(() => el.classList.remove('is-shaking'), 300)
       return () => clearTimeout(t)
     }
@@ -84,6 +87,7 @@ export default function ExerciseSystem({ grade, chapter, topic, onXPGained }) {
       const xp = XP_PER_CORRECT[currentLevel]
       addXP(xp)
       onXPGained?.(xp)
+      flashCorrect(cardRef.current)
       if (submitBtnRef.current) {
         const r = submitBtnRef.current.getBoundingClientRect()
         showXPFloat(r.left + r.width / 2, r.top - 8, xp)
@@ -96,19 +100,16 @@ export default function ExerciseSystem({ grade, chapter, topic, onXPGained }) {
       if (newStreak % 5 === 0) {
         setShowConfetti(true)
         setTimeout(() => setShowConfetti(false), 2000)
-      }
-
-      if (newStreak > 0 && newStreak % 5 === 0) {
-        toast.success(streakMessage(newStreak), { duration: 2500 })
+        streakMilestoneBurst(newStreak)
       }
 
       if (totalCorrect + 1 >= REQUIRED_CORRECT_TO_ADVANCE && currentLevel < 4) {
         setTimeout(() => {
-          toast.success(levelUpMessage(currentLevel + 1), { duration: 4000 })
+          levelUpBurst(currentLevel + 1)
           setCurrentLevel(prev => prev + 1)
           setCorrectStreak(0)
           setTotalCorrect(0)
-        }, 1500)
+        }, 900)
       }
     } else {
       setCorrectStreak(0)
@@ -240,7 +241,7 @@ export default function ExerciseSystem({ grade, chapter, topic, onXPGained }) {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
           >
-            <Card>
+            <div ref={cardRef}><Card>
               <div className="space-y-4">
                 {/* Question */}
                 <div>
@@ -302,26 +303,36 @@ export default function ExerciseSystem({ grade, chapter, topic, onXPGained }) {
                   {submitted && (
                     <motion.div
                       ref={resultRef}
-                      initial={{ opacity: 0, scale: 0.95 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      className={`t-shake p-4 rounded-xl border ${
+                      initial={{ opacity: 0, y: 14, scale: 0.92 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      transition={{ type: 'spring', stiffness: 420, damping: 24 }}
+                      className={`t-shake result-pop rounded-2xl border overflow-hidden ${
                         isCorrect
                           ? 'bg-emerald-500/10 border-emerald-500/30'
                           : 'bg-red-500/10 border-red-500/30'
                       }`}
                     >
-                      <div className="flex items-center gap-2 mb-2">
+                      {/* Top accent bar */}
+                      <div className="h-1 w-full" style={{ background: isCorrect ? '#10b981' : '#ef4444' }} />
+                      <div className="p-4">
+                      <div className="flex items-center gap-3 mb-2">
                         {isCorrect ? (
                           <>
-                            <span className="t-success-wrap" data-state="in">
-                              <CheckCircle size={18} className="text-emerald-400" />
+                            <span className="t-success-wrap correct-text-bounce" data-state="in">
+                              <CheckCircle size={22} className="text-emerald-400" />
                             </span>
-                            <span className="font-semibold text-emerald-300">{correctMessage(XP_PER_CORRECT[currentLevel])}</span>
+                            <div>
+                              <p className="font-black text-emerald-300 text-base leading-tight correct-text-bounce">{correctMessage(XP_PER_CORRECT[currentLevel])}</p>
+                              <span className="xp-earned-badge mt-0.5">+{XP_PER_CORRECT[currentLevel]} XP</span>
+                            </div>
                           </>
                         ) : (
                           <>
-                            <XCircle size={18} className="text-red-400" />
-                            <span className="font-semibold text-red-300">Λάθος — Σωστό: {exercise.answer}</span>
+                            <XCircle size={22} className="text-red-400 shrink-0" />
+                            <div>
+                              <p className="font-black text-red-300 text-base leading-tight">Λάθος!</p>
+                              <p className="text-sm text-slate-400">Σωστό: <strong className="text-white">{exercise.answer}</strong></p>
+                            </div>
                           </>
                         )}
                       </div>
@@ -351,6 +362,7 @@ export default function ExerciseSystem({ grade, chapter, topic, onXPGained }) {
                           </motion.div>
                         )}
                       </AnimatePresence>
+                      </div>
                     </motion.div>
                   )}
                 </AnimatePresence>
@@ -383,7 +395,7 @@ export default function ExerciseSystem({ grade, chapter, topic, onXPGained }) {
                   </div>
                 )}
               </div>
-            </Card>
+            </Card></div>
           </motion.div>
         )}
       </AnimatePresence>

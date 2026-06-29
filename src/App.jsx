@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom'
+import { AnimatePresence, motion } from 'framer-motion'
 import { Toaster } from 'react-hot-toast'
 import { supabase, getProfile, updateProfile } from './lib/supabase'
 import useStore from './store/useStore'
@@ -14,6 +15,20 @@ import ProfilePage from './pages/ProfilePage'
 import SettingsPage from './pages/SettingsPage'
 import PanelliniesPage from './pages/PanelliniesPage'
 import LeaderboardPage from './pages/LeaderboardPage'
+
+const PAGE_VARIANTS = {
+  initial: { opacity: 0, y: 10 },
+  animate: { opacity: 1, y: 0, transition: { duration: 0.22, ease: [0.16, 1, 0.3, 1] } },
+  exit:    { opacity: 0, y: -8, transition: { duration: 0.16, ease: [0.4, 0, 1, 1] } },
+}
+
+function PageFade({ children }) {
+  return (
+    <motion.div variants={PAGE_VARIANTS} initial="initial" animate="animate" exit="exit">
+      {children}
+    </motion.div>
+  )
+}
 
 export default function App() {
   const { setUser, setProfile, setAuthModal, setOnboardingCompleted, setOnboarding, setPreAuthOnboarding, user, onboardingCompleted, preAuthOnboardingOpen } = useStore()
@@ -48,9 +63,7 @@ export default function App() {
 
     supabase.auth.getSession().then(({ data }) => {
       loadUser(data?.session?.user ?? null)
-    }).catch(() => {
-      // Network error — don't log the user out, keep cached state
-    })
+    }).catch(() => {})
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       loadUser(session?.user ?? null)
@@ -64,52 +77,61 @@ export default function App() {
 
   return (
     <BrowserRouter>
-      <div className="min-h-screen bg-[#0a0a0f]">
-        <Header />
-
-        <main>
-          <Routes>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/grade/:gradeId" element={<GradePage />} />
-            <Route path="/grade/:gradeId/chapter/:chapterId" element={<ChapterPage />} />
-            <Route path="/profile" element={<ProfilePage />} />
-            <Route path="/settings" element={<SettingsPage />} />
-            <Route path="/panellinies" element={<PanelliniesPage />} />
-            <Route path="/leaderboard" element={<LeaderboardPage />} />
-            <Route path="/auth/callback" element={<AuthCallback />} />
-          </Routes>
-        </main>
-
-        {/* Onboarding overlay — shown on signup (pre-auth) or once for new logged-in users */}
-        {(preAuthOnboardingOpen || (user && !onboardingCompleted)) && (
-          <OnboardingFlow preAuth={preAuthOnboardingOpen && !user} />
-        )}
-
-        {/* Global modals */}
-        <AuthModal />
-        <UpgradeModal />
-
-        {/* Toast notifications */}
-        <Toaster
-          position="bottom-right"
-          toastOptions={{
-            style: {
-              background: '#16161f',
-              color: '#e2e2f0',
-              border: '1px solid #2a2a3a',
-              borderRadius: '12px',
-              fontSize: '14px',
-            },
-            success: {
-              iconTheme: { primary: '#10b981', secondary: '#16161f' },
-            },
-            error: {
-              iconTheme: { primary: '#ef4444', secondary: '#16161f' },
-            },
-          }}
-        />
-      </div>
+      <AppContent
+        user={user}
+        onboardingCompleted={onboardingCompleted}
+        preAuthOnboardingOpen={preAuthOnboardingOpen}
+      />
     </BrowserRouter>
+  )
+}
+
+function AppContent({ user, onboardingCompleted, preAuthOnboardingOpen }) {
+  const location = useLocation()
+
+  return (
+    <div className="min-h-screen bg-[#0a0a0f]">
+      <Header />
+
+      <main>
+        <AnimatePresence mode="wait" initial={false}>
+          <Routes location={location} key={location.pathname}>
+            <Route path="/"         element={<PageFade><HomePage /></PageFade>} />
+            <Route path="/grade/:gradeId" element={<PageFade><GradePage /></PageFade>} />
+            <Route path="/grade/:gradeId/chapter/:chapterId" element={<PageFade><ChapterPage /></PageFade>} />
+            <Route path="/profile"  element={<PageFade><ProfilePage /></PageFade>} />
+            <Route path="/settings" element={<PageFade><SettingsPage /></PageFade>} />
+            <Route path="/panellinies" element={<PageFade><PanelliniesPage /></PageFade>} />
+            <Route path="/leaderboard" element={<PageFade><LeaderboardPage /></PageFade>} />
+            <Route path="/auth/callback" element={<PageFade><AuthCallback /></PageFade>} />
+          </Routes>
+        </AnimatePresence>
+      </main>
+
+      {/* Onboarding overlay — shown on signup (pre-auth) or once for new logged-in users */}
+      {(preAuthOnboardingOpen || (user && !onboardingCompleted)) && (
+        <OnboardingFlow preAuth={preAuthOnboardingOpen && !user} />
+      )}
+
+      {/* Global modals */}
+      <AuthModal />
+      <UpgradeModal />
+
+      <Toaster
+        position="bottom-right"
+        toastOptions={{
+          style: {
+            background: '#16161f',
+            color: '#e2e2f0',
+            border: '1px solid #2a2a3a',
+            borderRadius: '12px',
+            fontSize: '14px',
+          },
+          success: { iconTheme: { primary: '#10b981', secondary: '#16161f' } },
+          error:   { iconTheme: { primary: '#ef4444', secondary: '#16161f' } },
+        }}
+      />
+    </div>
   )
 }
 
@@ -118,7 +140,6 @@ function AuthCallback() {
   useEffect(() => {
     const code = new URLSearchParams(window.location.search).get('code')
     if (code) {
-      // PKCE flow: exchange the code for a session
       supabase.auth.exchangeCodeForSession(window.location.search)
         .then(({ error }) => {
           if (error) { setError(error.message); return }
@@ -126,7 +147,6 @@ function AuthCallback() {
         })
         .catch((err) => setError(err.message))
     } else {
-      // Implicit flow: Supabase JS already consumed the hash and set the session
       supabase.auth.getSession().then(({ data }) => {
         if (data?.session) {
           window.location.href = '/'
