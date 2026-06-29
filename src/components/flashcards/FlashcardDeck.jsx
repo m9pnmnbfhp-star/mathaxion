@@ -210,7 +210,9 @@ export default function FlashcardDeck({ grade, chapter, topic }) {
 
 function extractJSONArray(text) {
   try {
-    const match = text.match(/\[[\s\S]*\]/)
+    // Strip markdown code fences if present
+    const stripped = text.replace(/```(?:json)?\s*/gi, '').replace(/```\s*/g, '').trim()
+    const match = stripped.match(/\[[\s\S]*\]/)
     if (match) return JSON.parse(match[0])
   } catch { /* fall through */ }
   return []

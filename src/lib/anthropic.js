@@ -113,11 +113,11 @@ export async function generateSimilarExercises(wrongQuestion, topic, grade, coun
   )
 }
 
-export async function generateFlashcards(topic, chapterTitle, grade, count = 6) {
+export async function generateFlashcards(topic, chapterTitle, grade, count = 5) {
   return callAI(
     [{ role: 'user', content: `Δημιούργησε ${count} flashcards για το θέμα "${topic}" (${chapterTitle}, ${grade?.label}).` }],
-    `${BASE_SYSTEM}\n\nΔημιουργείς flashcards. Απάντα σε JSON:\n[\n  {"front": "ερώτηση/έννοια", "back": "απάντηση/ορισμός", "example": "παράδειγμα"},\n  ...\n]\nΜόνο JSON.`,
-    1000
+    `${BASE_SYSTEM}\n\nΔημιουργείς flashcards. Απάντα ΜΟΝΟ με raw JSON array, χωρίς markdown, χωρίς backticks, χωρίς εξήγηση:\n[\n  {"front": "ερώτηση/έννοια", "back": "απάντηση/ορισμός", "example": "παράδειγμα"},\n  ...\n]`,
+    2000
   )
 }
 
