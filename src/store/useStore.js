@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import { logXP } from '../lib/supabase'
+import { supabase } from '../lib/supabase'
 
 const useStore = create(
   persist(
@@ -61,10 +61,10 @@ const useStore = create(
           xp: state.xp + amount,
           totalXP: state.totalXP + amount,
         }))
-        // Fire-and-forget sync to Supabase for leaderboard
+        // Fire-and-forget XP sync to Supabase for leaderboard
         const userId = get().user?.id
         if (userId) {
-          logXP(userId, amount, 'addXP').catch(() => {})
+          supabase.rpc('increment_xp', { uid: userId, delta: amount }).catch(() => {})
         }
       },
 

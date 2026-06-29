@@ -3,9 +3,6 @@ import { Check, Crown, Zap, Camera, Swords, Trophy, BookOpen, Star } from 'lucid
 import Modal from '../ui/Modal'
 import useStore from '../../store/useStore'
 import toast from 'react-hot-toast'
-import { loadStripe } from '@stripe/stripe-js'
-
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY)
 
 const PRO_FEATURES = [
   { icon: Zap,      color: '#8b5cf6', text: 'Axi AI Tutor — Απεριόριστο' },
@@ -27,18 +24,7 @@ export default function UpgradeModal() {
       setAuthModal(true, 'signup')
       return
     }
-    try {
-      const res = await fetch('/api/create-checkout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: user.id }),
-      })
-      const { sessionId } = await res.json()
-      const stripe = await stripePromise
-      await stripe.redirectToCheckout({ sessionId })
-    } catch {
-      toast.error('Σφάλμα. Δοκίμασε ξανά.')
-    }
+    toast('Σύντομα διαθέσιμο! 🚀', { icon: '⏳' })
   }
 
   return (
