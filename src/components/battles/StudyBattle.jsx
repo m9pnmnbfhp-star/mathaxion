@@ -44,13 +44,17 @@ export default function StudyBattle({ grade, chapter }) {
   const loadQuestionsAndStart = async () => {
     try {
       const chapterTopics = chapter.concepts || ['Βασικές έννοιες']
-      const qs = []
-      for (let i = 0; i < Math.min(5, QUESTIONS_PER_BATTLE); i++) {
-        const topic = chapterTopics[i % chapterTopics.length]
-        const raw = await generateExercise(topic, chapter.title, grade, randomDifficultyLevel())
-        const json = extractJSON(raw)
-        qs.push({ ...json, topic })
-      }
+      const COUNT = 5
+      const results = await Promise.all(
+        Array.from({ length: COUNT }, (_, i) => {
+          const topic = chapterTopics[i % chapterTopics.length]
+          return generateExercise(topic, chapter.title, grade, randomDifficultyLevel())
+            .then(raw => ({ ...extractJSON(raw), topic }))
+            .catch(() => null)
+        })
+      )
+      const qs = results.filter(Boolean)
+      if (!qs.length) throw new Error('no questions')
       setQuestions(qs)
       setPhase('battle')
       setTimeLeft(BATTLE_DURATION)
@@ -187,12 +191,22 @@ export default function StudyBattle({ grade, chapter }) {
           key={countdown}
           initial={{ scale: 2, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
-          exit={{ scale: 0, opacity: 0 }}
           className="text-8xl font-black text-violet-400"
         >
           {countdown > 0 ? countdown : '🚀'}
         </motion.div>
-        <p className="text-slate-400">Έτοιμοι;</p>
+        <p className="text-slate-400">
+          {countdown > 0 ? 'Έτοιμοι;' : 'Φόρτωση ερωτήσεων...'}
+        </p>
+        {countdown <= 0 && (
+          <div className="flex gap-1 mt-2">
+            {[0,1,2].map(i => (
+              <motion.div key={i} className="w-2 h-2 rounded-full bg-violet-500"
+                animate={{ opacity: [0.3, 1, 0.3] }}
+                transition={{ duration: 1, repeat: Infinity, delay: i * 0.2 }} />
+            ))}
+          </div>
+        )}
       </div>
     )
   }
