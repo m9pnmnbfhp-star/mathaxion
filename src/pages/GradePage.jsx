@@ -1,7 +1,7 @@
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { ArrowLeft, ArrowRight, Clock, CheckCircle2, Lock, Zap, BookOpen, Target } from 'lucide-react'
-import { GRADES, getGrade } from '../data/curriculum'
+import { GRADES, DIMOTIKO_GRADES, getGrade } from '../data/curriculum'
 import ProgressBar from '../components/ui/ProgressBar'
 import useStore from '../store/useStore'
 import ChapterHeatmap from '../components/profile/ChapterHeatmap'
@@ -37,7 +37,7 @@ export default function GradePage() {
     </div>
   )
 
-  const otherGrades = GRADES.filter(g => g.id !== gradeId)
+  const otherGrades = [...DIMOTIKO_GRADES, ...GRADES].filter(g => g.id !== gradeId)
   const totalChapters = grade.chapters.length
   const startedCount = grade.chapters.filter(c => {
     const p = getChapterProgress(grade.id, c.id)

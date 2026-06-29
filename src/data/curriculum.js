@@ -1151,7 +1151,8 @@ export const DIMOTIKO_GRADES = [
   },
 ]
 
-export const getGrade = (id) => GRADES.find(g => g.id === id)
+export const ALL_GRADES = () => [...DIMOTIKO_GRADES, ...GRADES]
+export const getGrade = (id) => GRADES.find(g => g.id === id) || DIMOTIKO_GRADES.find(g => g.id === id)
 export const getChapter = (gradeId, chapterId) => {
   const grade = getGrade(gradeId)
   return grade?.chapters.find(c => c.id === chapterId)

@@ -6,7 +6,7 @@ import {
   Bot, Camera, Swords, Crown, Flame, Star,
   CheckCircle2, ChevronRight, GraduationCap
 } from 'lucide-react'
-import { GRADES } from '../data/curriculum'
+import { GRADES, DIMOTIKO_GRADES } from '../data/curriculum'
 import useStore from '../store/useStore'
 
 const SPRING = { ease: [0.16, 1, 0.3, 1], duration: 0.55 }
@@ -211,34 +211,95 @@ function GradesSection({ user, setAuthModal, navigate }) {
   const inView = useInView(ref, { once: true, margin: '-80px' })
 
   return (
-    <section ref={ref} className="max-w-6xl mx-auto px-4 py-24">
-      <motion.div custom={0} variants={FADE_UP} initial="hidden" animate={inView ? 'visible' : 'hidden'} className="text-center mb-14">
+    <section ref={ref} className="max-w-6xl mx-auto px-4 py-24 space-y-16">
+      <motion.div custom={0} variants={FADE_UP} initial="hidden" animate={inView ? 'visible' : 'hidden'} className="text-center">
         <p className="text-sm font-bold tracking-widest text-violet-400 uppercase mb-3">Πρόγραμμα σπουδών</p>
         <h2 className="font-display font-black text-4xl sm:text-5xl text-white mb-4">Διάλεξε την τάξη σου</h2>
         <p className="text-lg max-w-lg mx-auto" style={{ color: 'var(--fg-2)' }}>
-          Από Α' Γυμνασίου έως Γ' Λυκείου — όλη η ύλη, οργανωμένη και αναλυτική.
+          Από Α' Δημοτικού έως Γ' Λυκείου — όλη η ύλη, οργανωμένη και αναλυτική.
         </p>
       </motion.div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {GRADES.map((grade, i) => (
-          <GradeCard key={grade.id} grade={grade} index={i} inView={inView}
-            user={user} setAuthModal={setAuthModal} navigate={navigate} />
-        ))}
+      {/* Δημοτικό */}
+      <div>
+        <motion.div custom={1} variants={FADE_UP} initial="hidden" animate={inView ? 'visible' : 'hidden'}
+          className="flex items-center gap-3 mb-5">
+          <span className="text-2xl">🏫</span>
+          <h3 className="font-display font-bold text-xl text-white">Δημοτικό</h3>
+          <div className="flex-1 h-px bg-white/5" />
+          <span className="text-xs font-medium px-2.5 py-1 rounded-full"
+            style={{ background: 'rgba(245,158,11,0.12)', color: '#f59e0b', border: '1px solid rgba(245,158,11,0.2)' }}>
+            Α'–ΣΤ' Τάξη
+          </span>
+        </motion.div>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+          {DIMOTIKO_GRADES.map((grade, i) => (
+            <GradeCard key={grade.id} grade={grade} index={i + 1} inView={inView}
+              user={user} setAuthModal={setAuthModal} navigate={navigate} compact />
+          ))}
+        </div>
+      </div>
+
+      {/* Γυμνάσιο + Λύκειο */}
+      <div>
+        <motion.div custom={2} variants={FADE_UP} initial="hidden" animate={inView ? 'visible' : 'hidden'}
+          className="flex items-center gap-3 mb-5">
+          <span className="text-2xl">🎓</span>
+          <h3 className="font-display font-bold text-xl text-white">Γυμνάσιο & Λύκειο</h3>
+          <div className="flex-1 h-px bg-white/5" />
+          <span className="text-xs font-medium px-2.5 py-1 rounded-full"
+            style={{ background: 'rgba(139,92,246,0.12)', color: '#8b5cf6', border: '1px solid rgba(139,92,246,0.2)' }}>
+            Α' Γυμ.–Γ' Λυκ.
+          </span>
+        </motion.div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {GRADES.map((grade, i) => (
+            <GradeCard key={grade.id} grade={grade} index={i + 7} inView={inView}
+              user={user} setAuthModal={setAuthModal} navigate={navigate} />
+          ))}
+        </div>
       </div>
     </section>
   )
 }
 
-function GradeCard({ grade, index, inView, user, setAuthModal, navigate }) {
+function GradeCard({ grade, index, inView, user, setAuthModal, navigate, compact = false }) {
   const [hovered, setHovered] = useState(false)
   const handleClick = () => {
     if (grade.comingSoon) return
     if (!user) { setAuthModal(true, 'signup'); return }
     navigate(`/grade/${grade.id}`)
   }
+
+  if (compact) {
+    return (
+      <motion.div custom={index} variants={FADE_UP} initial="hidden" animate={inView ? 'visible' : 'hidden'}>
+        <motion.div
+          whileHover={{ y: -3 }} whileTap={{ scale: 0.97 }}
+          onHoverStart={() => setHovered(true)} onHoverEnd={() => setHovered(false)}
+          onClick={handleClick}
+          className="relative group p-4 rounded-2xl border overflow-hidden text-center cursor-pointer"
+          style={{
+            background: '#16161f',
+            borderColor: hovered ? `${grade.color}40` : 'rgba(255,255,255,0.07)',
+            boxShadow: hovered ? `0 12px 32px rgba(0,0,0,0.4), 0 0 0 1px ${grade.color}18` : 'none',
+            transition: 'border-color 0.2s, box-shadow 0.2s',
+          }}
+        >
+          <div className="absolute top-0 left-0 right-0 h-[2px]" style={{ background: grade.color, opacity: hovered ? 1 : 0.3 }} />
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl mx-auto mb-2"
+            style={{ background: `${grade.color}12`, border: `1.5px solid ${grade.color}22` }}>
+            {grade.icon}
+          </div>
+          <p className="font-display font-bold text-sm text-white leading-tight">{grade.shortLabel}</p>
+          <p className="text-[10px] mt-0.5" style={{ color: grade.color }}>{grade.chapters.length} κεφ.</p>
+        </motion.div>
+      </motion.div>
+    )
+  }
+
   return (
-    <motion.div custom={index + 1} variants={FADE_UP} initial="hidden" animate={inView ? 'visible' : 'hidden'}>
+    <motion.div custom={index} variants={FADE_UP} initial="hidden" animate={inView ? 'visible' : 'hidden'}>
       <motion.div
         whileHover={grade.comingSoon ? {} : { y: -4 }} whileTap={grade.comingSoon ? {} : { scale: 0.98 }}
         transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
@@ -269,9 +330,6 @@ function GradeCard({ grade, index, inView, user, setAuthModal, navigate }) {
               style={{ background: `${grade.color}12`, border: `1.5px solid ${grade.color}22` }}>
               {grade.icon}
             </div>
-            <span className="text-[9px] font-mono font-black tracking-widest" style={{ color: grade.color }}>
-              LVL {String(GRADES.indexOf(grade) + 1).padStart(2, '0')}
-            </span>
           </div>
 
           <div className="flex-1 min-w-0">
