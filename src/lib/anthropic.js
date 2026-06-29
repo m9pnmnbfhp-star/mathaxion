@@ -92,8 +92,8 @@ export async function generateExercise(topic, chapterTitle, grade, level, previo
 
   return callAI(
     [{ role: 'user', content: `Δημιούργησε μία άσκηση για το θέμα "${topic}" (${chapterTitle}, ${grade?.label}).\nΕπίπεδο: ${levelDesc[level]}${prevEx}` }],
-    `${BASE_SYSTEM}\n\nΔημιουργείς ασκήσεις μαθηματικών. Απάντα σε JSON format:\n{\n  "question": "η ερώτηση",\n  "answer": "η σωστή απάντηση",\n  "hint": "υπόδειξη αν χρειαστεί",\n  "solution_steps": ["βήμα 1", "βήμα 2", ...],\n  "difficulty": ${level}\n}\n\nΜόνο JSON, χωρίς άλλο κείμενο.`,
-    800
+    `${BASE_SYSTEM}\n\nΔημιουργείς ασκήσεις μαθηματικών. Απάντα ΜΟΝΟ με raw JSON, χωρίς markdown, χωρίς backticks:\n{\n  "question": "η ερώτηση",\n  "answer": "η σωστή απάντηση",\n  "hint": "υπόδειξη αν χρειαστεί",\n  "solution_steps": ["βήμα 1", "βήμα 2"],\n  "difficulty": ${level}\n}`,
+    1200
   )
 }
 

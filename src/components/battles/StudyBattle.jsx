@@ -344,6 +344,10 @@ function checkAnswer(a, b) {
 }
 
 function extractJSON(text) {
-  try { const m = text.match(/\{[\s\S]*\}/); if (m) return JSON.parse(m[0]) } catch { /* */ }
-  return { question: text.slice(0, 100), answer: '—', hint: '', solution_steps: [] }
+  try {
+    const s = text.replace(/```(?:json)?\s*/gi, '').replace(/```/g, '').trim()
+    const m = s.match(/\{[\s\S]*\}/)
+    if (m) return JSON.parse(m[0])
+  } catch { /* */ }
+  return { question: text.replace(/```json?/gi, '').slice(0, 120), answer: '—', hint: '', solution_steps: [] }
 }
