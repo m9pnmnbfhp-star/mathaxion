@@ -1052,6 +1052,105 @@ export const GRADES = [
   },
 ]
 
+export const DIMOTIKO_GRADES = [
+  {
+    id: 'a-dimotikou',
+    label: 'Α\' Δημοτικού',
+    shortLabel: 'Α\' Δημ.',
+    description: 'Αριθμοί 0-100, πρόσθεση & αφαίρεση, σχήματα',
+    level: 'dimotiko',
+    grade: 1,
+    color: '#f59e0b',
+    icon: '①',
+    chapters: [
+      { id: 'arithmoi-a-dim', title: '1. Αριθμοί 0–20', emoji: '🔢', description: 'Μέτρηση, διάταξη, σύγκριση', concepts: ['Αριθμοί 0-10', 'Αριθμοί 11-20', 'Διάταξη αριθμών', 'Σύγκριση αριθμών'], difficulty: 1, estimatedHours: 4 },
+      { id: 'prosthesi-a-dim', title: '2. Πρόσθεση & Αφαίρεση', emoji: '➕', description: 'Πρόσθεση και αφαίρεση αριθμών έως 20', concepts: ['Πρόσθεση αριθμών', 'Αφαίρεση αριθμών', 'Προβλήματα πρόσθεσης και αφαίρεσης'], difficulty: 1, estimatedHours: 6 },
+      { id: 'arithmoi-100-a-dim', title: '3. Αριθμοί έως 100', emoji: '💯', description: 'Δεκάδες, μονάδες, διάταξη', concepts: ['Δεκάδες', 'Μονάδες', 'Αριθμοί 20-100', 'Στρογγυλοποίηση στις δεκάδες'], difficulty: 1, estimatedHours: 5 },
+      { id: 'sximata-a-dim', title: '4. Σχήματα & Μετρήσεις', emoji: '📐', description: 'Επίπεδα σχήματα, μήκος, βάρος, χωρητικότητα', concepts: ['Επίπεδα σχήματα', 'Μέτρηση μήκους', 'Μέτρηση βάρους', 'Χρόνος'], difficulty: 1, estimatedHours: 4 },
+    ],
+  },
+  {
+    id: 'b-dimotikou',
+    label: 'Β\' Δημοτικού',
+    shortLabel: 'Β\' Δημ.',
+    description: 'Αριθμοί έως 1000, πολλαπλασιασμός, γεωμετρία',
+    level: 'dimotiko',
+    grade: 2,
+    color: '#10b981',
+    icon: '②',
+    chapters: [
+      { id: 'arithmoi-1000-b-dim', title: '1. Αριθμοί έως 1000', emoji: '🔢', description: 'Εκατοντάδες, δεκάδες, μονάδες', concepts: ['Αριθμοί 100-1000', 'Ανάλυση αριθμών', 'Διάταξη και σύγκριση', 'Στρογγυλοποίηση'], difficulty: 1, estimatedHours: 5 },
+      { id: 'prosthesi-b-dim', title: '2. Πρόσθεση & Αφαίρεση', emoji: '➕', description: 'Πράξεις με αριθμούς έως 1000', concepts: ['Πρόσθεση με κρατούμενο', 'Αφαίρεση με δανεισμό', 'Προβλήματα'], difficulty: 2, estimatedHours: 6 },
+      { id: 'pollaplasiasmos-b-dim', title: '3. Εισαγωγή στον Πολλαπλασιασμό', emoji: '✖️', description: 'Πολλαπλασιασμός ως επανειλημμένη πρόσθεση', concepts: ['Πολλαπλασιασμός 2, 3, 4, 5', 'Πίνακας πολλαπλασιασμού', 'Προβλήματα πολλαπλασιασμού'], difficulty: 2, estimatedHours: 7 },
+      { id: 'geometria-b-dim', title: '4. Γεωμετρία', emoji: '📐', description: 'Γραμμές, γωνίες, σχήματα', concepts: ['Ευθείες και καμπύλες', 'Γωνίες', 'Τετράγωνο, ορθογώνιο, τρίγωνο', 'Περίμετρος'], difficulty: 1, estimatedHours: 4 },
+    ],
+  },
+  {
+    id: 'g-dimotikou',
+    label: 'Γ\' Δημοτικού',
+    shortLabel: 'Γ\' Δημ.',
+    description: 'Πολλαπλασιασμός, διαίρεση, κλάσματα',
+    level: 'dimotiko',
+    grade: 3,
+    color: '#6366f1',
+    icon: '③',
+    chapters: [
+      { id: 'pollaplasiasmos-g-dim', title: '1. Πολλαπλασιασμός', emoji: '✖️', description: 'Πίνακας πολλαπλασιασμού, πολλαπλασιασμός πολυψήφιων', concepts: ['Πίνακας πολλαπλασιασμού έως 10×10', 'Πολλαπλασιασμός με 10, 100, 1000', 'Πολλαπλασιασμός πολυψήφιων αριθμών'], difficulty: 2, estimatedHours: 7 },
+      { id: 'diairesi-g-dim', title: '2. Διαίρεση', emoji: '➗', description: 'Διαίρεση ακεραίων, υπόλοιπο', concepts: ['Διαίρεση ως αντίστροφη πράξη', 'Ευκλείδεια διαίρεση', 'Προβλήματα διαίρεσης'], difficulty: 2, estimatedHours: 7 },
+      { id: 'klasmata-g-dim', title: '3. Εισαγωγή στα Κλάσματα', emoji: '½', description: 'Έννοια κλάσματος, ισοδύναμα, σύγκριση', concepts: ['Η έννοια του κλάσματος', 'Κλάσματα της μονάδας', 'Σύγκριση κλασμάτων'], difficulty: 2, estimatedHours: 5 },
+      { id: 'metriseis-g-dim', title: '4. Μετρήσεις & Γεωμετρία', emoji: '📏', description: 'Μονάδες μέτρησης, εμβαδόν, περίμετρος', concepts: ['Μονάδες μήκους', 'Μονάδες βάρους', 'Περίμετρος ορθογωνίου', 'Εμβαδόν τετραγώνου'], difficulty: 2, estimatedHours: 5 },
+    ],
+  },
+  {
+    id: 'd-dimotikou',
+    label: 'Δ\' Δημοτικού',
+    shortLabel: 'Δ\' Δημ.',
+    description: 'Κλάσματα, δεκαδικοί, γεωμετρία',
+    level: 'dimotiko',
+    grade: 4,
+    color: '#ec4899',
+    icon: '④',
+    chapters: [
+      { id: 'klasmata-d-dim', title: '1. Κλάσματα', emoji: '½', description: 'Ισοδύναμα κλάσματα, πράξεις', concepts: ['Ισοδύναμα κλάσματα', 'Πρόσθεση και αφαίρεση ομοιονόμων', 'Μικτοί αριθμοί', 'Προβλήματα με κλάσματα'], difficulty: 2, estimatedHours: 8 },
+      { id: 'dekadikoi-d-dim', title: '2. Δεκαδικοί Αριθμοί', emoji: '📊', description: 'Δεκαδικοί, σύγκριση, πράξεις', concepts: ['Δεκαδικοί αριθμοί', 'Σύγκριση δεκαδικών', 'Πρόσθεση και αφαίρεση δεκαδικών', 'Στρογγυλοποίηση'], difficulty: 2, estimatedHours: 7 },
+      { id: 'geometria-d-dim', title: '3. Γεωμετρία', emoji: '📐', description: 'Γωνίες, τρίγωνα, τετράπλευρα', concepts: ['Είδη γωνιών', 'Είδη τριγώνων', 'Ορθογώνιο παραλληλόγραμμο', 'Εμβαδόν ορθογωνίου'], difficulty: 2, estimatedHours: 6 },
+      { id: 'statisitiki-d-dim', title: '4. Στατιστική', emoji: '📈', description: 'Πίνακες, ραβδογράμματα', concepts: ['Συγκέντρωση δεδομένων', 'Ραβδόγραμμα', 'Κυκλικό διάγραμμα'], difficulty: 1, estimatedHours: 3 },
+    ],
+  },
+  {
+    id: 'e-dimotikou',
+    label: 'Ε\' Δημοτικού',
+    shortLabel: 'Ε\' Δημ.',
+    description: 'Κλάσματα-δεκαδικοί, εμβαδόν, αναλογίες',
+    level: 'dimotiko',
+    grade: 5,
+    color: '#14b8a6',
+    icon: '⑤',
+    chapters: [
+      { id: 'arithmoi-e-dim', title: '1. Αριθμοί & Πράξεις', emoji: '🔢', description: 'Φυσικοί, κλάσματα, δεκαδικοί', concepts: ['Φυσικοί αριθμοί — επανάληψη', 'Κλάσματα — πολλαπλασιασμός και διαίρεση', 'Δεκαδικοί αριθμοί — πολλαπλασιασμός'], difficulty: 3, estimatedHours: 8 },
+      { id: 'analogies-e-dim', title: '2. Αναλογίες', emoji: '⚖️', description: 'Ευθεία και αντίστροφη αναλογία', concepts: ['Ευθεία αναλογία', 'Αντίστροφη αναλογία', 'Προβλήματα αναλογιών'], difficulty: 3, estimatedHours: 6 },
+      { id: 'emvadon-e-dim', title: '3. Εμβαδόν & Όγκος', emoji: '📦', description: 'Εμβαδόν σχημάτων, όγκος ορθογωνίου παραλληλεπιπέδου', concepts: ['Εμβαδόν τριγώνου', 'Εμβαδόν παραλληλογράμμου', 'Εμβαδόν τραπεζίου', 'Όγκος ορθογωνίου παραλληλεπιπέδου'], difficulty: 3, estimatedHours: 7 },
+      { id: 'geometria-e-dim', title: '4. Γεωμετρία', emoji: '📐', description: 'Κύκλος, κυλίνδρος, συντεταγμένες', concepts: ['Κύκλος — ακτίνα, διάμετρος', 'Περιφέρεια κύκλου', 'Συστήματα συντεταγμένων'], difficulty: 2, estimatedHours: 5 },
+    ],
+  },
+  {
+    id: 'st-dimotikou',
+    label: 'ΣΤ\' Δημοτικού',
+    shortLabel: 'ΣΤ\' Δημ.',
+    description: 'Ποσοστά, εμβαδόν, εισαγωγή στην άλγεβρα',
+    level: 'dimotiko',
+    grade: 6,
+    color: '#f97316',
+    icon: '⑥',
+    chapters: [
+      { id: 'pososta-st-dim', title: '1. Ποσοστά', emoji: '💯', description: 'Έννοια ποσοστού, υπολογισμοί', concepts: ['Η έννοια του ποσοστού', 'Υπολογισμός ποσοστού', 'Ποσοστιαία μεταβολή', 'Προβλήματα ποσοστών'], difficulty: 3, estimatedHours: 7 },
+      { id: 'emvadon-ogkos-st-dim', title: '2. Εμβαδόν & Όγκος', emoji: '📦', description: 'Εμβαδόν επιφανειών, όγκος στερεών', concepts: ['Εμβαδόν κύκλου', 'Επιφάνεια κυλίνδρου', 'Όγκος κυλίνδρου', 'Εμβαδόν σύνθετων σχημάτων'], difficulty: 3, estimatedHours: 7 },
+      { id: 'algebra-st-dim', title: '3. Εισαγωγή στην Άλγεβρα', emoji: '🔡', description: 'Άγνωστος, εξισώσεις, γράφοι', concepts: ['Άγνωστος σε εξίσωση', 'Απλές εξισώσεις', 'Γράφοι συνάρτησης'], difficulty: 3, estimatedHours: 6 },
+      { id: 'pithanotites-st-dim', title: '4. Πιθανότητες & Στατιστική', emoji: '🎲', description: 'Βασικές πιθανότητες, ανάλυση δεδομένων', concepts: ['Έννοια πιθανότητας', 'Απλές πιθανότητες', 'Μέσος όρος', 'Ανάλυση δεδομένων'], difficulty: 2, estimatedHours: 5 },
+    ],
+  },
+]
+
 export const getGrade = (id) => GRADES.find(g => g.id === id)
 export const getChapter = (gradeId, chapterId) => {
   const grade = getGrade(gradeId)
