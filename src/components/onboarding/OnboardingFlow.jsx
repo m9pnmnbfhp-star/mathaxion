@@ -1,18 +1,19 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { CheckCircle2, ArrowRight } from 'lucide-react'
+import { CheckCircle2, ArrowRight, Mail, Lock, User, Eye, EyeOff } from 'lucide-react'
 import { GRADES, DIMOTIKO_GRADES } from '../../data/curriculum'
 import useStore from '../../store/useStore'
-import { updateProfile } from '../../lib/supabase'
+import { updateProfile, signUp, signInWithGoogle } from '../../lib/supabase'
+import toast from 'react-hot-toast'
 
 const ALL_GRADES = [...DIMOTIKO_GRADES, ...GRADES.filter(g => !g.comingSoon)]
 
 const GOALS = [
-  { id: 'lesson',     emoji: '📖', label: 'Να καταλάβω το σημερινό μάθημα' },
-  { id: 'tests',      emoji: '📝', label: 'Να προετοιμαστώ για διαγωνίσματα' },
-  { id: 'panellinies',emoji: '🎓', label: 'Πανελλαδικές' },
-  { id: 'grades',     emoji: '💯', label: 'Να βελτιώσω τον βαθμό μου' },
-  { id: 'love',       emoji: '❤️', label: 'Μου αρέσουν τα μαθηματικά' },
+  { id: 'lesson',      emoji: '📖', label: 'Να καταλάβω το σημερινό μάθημα' },
+  { id: 'tests',       emoji: '📝', label: 'Να προετοιμαστώ για διαγωνίσματα' },
+  { id: 'panellinies', emoji: '🎓', label: 'Πανελλαδικές' },
+  { id: 'grades',      emoji: '💯', label: 'Να βελτιώσω τον βαθμό μου' },
+  { id: 'love',        emoji: '❤️', label: 'Μου αρέσουν τα μαθηματικά' },
 ]
 
 const CONFIDENCE = [
@@ -38,11 +39,11 @@ const FRUSTRATIONS = [
 ]
 
 const PERSONALITIES = [
-  { id: 'funny',        emoji: '😄', label: 'Αστεία',          desc: 'Με χιούμορ και jokes' },
-  { id: 'friendly',     emoji: '😊', label: 'Φιλικά',          desc: 'Σαν φίλος που σε βοηθά' },
-  { id: 'serious',      emoji: '📚', label: 'Σοβαρά',          desc: 'Straight to the point' },
-  { id: 'professional', emoji: '👔', label: 'Επαγγελματικά',   desc: 'Σαν καθηγητής' },
-  { id: 'motivational', emoji: '🚀', label: 'Με ενθάρρυνση',   desc: '"Μπράβο! Τα πας τέλεια!"' },
+  { id: 'funny',        emoji: '😄', label: 'Αστεία',        desc: 'Με χιούμορ και jokes' },
+  { id: 'friendly',     emoji: '😊', label: 'Φιλικά',        desc: 'Σαν φίλος που σε βοηθά' },
+  { id: 'serious',      emoji: '📚', label: 'Σοβαρά',        desc: 'Straight to the point' },
+  { id: 'professional', emoji: '👔', label: 'Επαγγελματικά', desc: 'Σαν καθηγητής' },
+  { id: 'motivational', emoji: '🚀', label: 'Με ενθάρρυνση', desc: '"Μπράβο! Τα πας τέλεια!"' },
 ]
 
 const SPRING = { type: 'spring', stiffness: 360, damping: 28 }
@@ -65,16 +66,18 @@ async function fireConfetti() {
   }, 350)
 }
 
-export default function OnboardingFlow() {
-  const { user, completeOnboarding } = useStore()
+const TOTAL_STEPS = 6
+const SIGNUP_STEP  = 7
+const FINISH_STEP  = 8
+
+export default function OnboardingFlow({ preAuth = false }) {
+  const { user, completeOnboarding, setPreAuthOnboarding } = useStore()
   const [step, setStep] = useState(0)
   const [dir,  setDir]  = useState(1)
   const [ans,  setAns]  = useState({ grade: null, goal: null, confidence: null, time: null, frustration: null, personality: null })
 
   const name = user?.user_metadata?.display_name || user?.email?.split('@')[0] || 'Μαθητή'
-  const TOTAL_STEPS = 6 // grade, goal, confidence, time, frustration, personality
-  const FINISH_STEP = 7
-  const progress = step === 0 ? 0 : step >= FINISH_STEP ? 100 : ((step - 1) / TOTAL_STEPS) * 100
+  const progress = step === 0 ? 0 : step >= TOTAL_STEPS + 1 ? 100 : ((step - 1) / TOTAL_STEPS) * 100
 
   const go = (next) => { setDir(next > step ? 1 : -1); setStep(next) }
 
@@ -83,35 +86,54 @@ export default function OnboardingFlow() {
     setTimeout(() => go(nextStep), 280)
   }
 
-  const pickFrustration = (value) => {
-    setAns(prev => ({ ...prev, frustration: value }))
-    setTimeout(() => go(6), 280)
-  }
-
   const pickPersonality = (value) => {
     const final = { ...ans, personality: value, completedAt: Date.now() }
     setAns(final)
     setDir(1)
-    setStep(FINISH_STEP)
     fireConfetti()
-    if (user?.id) {
-      updateProfile(user.id, {
-        onboarding: final,
-        onboarding_completed: true,
-        grade: final.grade,
-      }).catch(() => {})
+
+    if (preAuth) {
+      localStorage.setItem('pendingOnboarding', JSON.stringify(final))
+      setStep(SIGNUP_STEP)
+    } else {
+      setStep(SIGNUP_STEP) // in post-auth mode SIGNUP_STEP renders FinishScreen
+      if (user?.id) {
+        updateProfile(user.id, {
+          onboarding: final,
+          onboarding_completed: true,
+          grade: final.grade,
+        }).catch(() => {})
+      }
+      useStore.setState({ onboarding: final })
     }
-    useStore.setState({ onboarding: final })
   }
 
-  const dismiss = () => completeOnboarding(ans)
+  const onSignupDone = (userData, enrichedAnswers) => {
+    if (userData?.id) {
+      updateProfile(userData.id, {
+        onboarding: enrichedAnswers,
+        onboarding_completed: true,
+        grade: enrichedAnswers.grade,
+      }).catch(() => {})
+    }
+    useStore.setState({ onboarding: enrichedAnswers, onboardingCompleted: true })
+    localStorage.removeItem('pendingOnboarding')
+    setPreAuthOnboarding(false)
+    setAns(enrichedAnswers)
+    go(FINISH_STEP)
+  }
+
+  const dismiss = () => {
+    completeOnboarding(ans)
+    if (preAuth) setPreAuthOnboarding(false)
+  }
 
   return (
     <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center p-4"
       style={{ background: '#0a0a0f' }}>
 
       {/* Progress bar */}
-      {step > 0 && step < 6 && (
+      {step > 0 && step <= TOTAL_STEPS && (
         <div className="absolute top-0 left-0 right-0 h-[3px]" style={{ background: 'rgba(255,255,255,0.06)' }}>
           <motion.div className="h-full" initial={{ width: 0 }}
             animate={{ width: `${progress}%` }}
@@ -125,7 +147,7 @@ export default function OnboardingFlow() {
 
           {step === 0 && (
             <motion.div key="welcome" {...slide(dir)}>
-              <WelcomeScreen name={name} onStart={() => go(1)} />
+              <WelcomeScreen name={preAuth ? null : name} onStart={() => go(1)} />
             </motion.div>
           )}
 
@@ -166,7 +188,7 @@ export default function OnboardingFlow() {
               <ChoiceScreen
                 question="✨ Τι σε δυσκολεύει περισσότερο;" options={FRUSTRATIONS}
                 selected={ans.frustration} onBack={() => go(4)}
-                onSelect={pickFrustration} />
+                onSelect={(v) => pick('frustration', v, 6)} />
             </motion.div>
           )}
 
@@ -176,9 +198,23 @@ export default function OnboardingFlow() {
             </motion.div>
           )}
 
-          {step === FINISH_STEP && (
-            <motion.div key="finish" {...slide(dir)}>
+          {/* Step 7: signup (pre-auth) OR finish (post-auth) */}
+          {step === SIGNUP_STEP && preAuth && (
+            <motion.div key="signup" {...slide(dir)}>
+              <SignupScreen answers={ans} onBack={() => go(6)} onDone={onSignupDone} />
+            </motion.div>
+          )}
+
+          {step === SIGNUP_STEP && !preAuth && (
+            <motion.div key="finish-direct" {...slide(dir)}>
               <FinishScreen name={name} answers={ans} onDone={dismiss} />
+            </motion.div>
+          )}
+
+          {/* Step 8: finish after pre-auth signup */}
+          {step === FINISH_STEP && (
+            <motion.div key="finish-postauth" {...slide(dir)}>
+              <FinishScreen name={ans.signupName || 'Μαθητή'} answers={ans} onDone={dismiss} />
             </motion.div>
           )}
 
@@ -186,7 +222,7 @@ export default function OnboardingFlow() {
       </div>
 
       {/* Step dots */}
-      {step > 0 && step < FINISH_STEP && (
+      {step > 0 && step <= TOTAL_STEPS && (
         <div className="absolute bottom-8 flex gap-2">
           {Array.from({ length: TOTAL_STEPS }).map((_, i) => (
             <div key={i} className="w-1.5 h-1.5 rounded-full transition-all duration-300"
@@ -210,8 +246,10 @@ function WelcomeScreen({ name, onStart }) {
 
       <motion.h1 initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1, ...SPRING }}
         className="font-display font-black text-4xl text-white mb-3 leading-tight">
-        Καλώς ήρθες στο<br />
-        <span className="text-gradient">MathAxion!</span>
+        {name ? `Γεια σου, ${name}!` : 'Καλώς ήρθες στο'}<br />
+        {name
+          ? <span className="text-gradient">Φτιάχνουμε το πρόγραμμά σου.</span>
+          : <span className="text-gradient">MathAxion!</span>}
       </motion.h1>
 
       <motion.p initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2, ...SPRING }}
@@ -247,7 +285,6 @@ function GradeScreen({ selected, onBack, onSelect }) {
       <div className="max-h-[60vh] overflow-y-auto space-y-2 pr-1"
         style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(255,255,255,0.1) transparent' }}>
 
-        {/* Δημοτικό group */}
         <p className="text-[10px] font-black tracking-widest uppercase mb-1 px-1" style={{ color: 'var(--fg-3)' }}>Δημοτικό</p>
         {DIMOTIKO_GRADES.map(g => (
           <OptionBtn key={g.id} selected={selected === g.id} onClick={() => onSelect(g.id)}
@@ -366,6 +403,101 @@ function PersonalityScreen({ selected, onBack, onSelect }) {
   )
 }
 
+/* ─── SIGNUP (pre-auth only) ─────────────────────────────────────── */
+function SignupScreen({ answers, onBack, onDone }) {
+  const [loading, setLoading] = useState(false)
+  const [showPass, setShowPass] = useState(false)
+  const [form, setForm] = useState({ name: '', email: '', password: '' })
+
+  const handleEmail = async (e) => {
+    e.preventDefault()
+    if (form.password.length < 6) { toast.error('Τουλάχιστον 6 χαρακτήρες'); return }
+    setLoading(true)
+    try {
+      const { data, error } = await signUp(form.email, form.password, { display_name: form.name })
+      if (error) throw error
+      const enriched = { ...answers, signupName: form.name }
+      onDone(data?.user, enriched)
+      toast.success('Καλώς ήρθες! 🎉')
+    } catch (err) {
+      toast.error(err.message || 'Κάτι πήγε στραβά')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleGoogle = async () => {
+    localStorage.setItem('pendingOnboarding', JSON.stringify(answers))
+    try {
+      const { error } = await signInWithGoogle()
+      if (error) throw error
+    } catch (err) {
+      toast.error(err.message || 'Σφάλμα σύνδεσης με Google')
+    }
+  }
+
+  return (
+    <div>
+      <div className="text-center mb-7">
+        <motion.div initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
+          transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+          className="text-5xl mb-4 select-none">🔐</motion.div>
+        <h2 className="font-display font-black text-2xl text-white mb-1">
+          Αποθήκευσε το πρόγραμμά σου
+        </h2>
+        <p className="text-sm" style={{ color: 'var(--fg-3)' }}>
+          Δημιούργησε δωρεάν λογαριασμό για να μην χαθεί τίποτα.
+        </p>
+      </div>
+
+      <motion.button whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.98 }}
+        onClick={handleGoogle}
+        className="w-full flex items-center justify-center gap-2.5 py-3 rounded-xl text-sm font-medium mb-4 cursor-pointer transition-colors"
+        style={{ background: '#1c1c28', border: '1px solid rgba(255,255,255,0.1)', color: 'var(--fg-2)' }}
+        onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.2)'; e.currentTarget.style.color = 'white' }}
+        onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'; e.currentTarget.style.color = 'var(--fg-2)' }}>
+        <svg width="16" height="16" viewBox="0 0 24 24">
+          <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+          <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+          <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+          <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+        </svg>
+        Συνέχεια με Google
+      </motion.button>
+
+      <div className="flex items-center gap-3 mb-4">
+        <div className="flex-1 h-px" style={{ background: 'rgba(255,255,255,0.06)' }} />
+        <span className="text-[11px]" style={{ color: 'var(--fg-3)' }}>ή με email</span>
+        <div className="flex-1 h-px" style={{ background: 'rgba(255,255,255,0.06)' }} />
+      </div>
+
+      <form onSubmit={handleEmail} className="space-y-2.5">
+        <InputField icon={User} placeholder="Όνομα" value={form.name}
+          onChange={v => setForm({ ...form, name: v })} />
+        <InputField icon={Mail} type="email" placeholder="Email" value={form.email}
+          onChange={v => setForm({ ...form, email: v })} />
+        <InputField icon={Lock} type={showPass ? 'text' : 'password'} placeholder="Κωδικός (6+ χαρακτήρες)"
+          value={form.password} onChange={v => setForm({ ...form, password: v })}
+          suffix={
+            <button type="button" onClick={() => setShowPass(s => !s)}
+              className="text-slate-500 hover:text-slate-300 transition-colors shrink-0 cursor-pointer">
+              {showPass ? <EyeOff size={15} /> : <Eye size={15} />}
+            </button>
+          } />
+
+        <motion.button whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.98 }}
+          type="submit" disabled={loading}
+          className="w-full py-3.5 rounded-xl font-black text-white cursor-pointer disabled:opacity-60 mt-1"
+          style={{ background: 'linear-gradient(135deg, #7c3aed, #6d28d9)', boxShadow: '0 0 24px rgba(124,58,237,0.4)' }}>
+          {loading ? 'Δημιουργία...' : 'Δημιουργία λογαριασμού →'}
+        </motion.button>
+      </form>
+
+      <BackBtn onClick={onBack} />
+    </div>
+  )
+}
+
 /* ─── FINISH ──────────────────────────────────────────────────────── */
 const FRUSTRATION_AI = {
   theory:   '📖 Ο Axi θα σου εξηγεί πάντα βήμα-βήμα',
@@ -404,7 +536,6 @@ function FinishScreen({ name, answers, onDone }) {
         Φτιάξαμε το προσωπικό σου learning plan, {name}.
       </motion.p>
 
-      {/* Plan summary card */}
       <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}
         className="text-left rounded-2xl p-5 mb-6 space-y-3"
         style={{ background: '#16161f', border: '1px solid rgba(124,58,237,0.25)' }}>
@@ -462,7 +593,7 @@ function FinishScreen({ name, answers, onDone }) {
   )
 }
 
-/* ─── SHARED COMPONENTS ──────────────────────────────────────────── */
+/* ─── SHARED ─────────────────────────────────────────────────────── */
 function OptionBtn({ selected, onClick, left, label }) {
   return (
     <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
@@ -482,6 +613,21 @@ function OptionBtn({ selected, onClick, left, label }) {
         </motion.div>
       )}
     </motion.button>
+  )
+}
+
+function InputField({ icon: Icon, type = 'text', placeholder, value, onChange, suffix }) {
+  return (
+    <div className="flex items-center gap-2.5 rounded-xl px-3.5 py-2.5 transition-colors"
+      style={{ background: '#1c1c28', border: '1px solid rgba(255,255,255,0.08)' }}
+      onFocus={e => e.currentTarget.style.borderColor = 'rgba(124,58,237,0.4)'}
+      onBlur={e => e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'}>
+      <Icon size={15} style={{ color: 'var(--fg-3)' }} className="shrink-0" />
+      <input type={type} placeholder={placeholder} value={value}
+        onChange={e => onChange(e.target.value)} required
+        className="flex-1 bg-transparent text-sm text-white placeholder-slate-500 outline-none" />
+      {suffix}
+    </div>
   )
 }
 

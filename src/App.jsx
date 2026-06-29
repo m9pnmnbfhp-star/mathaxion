@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
-import { supabase, getProfile } from './lib/supabase'
+import { supabase, getProfile, updateProfile } from './lib/supabase'
 import useStore from './store/useStore'
 import Header from './components/layout/Header'
 import AuthModal from './components/auth/AuthModal'
@@ -16,7 +16,7 @@ import PanelliniesPage from './pages/PanelliniesPage'
 import LeaderboardPage from './pages/LeaderboardPage'
 
 export default function App() {
-  const { setUser, setProfile, setAuthModal, setOnboardingCompleted, setOnboarding, user, onboardingCompleted } = useStore()
+  const { setUser, setProfile, setAuthModal, setOnboardingCompleted, setOnboarding, setPreAuthOnboarding, user, onboardingCompleted, preAuthOnboardingOpen } = useStore()
 
   useEffect(() => {
     const loadUser = (user) => {
@@ -24,10 +24,21 @@ export default function App() {
       if (user) {
         getProfile(user.id).then(({ data }) => {
           setProfile(data)
-          // Sync onboarding state from Supabase so returning users skip it
           if (data?.onboarding_completed) {
             setOnboardingCompleted(true)
             if (data?.onboarding) setOnboarding(data.onboarding)
+          }
+          // Restore pre-auth onboarding answers saved before Google redirect
+          const pending = localStorage.getItem('pendingOnboarding')
+          if (pending && !data?.onboarding_completed) {
+            try {
+              const answers = JSON.parse(pending)
+              updateProfile(user.id, { onboarding: answers, onboarding_completed: true, grade: answers.grade }).catch(() => {})
+              setOnboarding(answers)
+              setOnboardingCompleted(true)
+              setPreAuthOnboarding(false)
+            } catch (_) {}
+            localStorage.removeItem('pendingOnboarding')
           }
         })
       } else {
@@ -69,8 +80,10 @@ export default function App() {
           </Routes>
         </main>
 
-        {/* Onboarding overlay — shown once to new users */}
-        {user && !onboardingCompleted && <OnboardingFlow />}
+        {/* Onboarding overlay — shown on signup (pre-auth) or once for new logged-in users */}
+        {(preAuthOnboardingOpen || (user && !onboardingCompleted)) && (
+          <OnboardingFlow preAuth={preAuthOnboardingOpen && !user} />
+        )}
 
         {/* Global modals */}
         <AuthModal />

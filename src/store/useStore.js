@@ -89,8 +89,16 @@ const useStore = create(
       // Modal state
       authModalOpen: false,
       authModalMode: 'login',
+      preAuthOnboardingOpen: false,
       upgradeModalOpen: false,
-      setAuthModal: (open, mode = 'login') => set({ authModalOpen: open, authModalMode: mode }),
+      setAuthModal: (open, mode = 'login') => {
+        if (open && mode === 'signup') {
+          set({ preAuthOnboardingOpen: true, authModalOpen: false })
+        } else {
+          set({ authModalOpen: open, authModalMode: mode, preAuthOnboardingOpen: false })
+        }
+      },
+      setPreAuthOnboarding: (open) => set({ preAuthOnboardingOpen: open }),
       setUpgradeModal: (open) => set({ upgradeModalOpen: open }),
 
       // Toast / notifications
