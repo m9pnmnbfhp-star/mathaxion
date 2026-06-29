@@ -6,6 +6,7 @@ import Card from '../ui/Card'
 import AIResponse from '../ui/AIResponse'
 import { LEVEL_DESCRIPTIONS } from '../../data/curriculum'
 import { generateExercise, explainWrongAnswer, generateSimilarExercises } from '../../lib/anthropic'
+import { correctMessage, levelUpMessage, streakMessage } from '../../lib/personalizedMessages'
 import useStore from '../../store/useStore'
 import toast from 'react-hot-toast'
 
@@ -78,9 +79,13 @@ export default function ExerciseSystem({ grade, chapter, topic, onXPGained }) {
         setTimeout(() => setShowConfetti(false), 2000)
       }
 
+      if (newStreak > 0 && newStreak % 5 === 0) {
+        toast.success(streakMessage(newStreak), { duration: 2500 })
+      }
+
       if (totalCorrect + 1 >= REQUIRED_CORRECT_TO_ADVANCE && currentLevel < 4) {
         setTimeout(() => {
-          toast.success(`🎉 Προχωράς στο Επίπεδο ${currentLevel + 1}!`, { duration: 4000 })
+          toast.success(levelUpMessage(currentLevel + 1), { duration: 4000 })
           setCurrentLevel(prev => prev + 1)
           setCorrectStreak(0)
           setTotalCorrect(0)
@@ -287,7 +292,7 @@ export default function ExerciseSystem({ grade, chapter, topic, onXPGained }) {
                         {isCorrect ? (
                           <>
                             <CheckCircle size={18} className="text-emerald-400" />
-                            <span className="font-semibold text-emerald-300">Σωστό! +{XP_PER_CORRECT[currentLevel]} XP</span>
+                            <span className="font-semibold text-emerald-300">{correctMessage(XP_PER_CORRECT[currentLevel])}</span>
                           </>
                         ) : (
                           <>

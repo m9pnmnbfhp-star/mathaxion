@@ -37,6 +37,14 @@ const FRUSTRATIONS = [
   { id: 'start',    emoji: '🤷', label: 'Δεν ξέρω από πού να αρχίσω' },
 ]
 
+const PERSONALITIES = [
+  { id: 'funny',        emoji: '😄', label: 'Αστεία',          desc: 'Με χιούμορ και jokes' },
+  { id: 'friendly',     emoji: '😊', label: 'Φιλικά',          desc: 'Σαν φίλος που σε βοηθά' },
+  { id: 'serious',      emoji: '📚', label: 'Σοβαρά',          desc: 'Straight to the point' },
+  { id: 'professional', emoji: '👔', label: 'Επαγγελματικά',   desc: 'Σαν καθηγητής' },
+  { id: 'motivational', emoji: '🚀', label: 'Με ενθάρρυνση',   desc: '"Μπράβο! Τα πας τέλεια!"' },
+]
+
 const SPRING = { type: 'spring', stiffness: 360, damping: 28 }
 
 function slide(dir) {
@@ -61,11 +69,12 @@ export default function OnboardingFlow() {
   const { user, completeOnboarding } = useStore()
   const [step, setStep] = useState(0)
   const [dir,  setDir]  = useState(1)
-  const [ans,  setAns]  = useState({ grade: null, goal: null, confidence: null, time: null, frustration: null })
+  const [ans,  setAns]  = useState({ grade: null, goal: null, confidence: null, time: null, frustration: null, personality: null })
 
   const name = user?.user_metadata?.display_name || user?.email?.split('@')[0] || 'Μαθητή'
-  const TOTAL_STEPS = 5 // grade, goal, confidence, time, frustration
-  const progress = step === 0 ? 0 : step === 6 ? 100 : ((step - 1) / TOTAL_STEPS) * 100
+  const TOTAL_STEPS = 6 // grade, goal, confidence, time, frustration, personality
+  const FINISH_STEP = 7
+  const progress = step === 0 ? 0 : step >= FINISH_STEP ? 100 : ((step - 1) / TOTAL_STEPS) * 100
 
   const go = (next) => { setDir(next > step ? 1 : -1); setStep(next) }
 
@@ -75,12 +84,16 @@ export default function OnboardingFlow() {
   }
 
   const pickFrustration = (value) => {
-    const final = { ...ans, frustration: value, completedAt: Date.now() }
+    setAns(prev => ({ ...prev, frustration: value }))
+    setTimeout(() => go(6), 280)
+  }
+
+  const pickPersonality = (value) => {
+    const final = { ...ans, personality: value, completedAt: Date.now() }
     setAns(final)
     setDir(1)
-    setStep(6)
+    setStep(FINISH_STEP)
     fireConfetti()
-    // Persist — best effort to Supabase
     if (user?.id) {
       updateProfile(user.id, {
         onboarding: final,
@@ -88,8 +101,6 @@ export default function OnboardingFlow() {
         grade: final.grade,
       }).catch(() => {})
     }
-    // Will completeOnboarding when user clicks "Αρχίζουμε"
-    // Store the data now so it's ready
     useStore.setState({ onboarding: final })
   }
 
@@ -160,6 +171,12 @@ export default function OnboardingFlow() {
           )}
 
           {step === 6 && (
+            <motion.div key="personality" {...slide(dir)}>
+              <PersonalityScreen selected={ans.personality} onBack={() => go(5)} onSelect={pickPersonality} />
+            </motion.div>
+          )}
+
+          {step === FINISH_STEP && (
             <motion.div key="finish" {...slide(dir)}>
               <FinishScreen name={name} answers={ans} onDone={dismiss} />
             </motion.div>
@@ -169,7 +186,7 @@ export default function OnboardingFlow() {
       </div>
 
       {/* Step dots */}
-      {step > 0 && step < 6 && (
+      {step > 0 && step < FINISH_STEP && (
         <div className="absolute bottom-8 flex gap-2">
           {Array.from({ length: TOTAL_STEPS }).map((_, i) => (
             <div key={i} className="w-1.5 h-1.5 rounded-full transition-all duration-300"
@@ -306,6 +323,49 @@ function TimeScreen({ selected, onBack, onSelect }) {
   )
 }
 
+/* ─── PERSONALITY ─────────────────────────────────────────────────── */
+function PersonalityScreen({ selected, onBack, onSelect }) {
+  return (
+    <div>
+      <div className="text-center mb-6">
+        <h2 className="font-display font-black text-2xl text-white leading-snug">
+          🤖 Πώς θέλεις να σου μιλάει ο Axi;
+        </h2>
+        <p className="text-sm mt-2" style={{ color: 'var(--fg-3)' }}>
+          Αυτό αλλάζει τα πάντα — εξηγήσεις, ασκήσεις, ειδοποιήσεις
+        </p>
+      </div>
+
+      <div className="space-y-2.5">
+        {PERSONALITIES.map(p => (
+          <motion.button key={p.id} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.96 }}
+            onClick={() => onSelect(p.id)}
+            className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl text-left cursor-pointer"
+            style={{
+              background: selected === p.id ? 'rgba(124,58,237,0.18)' : '#16161f',
+              border: `1.5px solid ${selected === p.id ? '#7c3aed' : 'rgba(255,255,255,0.08)'}`,
+              transition: 'background 0.15s, border-color 0.15s',
+            }}>
+            <span className="text-2xl">{p.emoji}</span>
+            <div className="flex-1 min-w-0">
+              <p className="font-bold text-white text-sm">{p.label}</p>
+              <p className="text-[11px]" style={{ color: 'var(--fg-3)' }}>{p.desc}</p>
+            </div>
+            {selected === p.id && (
+              <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}
+                transition={{ type: 'spring', stiffness: 500, damping: 22 }}>
+                <CheckCircle2 size={18} className="text-violet-400 shrink-0" />
+              </motion.div>
+            )}
+          </motion.button>
+        ))}
+      </div>
+
+      <BackBtn onClick={onBack} />
+    </div>
+  )
+}
+
 /* ─── FINISH ──────────────────────────────────────────────────────── */
 const FRUSTRATION_AI = {
   theory:   '📖 Ο Axi θα σου εξηγεί πάντα βήμα-βήμα',
@@ -313,6 +373,14 @@ const FRUSTRATION_AI = {
   forget:   '🔁 Κάθε session ξεκινά με γρήγορη επανάληψη',
   time:     '⚡ Ο Axi δίνει τις πιο γρήγορες λύσεις',
   start:    '🧭 Ο Axi σου δίνει πάντα το πρώτο βήμα',
+}
+
+const PERSONALITY_LABEL = {
+  funny:        '😄 Αστεία',
+  friendly:     '😊 Φιλικά',
+  serious:      '📚 Σοβαρά',
+  professional: '👔 Επαγγελματικά',
+  motivational: '🚀 Με ενθάρρυνση',
 }
 
 function FinishScreen({ name, answers, onDone }) {
@@ -351,10 +419,21 @@ function FinishScreen({ name, answers, onDone }) {
           </div>
         )}
 
-        {answers.frustration && (
+        {answers.personality && (
           <div className="flex items-center gap-3 pt-2"
             style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
             <span className="text-lg">🤖</span>
+            <div>
+              <p className="text-[11px]" style={{ color: 'var(--fg-3)' }}>Ύφος Axi</p>
+              <p className="font-bold text-white text-sm">{PERSONALITY_LABEL[answers.personality]}</p>
+            </div>
+          </div>
+        )}
+
+        {answers.frustration && (
+          <div className="flex items-center gap-3 pt-2"
+            style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+            <span className="text-lg">💡</span>
             <p className="text-sm font-medium" style={{ color: '#a78bfa' }}>
               {FRUSTRATION_AI[answers.frustration]}
             </p>
