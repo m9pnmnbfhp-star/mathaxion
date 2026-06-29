@@ -15,9 +15,12 @@ import toast from 'react-hot-toast'
 const XP_PER_CORRECT = { 1: 10, 2: 20, 3: 35, 4: 60 }
 const REQUIRED_CORRECT_TO_ADVANCE = 3
 
+const CONFIDENCE_START_LEVEL = { love: 3, ok: 2, struggle: 1, hard: 1 }
+
 export default function ExerciseSystem({ grade, chapter, topic, onXPGained }) {
-  const { isPro, addXP, setUpgradeModal, addWrongAnswer } = useStore()
-  const [currentLevel, setCurrentLevel] = useState(1)
+  const { isPro, addXP, setUpgradeModal, addWrongAnswer, onboarding } = useStore()
+  const startLevel = CONFIDENCE_START_LEVEL[onboarding?.confidence] ?? 1
+  const [currentLevel, setCurrentLevel] = useState(startLevel)
   const [exercise, setExercise] = useState(null)
   const [loading, setLoading] = useState(false)
   const [answer, setAnswer] = useState('')

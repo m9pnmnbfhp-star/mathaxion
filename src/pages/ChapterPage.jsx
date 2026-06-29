@@ -34,10 +34,11 @@ export default function ChapterPage() {
 
   const [activeTab, setActiveTab] = useState('theory')
   const [selectedConcept, setSelectedConcept] = useState(chapter?.concepts?.[0] || '')
-  const [simplicity, setSimplicity] = useState(2)
+  const { user, isPro, setAuthModal, setUpgradeModal, addXP, updateStreak, onboarding } = useStore()
+  const confidenceSimplicity = { love: 3, ok: 2, struggle: 1, hard: 0 }
+  const [simplicity, setSimplicity] = useState(confidenceSimplicity[onboarding?.confidence] ?? 2)
   const [theoryContent, setTheoryContent] = useState(null)
   const [theoryLoading, setTheoryLoading] = useState(false)
-  const { user, isPro, setAuthModal, setUpgradeModal, addXP, updateStreak } = useStore()
 
   if (!grade || !chapter) {
     return (
@@ -105,12 +106,24 @@ export default function ChapterPage() {
           </div>
           <div>
             <h1 className="text-xl font-black text-white mb-0.5">{chapter.title}</h1>
-            <div className="flex items-center gap-3 text-xs text-slate-500">
+            <div className="flex items-center flex-wrap gap-3 text-xs text-slate-500">
               <span style={{ color: grade.color }}>{grade.label}</span>
               <span>·</span>
               <span className="flex items-center gap-1"><Clock size={10} />{chapter.estimatedHours}h</span>
               <span>·</span>
               <span>{chapter.concepts.length} θέματα</span>
+              {onboarding?.goal === 'panellinies' && (
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold"
+                  style={{ background: 'rgba(124,58,237,0.12)', color: '#a78bfa', border: '1px solid rgba(124,58,237,0.2)' }}>
+                  📋 Πανελλήνιες
+                </span>
+              )}
+              {onboarding?.goal === 'tests' && (
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold"
+                  style={{ background: 'rgba(16,185,129,0.1)', color: '#34d399', border: '1px solid rgba(16,185,129,0.2)' }}>
+                  📝 Για διαγωνίσματα
+                </span>
+              )}
             </div>
           </div>
         </div>
