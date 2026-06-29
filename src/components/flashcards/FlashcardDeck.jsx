@@ -18,13 +18,18 @@ export default function FlashcardDeck({ grade, chapter, topic }) {
     try {
       const raw = await generateFlashcards(topic, chapter.title, grade)
       const json = extractJSONArray(raw)
+      if (!json.length) {
+        console.error('Flashcard parse failed. Raw response:', raw)
+        throw new Error('Αδύνατη ανάλυση απάντησης AI')
+      }
       setCards(json)
       setCurrentIndex(0)
       setFlipped(false)
       setKnown(new Set())
       setUnknown(new Set())
-    } catch {
+    } catch (e) {
       toast.error('Σφάλμα φόρτωσης flashcards')
+      console.error('Flashcard error:', e)
     } finally {
       setLoading(false)
     }
