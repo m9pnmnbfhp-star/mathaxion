@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { CheckCircle, XCircle, Lightbulb, RefreshCw, Lock } from 'lucide-react'
 import Button from '../ui/Button'
@@ -7,6 +7,7 @@ import AIResponse from '../ui/AIResponse'
 import { LEVEL_DESCRIPTIONS } from '../../data/curriculum'
 import { generateExercise, explainWrongAnswer, generateSimilarExercises } from '../../lib/anthropic'
 import { correctMessage, levelUpMessage, streakMessage } from '../../lib/personalizedMessages'
+import { showXPFloat } from '../../lib/xpFloat'
 import useStore from '../../store/useStore'
 import toast from 'react-hot-toast'
 
@@ -31,6 +32,20 @@ export default function ExerciseSystem({ grade, chapter, topic, onXPGained }) {
   const [usedExercises, setUsedExercises] = useState([])
   const [similarExercises, setSimilarExercises] = useState([])
   const [showConfetti, setShowConfetti] = useState(false)
+  const resultRef = useRef(null)
+  const submitBtnRef = useRef(null)
+
+  // Shake animation on wrong answer
+  useEffect(() => {
+    if (submitted && isCorrect === false && resultRef.current) {
+      const el = resultRef.current
+      el.classList.remove('is-shaking')
+      void el.offsetWidth
+      el.classList.add('is-shaking')
+      const t = setTimeout(() => el.classList.remove('is-shaking'), 300)
+      return () => clearTimeout(t)
+    }
+  }, [submitted, isCorrect])
 
   const loadExercise = useCallback(async (level = currentLevel) => {
     if (!isPro) {
@@ -69,6 +84,10 @@ export default function ExerciseSystem({ grade, chapter, topic, onXPGained }) {
       const xp = XP_PER_CORRECT[currentLevel]
       addXP(xp)
       onXPGained?.(xp)
+      if (submitBtnRef.current) {
+        const r = submitBtnRef.current.getBoundingClientRect()
+        showXPFloat(r.left + r.width / 2, r.top - 8, xp)
+      }
       const newStreak = correctStreak + 1
       setCorrectStreak(newStreak)
       setTotalCorrect(prev => prev + 1)
@@ -270,9 +289,11 @@ export default function ExerciseSystem({ grade, chapter, topic, onXPGained }) {
                       placeholder="Η απάντησή σου..."
                       className="flex-1 bg-[#1c1c28] border border-[#2a2a3a] rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-500 outline-none focus:border-violet-500/50 transition-colors"
                     />
-                    <Button onClick={handleSubmit} disabled={!answer.trim()}>
-                      Έλεγχος
-                    </Button>
+                    <div ref={submitBtnRef}>
+                      <Button onClick={handleSubmit} disabled={!answer.trim()}>
+                        Έλεγχος
+                      </Button>
+                    </div>
                   </div>
                 )}
 
@@ -280,9 +301,10 @@ export default function ExerciseSystem({ grade, chapter, topic, onXPGained }) {
                 <AnimatePresence>
                   {submitted && (
                     <motion.div
+                      ref={resultRef}
                       initial={{ opacity: 0, scale: 0.95 }}
                       animate={{ opacity: 1, scale: 1 }}
-                      className={`p-4 rounded-xl border ${
+                      className={`t-shake p-4 rounded-xl border ${
                         isCorrect
                           ? 'bg-emerald-500/10 border-emerald-500/30'
                           : 'bg-red-500/10 border-red-500/30'
@@ -291,7 +313,9 @@ export default function ExerciseSystem({ grade, chapter, topic, onXPGained }) {
                       <div className="flex items-center gap-2 mb-2">
                         {isCorrect ? (
                           <>
-                            <CheckCircle size={18} className="text-emerald-400" />
+                            <span className="t-success-wrap" data-state="in">
+                              <CheckCircle size={18} className="text-emerald-400" />
+                            </span>
                             <span className="font-semibold text-emerald-300">{correctMessage(XP_PER_CORRECT[currentLevel])}</span>
                           </>
                         ) : (

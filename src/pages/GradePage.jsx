@@ -1,8 +1,10 @@
+import { useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { ArrowLeft, ArrowRight, Clock, CheckCircle2, Lock, Zap, BookOpen, Target } from 'lucide-react'
 import { GRADES, DIMOTIKO_GRADES, getGrade } from '../data/curriculum'
 import ProgressBar from '../components/ui/ProgressBar'
+import TiltCard from '../components/ui/TiltCard'
 import useStore from '../store/useStore'
 import ChapterHeatmap from '../components/profile/ChapterHeatmap'
 
@@ -141,24 +143,18 @@ export default function GradePage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.04, ...SPRING }}
               >
-                <div
-                  className="group relative overflow-hidden rounded-2xl cursor-pointer transition-all"
+                <TiltCard
+                  maxDeg={5}
+                  className="group relative overflow-hidden rounded-2xl cursor-pointer"
                   style={{
                     background: '#16161f',
                     border: `1px solid ${isMastered ? '#10b98130' : 'rgba(255,255,255,0.06)'}`,
+                    transition: 'border-color 0.2s, box-shadow 0.2s',
                   }}
                   onClick={() => {
                     if (!user) { setAuthModal(true, 'signup'); return }
                     if (!isPro) { setUpgradeModal(true); return }
                     navigate(`/grade/${grade.id}/chapter/${chapter.id}`)
-                  }}
-                  onMouseEnter={e => {
-                    e.currentTarget.style.border = `1px solid ${grade.color}35`
-                    e.currentTarget.style.boxShadow = `0 0 20px ${grade.color}10`
-                  }}
-                  onMouseLeave={e => {
-                    e.currentTarget.style.border = `1px solid ${isMastered ? '#10b98130' : 'rgba(255,255,255,0.06)'}`
-                    e.currentTarget.style.boxShadow = 'none'
                   }}
                 >
                   {/* Left accent bar */}
@@ -238,7 +234,7 @@ export default function GradePage() {
                       )}
                     </div>
                   </div>
-                </div>
+                </TiltCard>
               </motion.div>
             )
           })}

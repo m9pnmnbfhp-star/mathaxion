@@ -5,14 +5,16 @@ export default function AIResponse({ text, loading = false, compact = false }) {
   if (loading) {
     return (
       <div className={`flex items-start gap-3 ${compact ? '' : 'p-4 bg-[#1c1c28] rounded-xl border border-violet-500/20'}`}>
-        <div className="shrink-0 w-8 h-8 rounded-full bg-violet-600/20 border border-violet-500/30 flex items-center justify-center">
+        <div className="shrink-0 w-8 h-8 rounded-full bg-violet-600/20 border border-violet-500/30 flex items-center justify-center animate-pulse">
           <Sparkles size={14} className="text-violet-400" />
         </div>
-        <div className="flex-1 space-y-2 pt-1">
-          <div className="shimmer h-4 rounded w-3/4" />
-          <div className="shimmer h-4 rounded w-full" />
-          <div className="shimmer h-4 rounded w-5/6" />
-          <div className="shimmer h-4 rounded w-2/3" />
+        <div className="flex-1 space-y-3 pt-1">
+          <span className="t-shimmer text-sm font-medium" data-text="Το Axi σκέφτεται...">Το Axi σκέφτεται...</span>
+          <div className="space-y-2">
+            <div className="shimmer h-3.5 rounded-full w-3/4" />
+            <div className="shimmer h-3.5 rounded-full w-full" />
+            <div className="shimmer h-3.5 rounded-full w-5/6" />
+          </div>
         </div>
       </div>
     )

@@ -8,6 +8,7 @@ import {
 } from 'lucide-react'
 import { GRADES, DIMOTIKO_GRADES, getGrade } from '../data/curriculum'
 import useStore from '../store/useStore'
+import TiltCard from '../components/ui/TiltCard'
 
 const SPRING = { ease: [0.16, 1, 0.3, 1], duration: 0.55 }
 const FADE_UP = {
@@ -163,18 +164,18 @@ function PersonalizedDashboard({ user, onboarding, streak, xp, getChapterProgres
         {/* Streak + XP badges */}
         <div className="flex gap-3">
           <div className="flex items-center gap-2 px-4 py-2.5 rounded-2xl"
-            style={{ background: '#16161f', border: '1px solid rgba(245,158,11,0.2)' }}>
-            <span className="text-xl">🔥</span>
+            style={{ background: '#16161f', border: '1px solid rgba(245,158,11,0.25)', boxShadow: streak.current > 0 ? '0 0 20px rgba(245,158,11,0.08)' : 'none' }}>
+            <span className="text-xl" style={{ filter: streak.current > 0 ? 'drop-shadow(0 0 6px rgba(245,158,11,0.6))' : 'none' }}>🔥</span>
             <div>
-              <p className="font-black text-white text-lg leading-none font-display">{streak.current}</p>
+              <p key={streak.current} className="font-black text-white text-lg leading-none font-display num-pop">{streak.current}</p>
               <p className="text-[10px]" style={{ color: 'var(--fg-3)' }}>Μέρες streak</p>
             </div>
           </div>
           <div className="flex items-center gap-2 px-4 py-2.5 rounded-2xl"
-            style={{ background: '#16161f', border: '1px solid rgba(124,58,237,0.2)' }}>
-            <span className="text-xl">⚡</span>
+            style={{ background: '#16161f', border: '1px solid rgba(124,58,237,0.25)', boxShadow: xp > 0 ? '0 0 20px rgba(124,58,237,0.08)' : 'none' }}>
+            <span className="text-xl" style={{ filter: 'drop-shadow(0 0 6px rgba(167,139,250,0.5))' }}>⚡</span>
             <div>
-              <p className="font-black text-white text-lg leading-none font-display">{xp}</p>
+              <p key={xp} className="font-black text-white text-lg leading-none font-display num-pop">{xp}</p>
               <p className="text-[10px]" style={{ color: 'var(--fg-3)' }}>XP</p>
             </div>
           </div>
@@ -523,58 +524,61 @@ function GradeCard({ grade, index, inView, user, setAuthModal, navigate, compact
   if (compact) {
     return (
       <motion.div custom={index} variants={FADE_UP} initial="hidden" animate={inView ? 'visible' : 'hidden'}>
-        <motion.div
-          whileHover={{ y: -3 }} whileTap={{ scale: 0.97 }}
-          onHoverStart={() => setHovered(true)} onHoverEnd={() => setHovered(false)}
+        <TiltCard
+          maxDeg={8}
+          onHoverChange={setHovered}
           onClick={handleClick}
           className="relative group p-4 rounded-2xl border overflow-hidden text-center cursor-pointer"
           style={{
             background: '#16161f',
-            borderColor: hovered ? `${grade.color}40` : 'rgba(255,255,255,0.07)',
-            boxShadow: hovered ? `0 12px 32px rgba(0,0,0,0.4), 0 0 0 1px ${grade.color}18` : 'none',
+            borderColor: hovered ? `${grade.color}45` : 'rgba(255,255,255,0.07)',
+            boxShadow: hovered ? `0 16px 40px rgba(0,0,0,0.45), 0 0 0 1px ${grade.color}20` : 'none',
             transition: 'border-color 0.2s, box-shadow 0.2s',
           }}
         >
-          <div className="absolute top-0 left-0 right-0 h-[2px]" style={{ background: grade.color, opacity: hovered ? 1 : 0.3 }} />
+          <div className="absolute top-0 left-0 right-0 h-[2px]"
+            style={{ background: grade.color, opacity: hovered ? 1 : 0.3, transition: 'opacity 0.2s' }} />
           <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl mx-auto mb-2"
             style={{ background: `${grade.color}12`, border: `1.5px solid ${grade.color}22` }}>
             {grade.icon}
           </div>
           <p className="font-display font-bold text-sm text-white leading-tight">{grade.shortLabel}</p>
           <p className="text-[10px] mt-0.5" style={{ color: grade.color }}>{grade.chapters.length} κεφ.</p>
-        </motion.div>
+        </TiltCard>
       </motion.div>
     )
   }
 
   return (
     <motion.div custom={index} variants={FADE_UP} initial="hidden" animate={inView ? 'visible' : 'hidden'}>
-      <motion.div
-        whileHover={grade.comingSoon ? {} : { y: -4 }} whileTap={grade.comingSoon ? {} : { scale: 0.98 }}
-        transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-        onHoverStart={() => setHovered(true)}
-        onHoverEnd={() => setHovered(false)}
+      <TiltCard
+        maxDeg={8}
+        onHoverChange={grade.comingSoon ? undefined : setHovered}
         onClick={handleClick}
         className="relative group p-5 rounded-2xl border overflow-hidden h-full"
         style={{
           background: '#16161f',
-          borderColor: hovered && !grade.comingSoon ? `${grade.color}35` : 'rgba(255,255,255,0.07)',
-          boxShadow: hovered && !grade.comingSoon ? `0 24px 60px rgba(0,0,0,0.5), 0 0 0 1px ${grade.color}18` : 'none',
+          borderColor: hovered && !grade.comingSoon ? `${grade.color}40` : 'rgba(255,255,255,0.07)',
+          boxShadow: hovered && !grade.comingSoon ? `0 28px 64px rgba(0,0,0,0.55), 0 0 0 1px ${grade.color}20` : 'none',
           cursor: grade.comingSoon ? 'default' : 'pointer',
           opacity: grade.comingSoon ? 0.55 : 1,
           transition: 'border-color 0.22s, box-shadow 0.22s',
         }}
       >
         {/* Top color bar */}
-        <div className="absolute top-0 left-0 right-0 h-[2px] transition-opacity duration-300"
-          style={{ background: grade.color, opacity: hovered ? 1 : 0.35 }} />
+        <div className="absolute top-0 left-0 right-0 h-[2px]"
+          style={{ background: grade.color, opacity: hovered ? 1 : 0.35, transition: 'opacity 0.3s' }} />
 
         {/* Hover glow */}
-        <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
-          style={{ background: `radial-gradient(ellipse at top left, ${grade.color}07, transparent 65%)` }} />
+        <div className="absolute inset-0 pointer-events-none"
+          style={{
+            background: `radial-gradient(ellipse at top left, ${grade.color}09, transparent 65%)`,
+            opacity: hovered ? 1 : 0,
+            transition: 'opacity 0.3s',
+          }} />
 
         <div className="relative flex items-start gap-4">
-          <div className="shrink-0 flex flex-col items-center gap-1.5">
+          <div className="shrink-0">
             <div className="w-14 h-14 rounded-xl flex items-center justify-center text-3xl"
               style={{ background: `${grade.color}12`, border: `1.5px solid ${grade.color}22` }}>
               {grade.icon}
@@ -609,7 +613,7 @@ function GradeCard({ grade, index, inView, user, setAuthModal, navigate, compact
             </div>
           </div>
         </div>
-      </motion.div>
+      </TiltCard>
     </motion.div>
   )
 }
@@ -773,20 +777,23 @@ function FeaturesSection() {
 function FeatureCard({ feature: f }) {
   const [hovered, setHovered] = useState(false)
   return (
-    <motion.div
-      whileHover={{ y: -3 }} transition={{ duration: 0.2, ease: [0.16,1,0.3,1] }}
-      onHoverStart={() => setHovered(true)}
-      onHoverEnd={() => setHovered(false)}
+    <TiltCard
+      maxDeg={7}
+      onHoverChange={setHovered}
       className="relative group p-5 rounded-2xl border overflow-hidden h-full"
       style={{
         background: '#16161f',
-        borderColor: hovered ? `${f.color}30` : 'rgba(255,255,255,0.07)',
-        boxShadow: hovered ? `0 20px 50px rgba(0,0,0,0.5), 0 0 0 1px ${f.color}15` : 'none',
+        borderColor: hovered ? `${f.color}35` : 'rgba(255,255,255,0.07)',
+        boxShadow: hovered ? `0 24px 56px rgba(0,0,0,0.5), 0 0 0 1px ${f.color}18` : 'none',
         transition: 'border-color 0.2s, box-shadow 0.2s',
       }}
     >
-      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
-        style={{ background: `radial-gradient(ellipse at top left, ${f.color}07, transparent 60%)` }} />
+      <div className="absolute inset-0 pointer-events-none"
+        style={{
+          background: `radial-gradient(ellipse at top left, ${f.color}08, transparent 60%)`,
+          opacity: hovered ? 1 : 0,
+          transition: 'opacity 0.3s',
+        }} />
       <div className="relative">
         <div className="inline-flex items-center justify-center w-10 h-10 rounded-xl mb-3"
           style={{ background: `${f.color}14`, border: `1px solid ${f.color}22` }}>
@@ -796,7 +803,7 @@ function FeatureCard({ feature: f }) {
         <p className="text-sm leading-relaxed" style={{ color: 'var(--fg-2)' }}>{f.desc}</p>
         {f.preview}
       </div>
-    </motion.div>
+    </TiltCard>
   )
 }
 

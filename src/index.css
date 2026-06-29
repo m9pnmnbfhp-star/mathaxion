@@ -259,6 +259,159 @@ body {
 .no-select { user-select: none; }
 .progress-ring { transform: rotate(-90deg); transform-origin: 50% 50%; }
 
+/* ─── TILT CARD (transitions-dev #19) ───────────────────────────── */
+:root {
+  --tilt-perspective:  1000px;
+  --tilt-return:       800ms;
+  --tilt-return-ease:  cubic-bezier(0.22, 1, 0.36, 1);
+  --tilt-follow:       100ms;
+  --tilt-follow-ease:  linear;
+  --tilt-glare-opacity: 0.20;
+  --tilt-glare-fade:   250ms;
+  --tilt-glare-ease:   cubic-bezier(0.22, 1, 0.36, 1);
+}
+.t-tilt { touch-action: none; display: block; }
+.t-tilt-card {
+  position: relative;
+  transform:
+    perspective(var(--tilt-perspective))
+    rotateX(var(--tilt-rx, 0deg))
+    rotateY(var(--tilt-ry, 0deg));
+  transform-style: preserve-3d;
+  transition: transform var(--tilt-return) var(--tilt-return-ease);
+  will-change: transform;
+}
+.t-tilt-card.is-tilting {
+  transition: transform var(--tilt-follow) var(--tilt-follow-ease);
+}
+.t-tilt-glare {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  mix-blend-mode: screen;
+  border-radius: inherit;
+  background:
+    radial-gradient(circle 90px  at var(--tilt-gx,50%) var(--tilt-gy,50%), rgba(255,255,255,0.42), rgba(255,255,255,0.05) 52%, transparent 84%),
+    radial-gradient(circle 180px at var(--tilt-gx,50%) var(--tilt-gy,50%), rgba(255,255,255,0.18), rgba(255,255,255,0.03) 58%, transparent 78%),
+    radial-gradient(circle 340px at var(--tilt-gx,50%) var(--tilt-gy,50%), rgba(255,255,255,0.08), transparent 88%);
+  transition: opacity var(--tilt-glare-fade) var(--tilt-glare-ease);
+}
+.t-tilt.is-hover .t-tilt-glare { opacity: var(--tilt-glare-opacity); }
+
+/* ─── ERROR SHAKE (transitions-dev #12) ─────────────────────────── */
+:root {
+  --shake-distance:  8px;
+  --shake-overshoot: 4px;
+  --shake-dur-a:     80ms;
+  --shake-dur-b:     60ms;
+}
+.t-shake { will-change: transform; }
+.t-shake.is-shaking {
+  animation: t-shake calc(var(--shake-dur-a) * 2 + var(--shake-dur-b) * 2) linear;
+}
+@keyframes t-shake {
+  0%     { transform: translateX(0);                               animation-timing-function: cubic-bezier(0.22,1,0.36,1); }
+  28.57% { transform: translateX(var(--shake-distance));           animation-timing-function: cubic-bezier(0.22,1,0.36,1); }
+  57.14% { transform: translateX(calc(var(--shake-distance)*-1));  animation-timing-function: cubic-bezier(0.22,1,0.36,1); }
+  78.57% { transform: translateX(var(--shake-overshoot));          animation-timing-function: cubic-bezier(0.22,1,0.36,1); }
+  100%   { transform: translateX(0); }
+}
+
+/* ─── SUCCESS POP (transitions-dev #10 adapted) ─────────────────── */
+.t-success-wrap {
+  display: inline-block;
+  transform-origin: center;
+  will-change: transform, opacity, filter;
+}
+.t-success-wrap[data-state="in"] {
+  animation:
+    t-succ-fade   400ms cubic-bezier(0.22,1,0.36,1) forwards,
+    t-succ-rotate 400ms cubic-bezier(0.22,1,0.36,1) forwards,
+    t-succ-bob    400ms cubic-bezier(0.34,1.45,0.64,1) forwards;
+}
+@keyframes t-succ-fade   { from { opacity:0; } to { opacity:1; } }
+@keyframes t-succ-rotate { from { transform: rotate(60deg) scale(0.5); } to { transform: rotate(0) scale(1); } }
+@keyframes t-succ-bob    { from { translate: 0 16px; } to { translate: 0 0; } }
+
+/* ─── SHIMMER TEXT (transitions-dev #15) ────────────────────────── */
+:root {
+  --shimmer-dur:       1800ms;
+  --shimmer-base:      #8892a4;
+  --shimmer-highlight: #c4b5fd;
+  --shimmer-band:      400%;
+}
+.t-shimmer {
+  position: relative;
+  display: inline-block;
+  color: var(--shimmer-base);
+}
+.t-shimmer::before {
+  content: attr(data-text);
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: linear-gradient(
+    90deg,
+    transparent 0%, transparent 40%,
+    var(--shimmer-highlight) 50%,
+    transparent 60%, transparent 100%
+  );
+  background-size: var(--shimmer-band) 100%;
+  background-repeat: no-repeat;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  animation: t-shimmer var(--shimmer-dur) linear infinite;
+}
+@keyframes t-shimmer {
+  0%   { background-position: 100% 0; }
+  100% { background-position: 0% 0; }
+}
+
+/* ─── FLOATING +XP (custom) ─────────────────────────────────────── */
+@keyframes xp-float-up {
+  0%   { opacity: 1;   transform: translateY(0)     scale(1);    }
+  15%  { opacity: 1;   transform: translateY(-10px) scale(1.2);  }
+  100% { opacity: 0;   transform: translateY(-90px) scale(0.8);  }
+}
+.xp-float-label {
+  position: fixed;
+  pointer-events: none;
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 900;
+  font-size: 1.15rem;
+  color: #a78bfa;
+  text-shadow: 0 0 24px rgba(167,139,250,0.85), 0 0 48px rgba(124,58,237,0.4);
+  z-index: 9999;
+  animation: xp-float-up 1.3s cubic-bezier(0.16,1,0.3,1) forwards;
+}
+
+/* ─── NUMBER POP (transitions-dev #02 adapted) ──────────────────── */
+@keyframes num-pop {
+  0%   { opacity:0; transform: translateY(6px) scale(0.8); filter: blur(3px); }
+  100% { opacity:1; transform: translateY(0) scale(1);     filter: blur(0); }
+}
+.num-pop {
+  animation: num-pop 0.45s cubic-bezier(0.34,1.45,0.64,1) both;
+}
+
+/* ─── STAGGER REVEAL (minimalist-ui principle) ───────────────────── */
+@keyframes stagger-in {
+  from { opacity:0; transform: translateY(14px); }
+  to   { opacity:1; transform: translateY(0); }
+}
+.stagger > * {
+  animation: stagger-in 0.5s cubic-bezier(0.16,1,0.3,1) both;
+}
+.stagger > *:nth-child(1) { animation-delay:   0ms; }
+.stagger > *:nth-child(2) { animation-delay:  60ms; }
+.stagger > *:nth-child(3) { animation-delay: 120ms; }
+.stagger > *:nth-child(4) { animation-delay: 180ms; }
+.stagger > *:nth-child(5) { animation-delay: 240ms; }
+.stagger > *:nth-child(6) { animation-delay: 300ms; }
+
 /* ─── REDUCED MOTION ─────────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
@@ -267,5 +420,8 @@ body {
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
-  .blob { animation: none !important; }
+  .blob          { animation: none !important; }
+  .t-tilt-card   { transform: none !important; transition: none !important; }
+  .t-shimmer::before { animation: none !important; }
+  .t-shake       { animation: none !important; }
 }
