@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { motion, useInView } from 'framer-motion'
+import MagneticButton from '../components/ui/MagneticButton'
+import { countUpEl } from '../lib/gsapAnimations'
 import {
   ArrowRight, Sparkles, Zap, BookOpen, Pencil, Layers,
   Bot, Camera, Swords, Crown, Flame, Star,
@@ -131,6 +133,18 @@ function PersonalizedDashboard({ user, onboarding, streak, xp, getChapterProgres
   const name = user?.user_metadata?.display_name || user?.email?.split('@')[0] || 'Μαθητή'
   const grade = getGrade(onboarding.grade)
   const hint = FRUSTRATION_HINT[onboarding.frustration]
+  const xpRef = useRef(null)
+  const prevXp = useRef(xp)
+  useEffect(() => {
+    if (xpRef.current) {
+      if (xp !== prevXp.current) {
+        countUpEl(xpRef.current, prevXp.current, xp, 0.9)
+        prevXp.current = xp
+      } else {
+        xpRef.current.textContent = xp
+      }
+    }
+  }, [xp])
 
   // Find the first unmastered chapter in their grade
   const mission = grade?.chapters?.find(c => {
@@ -175,7 +189,7 @@ function PersonalizedDashboard({ user, onboarding, streak, xp, getChapterProgres
             style={{ background: '#16161f', border: '1px solid rgba(124,58,237,0.25)', boxShadow: xp > 0 ? '0 0 20px rgba(124,58,237,0.08)' : 'none' }}>
             <span className="text-xl" style={{ filter: 'drop-shadow(0 0 6px rgba(167,139,250,0.5))' }}>⚡</span>
             <div>
-              <p key={xp} className="font-black text-white text-lg leading-none font-display num-pop">{xp}</p>
+              <p ref={xpRef} className="font-black text-white text-lg leading-none font-display">{xp}</p>
               <p className="text-[10px]" style={{ color: 'var(--fg-3)' }}>XP</p>
             </div>
           </div>
@@ -361,17 +375,31 @@ function HeroSection({ user, setAuthModal, navigate }) {
         </div>
       </motion.div>
 
-      <motion.h1
-        custom={1} variants={FADE_UP} initial="hidden" animate={inView ? 'visible' : 'hidden'}
+      <h1
         className="font-display font-black leading-[0.9] tracking-tight mb-6 max-w-4xl"
-        style={{ fontSize: 'clamp(2.8rem, 8.5vw, 6.5rem)' }}
+        style={{ fontSize: 'clamp(2.8rem, 8.5vw, 6.5rem)', perspective: '600px' }}
       >
-        <span className="text-white">Λιγότερο από</span>
-        <br />
-        <span className="text-gradient">έναν καφέ.</span>
-        <br />
-        <span className="text-white">Καλύτερο από φροντιστήριο.</span>
-      </motion.h1>
+        {[
+          { words: ['Λιγότερο', 'από'], gradient: false },
+          { words: ['έναν', 'καφέ.'],   gradient: true  },
+          { words: ['Καλύτερο', 'από', 'φροντιστήριο.'], gradient: false },
+        ].map((line, li) => (
+          <span key={li} className="block">
+            {line.words.map((word, wi) => (
+              <motion.span
+                key={wi}
+                className={line.gradient ? 'text-gradient' : 'text-white'}
+                initial={{ opacity: 0, y: 36, rotateX: -45 }}
+                animate={inView ? { opacity: 1, y: 0, rotateX: 0 } : {}}
+                transition={{ delay: 0.15 + li * 0.18 + wi * 0.09, type: 'spring', stiffness: 180, damping: 20 }}
+                style={{ display: 'inline-block', marginRight: '0.28em', transformOrigin: 'bottom center' }}
+              >
+                {word}
+              </motion.span>
+            ))}
+          </span>
+        ))}
+      </h1>
 
       <motion.p
         custom={2} variants={FADE_UP} initial="hidden" animate={inView ? 'visible' : 'hidden'}
@@ -385,26 +413,30 @@ function HeroSection({ user, setAuthModal, navigate }) {
         custom={3} variants={FADE_UP} initial="hidden" animate={inView ? 'visible' : 'hidden'}
         className="flex flex-col sm:flex-row items-center gap-3 mb-16"
       >
-        <motion.button
-          whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
-          onClick={() => user ? navigate('/grade/a-gymnasiou') : setAuthModal(true, 'signup')}
-          className="group relative inline-flex items-center gap-2 px-8 py-4 rounded-2xl font-bold text-base text-white overflow-hidden cursor-pointer"
-          style={{ background: 'linear-gradient(135deg, #7c3aed, #6d28d9)', boxShadow: '0 0 30px rgba(124,58,237,0.4), 0 4px 24px rgba(0,0,0,0.4)' }}
-        >
-          <span className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
-            style={{ background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)' }} />
-          <span className="relative">Ξεκίνα δωρεάν</span>
-          <ArrowRight size={17} className="relative group-hover:translate-x-0.5 transition-transform duration-200" />
-        </motion.button>
+        <MagneticButton strength={0.32}>
+          <motion.button
+            whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
+            onClick={() => user ? navigate('/grade/a-gymnasiou') : setAuthModal(true, 'signup')}
+            className="group relative inline-flex items-center gap-2 px-8 py-4 rounded-2xl font-bold text-base text-white overflow-hidden cursor-pointer"
+            style={{ background: 'linear-gradient(135deg, #7c3aed, #6d28d9)', boxShadow: '0 0 30px rgba(124,58,237,0.4), 0 4px 24px rgba(0,0,0,0.4)' }}
+          >
+            <span className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+              style={{ background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)' }} />
+            <span className="relative">Ξεκίνα δωρεάν</span>
+            <ArrowRight size={17} className="relative group-hover:translate-x-0.5 transition-transform duration-200" />
+          </motion.button>
+        </MagneticButton>
 
-        <motion.button
-          whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
-          onClick={() => document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })}
-          className="inline-flex items-center gap-2 px-8 py-4 rounded-2xl font-medium text-base text-white/60 hover:text-white transition-all cursor-pointer"
-          style={{ border: '1px solid rgba(255,255,255,0.1)' }}
-        >
-          Δες πώς λειτουργεί
-        </motion.button>
+        <MagneticButton strength={0.22}>
+          <motion.button
+            whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
+            onClick={() => document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })}
+            className="inline-flex items-center gap-2 px-8 py-4 rounded-2xl font-medium text-base text-white/60 hover:text-white transition-all cursor-pointer"
+            style={{ border: '1px solid rgba(255,255,255,0.1)' }}
+          >
+            Δες πώς λειτουργεί
+          </motion.button>
+        </MagneticButton>
       </motion.div>
 
       {/* Trust differentiators */}
@@ -910,7 +942,12 @@ function PricingSection({ user, setAuthModal, setUpgradeModal, isPro }) {
                   MathAxion Pro
                 </div>
                 <div className="flex items-end gap-2">
-                  <span className="text-7xl font-black font-display text-white leading-none">2€</span>
+                  <motion.span
+                    className="text-7xl font-black font-display text-white leading-none"
+                    initial={{ scale: 0.7, opacity: 0 }}
+                    animate={inView ? { scale: 1, opacity: 1 } : {}}
+                    transition={{ delay: 0.3, type: 'spring', stiffness: 220, damping: 18 }}
+                  >2€</motion.span>
                   <div className="mb-2">
                     <p className="text-base" style={{ color: 'var(--fg-2)' }}>/μήνα</p>
                     <p className="text-xs text-violet-400">Ακύρωση ανά πάσα στιγμή</p>
@@ -928,27 +965,35 @@ function PricingSection({ user, setAuthModal, setUpgradeModal, isPro }) {
 
             {/* Features grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mb-8">
-              {PRO_FEATURES.map(({ icon: Icon, color, label }) => (
-                <div key={label} className="flex items-center gap-3 p-3 rounded-xl"
-                  style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)' }}>
+              {PRO_FEATURES.map(({ icon: Icon, color, label }, idx) => (
+                <motion.div
+                  key={label}
+                  initial={{ opacity: 0, x: -12 }}
+                  animate={inView ? { opacity: 1, x: 0 } : {}}
+                  transition={{ delay: 0.4 + idx * 0.06, type: 'spring', stiffness: 240, damping: 24 }}
+                  className="flex items-center gap-3 p-3 rounded-xl"
+                  style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)' }}
+                >
                   <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
                     style={{ background: `${color}18` }}>
                     <Icon size={13} style={{ color }} />
                   </div>
                   <span className="text-sm font-medium text-slate-200">{label}</span>
-                </div>
+                </motion.div>
               ))}
             </div>
 
             {/* CTA */}
-            <motion.button
-              whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
-              onClick={() => user ? setUpgradeModal(true) : setAuthModal(true, 'signup')}
-              className="w-full py-4 rounded-2xl font-black text-base text-white cursor-pointer"
-              style={{ background: 'linear-gradient(135deg, #7c3aed, #6d28d9)', boxShadow: '0 0 30px rgba(124,58,237,0.5), 0 4px 20px rgba(0,0,0,0.4)' }}
-            >
-              {isPro ? '✓ Ήδη Pro — Ευχαριστούμε!' : 'Αποκτήσε πλήρη πρόσβαση — 2€/μήνα'}
-            </motion.button>
+            <MagneticButton className="w-full">
+              <motion.button
+                whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
+                onClick={() => user ? setUpgradeModal(true) : setAuthModal(true, 'signup')}
+                className="w-full py-4 rounded-2xl font-black text-base text-white cursor-pointer"
+                style={{ background: 'linear-gradient(135deg, #7c3aed, #6d28d9)', boxShadow: '0 0 30px rgba(124,58,237,0.5), 0 4px 20px rgba(0,0,0,0.4)' }}
+              >
+                {isPro ? '✓ Ήδη Pro — Ευχαριστούμε!' : 'Αποκτήσε πλήρη πρόσβαση — 2€/μήνα'}
+              </motion.button>
+            </MagneticButton>
 
             <p className="text-center text-xs mt-3" style={{ color: 'var(--fg-3)' }}>
               Ακύρωση οποιαδήποτε στιγμή · Χωρίς δεσμεύσεις
@@ -988,15 +1033,17 @@ function CtaSection({ user, setAuthModal, navigate }) {
         <p className="text-lg mb-8 max-w-sm mx-auto" style={{ color: 'var(--fg-2)' }}>
           Εγγραφή δωρεάν. Χωρίς πιστωτική κάρτα.
         </p>
-        <motion.button
-          whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}
-          onClick={() => user ? navigate('/grade/a-gymnasiou') : setAuthModal(true, 'signup')}
-          className="inline-flex items-center gap-2 px-10 py-4 rounded-2xl font-bold text-white text-lg cursor-pointer"
-          style={{ background: 'linear-gradient(135deg, #7c3aed, #6d28d9)', boxShadow: '0 0 40px rgba(124,58,237,0.5), 0 4px 24px rgba(0,0,0,0.4)' }}
-        >
-          <Sparkles size={20} />
-          Ξεκίνα τώρα — δωρεάν
-        </motion.button>
+        <MagneticButton strength={0.3}>
+          <motion.button
+            whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}
+            onClick={() => user ? navigate('/grade/a-gymnasiou') : setAuthModal(true, 'signup')}
+            className="inline-flex items-center gap-2 px-10 py-4 rounded-2xl font-bold text-white text-lg cursor-pointer"
+            style={{ background: 'linear-gradient(135deg, #7c3aed, #6d28d9)', boxShadow: '0 0 40px rgba(124,58,237,0.5), 0 4px 24px rgba(0,0,0,0.4)' }}
+          >
+            <Sparkles size={20} />
+            Ξεκίνα τώρα — δωρεάν
+          </motion.button>
+        </MagneticButton>
       </motion.div>
     </section>
   )

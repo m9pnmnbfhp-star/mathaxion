@@ -17,6 +17,19 @@ const sizes = {
   xl: 'px-8 py-4 text-lg',
 }
 
+function ripple(e) {
+  const btn = e.currentTarget
+  const rect = btn.getBoundingClientRect()
+  const size = Math.max(rect.width, rect.height) * 2
+  const x = e.clientX - rect.left - size / 2
+  const y = e.clientY - rect.top  - size / 2
+  const span = document.createElement('span')
+  span.className = 'btn-ripple-el'
+  span.style.cssText = `width:${size}px;height:${size}px;left:${x}px;top:${y}px`
+  btn.appendChild(span)
+  span.addEventListener('animationend', () => span.remove(), { once: true })
+}
+
 export default function Button({
   children,
   variant = 'primary',
@@ -33,14 +46,14 @@ export default function Button({
   return (
     <motion.button
       type={type}
-      onClick={onClick}
+      onClick={(e) => { ripple(e); onClick?.(e) }}
       disabled={disabled || loading}
       whileTap={{ scale: 0.96 }}
       whileHover={{ scale: 1.02 }}
       transition={{ type: 'spring', stiffness: 400, damping: 25 }}
       className={`
         inline-flex items-center justify-center gap-2 rounded-xl font-medium
-        transition-colors duration-150 cursor-pointer select-none
+        transition-colors duration-150 cursor-pointer select-none relative overflow-hidden
         disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none
         ${variants[variant]} ${sizes[size]} ${className}
       `}

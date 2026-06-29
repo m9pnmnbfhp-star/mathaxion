@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom'
-import { AnimatePresence, motion } from 'framer-motion'
+import { AnimatePresence, motion, useScroll } from 'framer-motion'
 import { Toaster } from 'react-hot-toast'
 import { supabase, getProfile, updateProfile } from './lib/supabase'
 import useStore from './store/useStore'
@@ -88,9 +88,33 @@ export default function App() {
 
 function AppContent({ user, onboardingCompleted, preAuthOnboardingOpen }) {
   const location = useLocation()
+  const { scrollYProgress } = useScroll()
+  const spotlightRef = useRef(null)
+
+  useEffect(() => {
+    let raf
+    const handle = (e) => {
+      cancelAnimationFrame(raf)
+      raf = requestAnimationFrame(() => {
+        const el = spotlightRef.current
+        if (!el) return
+        el.style.background = `radial-gradient(600px circle at ${e.clientX}px ${e.clientY}px, rgba(124,58,237,0.065), transparent 55%)`
+        el.classList.add('active')
+      })
+    }
+    window.addEventListener('mousemove', handle, { passive: true })
+    return () => { window.removeEventListener('mousemove', handle); cancelAnimationFrame(raf) }
+  }, [])
 
   return (
     <div className="min-h-screen bg-[#0a0a0f]">
+      {/* Cursor spotlight */}
+      <div ref={spotlightRef} className="cursor-spotlight" />
+      {/* Scroll progress bar */}
+      <motion.div
+        className="fixed top-0 left-0 right-0 z-[200] h-[2px] origin-left"
+        style={{ scaleX: scrollYProgress, background: 'linear-gradient(90deg,#7c3aed,#a78bfa,#10b981)' }}
+      />
       <Header />
 
       <main>

@@ -1,5 +1,6 @@
-import { useState } from 'react'
-import { motion } from 'framer-motion'
+import { useState, useRef, useEffect } from 'react'
+import { motion, useInView } from 'framer-motion'
+import { countUpEl } from '../lib/gsapAnimations'
 import { Flame, Star, Trophy, Target, BookOpen, TrendingUp, Crown, Brain, User, Lightbulb, Zap, ChevronRight, Share2 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { GRADES } from '../data/curriculum'
@@ -12,6 +13,41 @@ import Badge from '../components/ui/Badge'
 import useStore from '../store/useStore'
 import { generateAdaptiveQuiz } from '../lib/anthropic'
 import toast from 'react-hot-toast'
+
+function StatCard({ icon: Icon, value, label, sub, color, delay }) {
+  const ref = useRef(null)
+  const numRef = useRef(null)
+  const inView = useInView(ref, { once: true })
+  const animated = useRef(false)
+  useEffect(() => {
+    if (inView && !animated.current && numRef.current && typeof value === 'number') {
+      animated.current = true
+      countUpEl(numRef.current, 0, value, 0.85)
+    } else if (numRef.current && !animated.current && typeof value !== 'number') {
+      numRef.current.textContent = value
+    }
+  }, [inView, value])
+  return (
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay, type: 'spring', stiffness: 220, damping: 22 }}
+      className="relative p-4 bg-[#16161f] rounded-2xl border border-[#2a2a3a] overflow-hidden group"
+    >
+      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+           style={{ background: `radial-gradient(ellipse at top left, ${color}08, transparent 70%)` }} />
+      <div className="relative">
+        <div className="w-8 h-8 rounded-xl flex items-center justify-center mb-3" style={{ background: `${color}18` }}>
+          <Icon size={15} style={{ color }} />
+        </div>
+        <div ref={numRef} className="text-2xl font-black text-white mb-0.5">{value}</div>
+        <div className="text-xs font-medium text-slate-400">{label}</div>
+        {sub && <div className="text-[11px] text-slate-600 mt-0.5">{sub}</div>}
+      </div>
+    </motion.div>
+  )
+}
 
 function getLevel(xp) {
   return Math.floor(Math.sqrt(Math.max(0, xp) / 8)) + 1
@@ -105,13 +141,32 @@ export default function ProfilePage() {
         <div className="absolute top-0 right-0 w-64 h-64 bg-violet-600/05 rounded-full blur-[80px] pointer-events-none" />
 
         <div className="relative flex items-start gap-5 flex-wrap">
-          {/* Avatar */}
+          {/* Avatar with SVG progress ring */}
           <div className="relative shrink-0">
-            <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-violet-500/30 to-violet-800/30 border-2 border-violet-500/40 flex items-center justify-center text-3xl font-black text-violet-200">
+            <svg width="88" height="88" viewBox="0 0 88 88" className="absolute -inset-[4px]" style={{ zIndex: 1 }}>
+              <circle cx="44" cy="44" r="40" fill="none" stroke="rgba(124,58,237,0.12)" strokeWidth="3" />
+              <motion.circle
+                cx="44" cy="44" r="40" fill="none"
+                stroke="url(#profileRing)" strokeWidth="3"
+                strokeLinecap="round"
+                strokeDasharray={`${2 * Math.PI * 40}`}
+                initial={{ strokeDashoffset: 2 * Math.PI * 40 }}
+                animate={{ strokeDashoffset: 2 * Math.PI * 40 * (1 - levelProgress / 100) }}
+                transition={{ duration: 1.1, ease: [0.16, 1, 0.3, 1], delay: 0.4 }}
+                style={{ transformOrigin: '44px 44px', rotate: '-90deg' }}
+              />
+              <defs>
+                <linearGradient id="profileRing" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#7c3aed" />
+                  <stop offset="100%" stopColor="#a78bfa" />
+                </linearGradient>
+              </defs>
+            </svg>
+            <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-violet-500/30 to-violet-800/30 border-2 border-violet-500/40 flex items-center justify-center text-3xl font-black text-violet-200 relative z-10">
               {displayName[0].toUpperCase()}
             </div>
             {isPro && (
-              <div className="absolute -bottom-1.5 -right-1.5 w-6 h-6 rounded-full bg-amber-500 border-2 border-[#16161f] flex items-center justify-center">
+              <div className="absolute -bottom-1.5 -right-1.5 w-6 h-6 rounded-full bg-amber-500 border-2 border-[#16161f] flex items-center justify-center" style={{ zIndex: 12 }}>
                 <Crown size={11} className="text-black" />
               </div>
             )}
@@ -155,28 +210,11 @@ export default function ProfilePage() {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {[
           { icon: Flame, value: streak.current, label: 'Streak', sub: `Μέγιστο ${streak.longest}`, color: '#f59e0b' },
-          { icon: Star, value: xp.toLocaleString('el'), label: 'XP', sub: `Lv.${level}`, color: '#7c3aed' },
+          { icon: Star, value: xp, label: 'XP', sub: `Lv.${level}`, color: '#7c3aed' },
           { icon: BookOpen, value: startedChapters, label: 'Κεφάλαια', sub: `από ${totalChapters}`, color: '#10b981' },
           { icon: Trophy, value: masteredChapters, label: 'Κατακτημένα', sub: 'κεφάλαια', color: '#fbbf24' },
         ].map(({ icon: Icon, value, label, sub, color }, i) => (
-          <motion.div
-            key={label}
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 + i * 0.06 }}
-            className="relative p-4 bg-[#16161f] rounded-2xl border border-[#2a2a3a] overflow-hidden group"
-          >
-            <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                 style={{ background: `radial-gradient(ellipse at top left, ${color}08, transparent 70%)` }} />
-            <div className="relative">
-              <div className="w-8 h-8 rounded-xl flex items-center justify-center mb-3" style={{ background: `${color}18` }}>
-                <Icon size={15} style={{ color }} />
-              </div>
-              <div className="text-2xl font-black text-white mb-0.5">{value}</div>
-              <div className="text-xs font-medium text-slate-400">{label}</div>
-              {sub && <div className="text-[11px] text-slate-600 mt-0.5">{sub}</div>}
-            </div>
-          </motion.div>
+          <StatCard key={label} icon={Icon} value={value} label={label} sub={sub} color={color} delay={0.1 + i * 0.06} />
         ))}
       </div>
 
