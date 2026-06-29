@@ -138,45 +138,19 @@ export async function solveProblem(problemDescription) {
 }
 
 export async function solvePhotoExercise(imageBase64, mimeType = 'image/jpeg') {
-  const res = await fetch(ANTHROPIC_API_URL, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': import.meta.env.VITE_ANTHROPIC_API_KEY,
-      'anthropic-version': '2023-06-01',
-      'anthropic-dangerous-direct-browser-access': 'true',
-    },
-    body: JSON.stringify({
-      model: 'claude-sonnet-4-6',
-      max_tokens: 2000,
-      system: `${BASE_SYSTEM}\n\nΛύνεις μαθηματικές ασκήσεις από φωτογραφίες. Βλέπεις μια χειρόγραφη ή τυπωμένη άσκηση. Λύσε την βήμα-βήμα, εξηγώντας κάθε κίνηση.`,
-      messages: [
-        {
-          role: 'user',
-          content: [
-            {
-              type: 'image',
-              source: {
-                type: 'base64',
-                media_type: mimeType,
-                data: imageBase64,
-              },
-            },
-            {
-              type: 'text',
-              text: 'Βλέπω αυτήν την άσκηση. Λύσε την βήμα-βήμα εξηγώντας κάθε κίνηση που κάνεις.',
-            },
-          ],
-        },
-      ],
-    }),
-  })
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}))
-    throw new Error(err.error?.message || `API error ${res.status}`)
-  }
-  const data = await res.json()
-  return data.content[0].text
+  return callAI(
+    [
+      {
+        role: 'user',
+        content: [
+          { type: 'image', source: { type: 'base64', media_type: mimeType, data: imageBase64 } },
+          { type: 'text', text: 'Βλέπω αυτήν την άσκηση. Λύσε την βήμα-βήμα εξηγώντας κάθε κίνηση που κάνεις.' },
+        ],
+      },
+    ],
+    `${BASE_SYSTEM}\n\nΛύνεις μαθηματικές ασκήσεις από φωτογραφίες. Βλέπεις μια χειρόγραφη ή τυπωμένη άσκηση. Λύσε την βήμα-βήμα, εξηγώντας κάθε κίνηση.`,
+    2000
+  )
 }
 
 export async function chatWithTutor(messages, grade, topic, onChunk) {
