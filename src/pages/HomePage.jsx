@@ -4,9 +4,9 @@ import { motion, useInView } from 'framer-motion'
 import {
   ArrowRight, Sparkles, Zap, BookOpen, Pencil, Layers,
   Bot, Camera, Swords, Crown, Flame, Star,
-  CheckCircle2, ChevronRight, GraduationCap
+  CheckCircle2, ChevronRight, GraduationCap, Target, TrendingUp
 } from 'lucide-react'
-import { GRADES, DIMOTIKO_GRADES } from '../data/curriculum'
+import { GRADES, DIMOTIKO_GRADES, getGrade } from '../data/curriculum'
 import useStore from '../store/useStore'
 
 const SPRING = { ease: [0.16, 1, 0.3, 1], duration: 0.55 }
@@ -71,20 +71,269 @@ function MathAtmosphere() {
 }
 
 export default function HomePage() {
-  const { user, setAuthModal, setUpgradeModal, isPro } = useStore()
+  const { user, setAuthModal, setUpgradeModal, isPro, onboarding, onboardingCompleted, streak, xp, getChapterProgress } = useStore()
   const navigate = useNavigate()
+
+  const showDashboard = user && onboardingCompleted && onboarding
+
   return (
     <div className="relative overflow-x-hidden">
       <MathAtmosphere />
       <div className="relative" style={{ zIndex: 1 }}>
-        <HeroSection user={user} setAuthModal={setAuthModal} navigate={navigate} />
-        <GradesSection user={user} setAuthModal={setAuthModal} navigate={navigate} />
-        <FeaturesSection />
-        <TestimonialsSection />
-        <PricingSection user={user} setAuthModal={setAuthModal} setUpgradeModal={setUpgradeModal} isPro={isPro} />
-        <CtaSection user={user} setAuthModal={setAuthModal} navigate={navigate} />
+        {showDashboard
+          ? <PersonalizedDashboard
+              user={user} onboarding={onboarding} streak={streak} xp={xp}
+              getChapterProgress={getChapterProgress} navigate={navigate}
+              setUpgradeModal={setUpgradeModal} isPro={isPro}
+            />
+          : <>
+              <HeroSection user={user} setAuthModal={setAuthModal} navigate={navigate} />
+              <GradesSection user={user} setAuthModal={setAuthModal} navigate={navigate} />
+              <FeaturesSection />
+              <TestimonialsSection />
+              <PricingSection user={user} setAuthModal={setAuthModal} setUpgradeModal={setUpgradeModal} isPro={isPro} />
+              <CtaSection user={user} setAuthModal={setAuthModal} navigate={navigate} />
+            </>
+        }
         <Footer />
       </div>
+    </div>
+  )
+}
+
+/* ─── PERSONALIZED DASHBOARD ─────────────────────────────────────── */
+const FRUSTRATION_HINT = {
+  theory:   { icon: '📖', text: 'Ο Axi σου εξηγεί βήμα-βήμα, πάντα' },
+  mistakes:  { icon: '🔍', text: 'Ο Axi εντοπίζει ακριβώς πού κάνεις λάθος' },
+  forget:   { icon: '🔁', text: 'Κάθε session ξεκινά με σύντομη επανάληψη' },
+  time:     { icon: '⚡', text: 'Ο Axi δίνει τις πιο γρήγορες λύσεις' },
+  start:    { icon: '🧭', text: 'Ο Axi σου δίνει πάντα το πρώτο βήμα' },
+}
+
+const GOAL_LABEL = {
+  lesson:      'Κατανόηση μαθήματος',
+  tests:       'Προετοιμασία διαγωνισμάτων',
+  panellinies: 'Πανελλαδικές',
+  grades:      'Βελτίωση βαθμού',
+  love:        'Αγαπώ τα Μαθηματικά',
+}
+
+function getGreeting(name) {
+  const h = new Date().getHours()
+  if (h < 5)  return `Καλή νύχτα, ${name}! 🌙`
+  if (h < 12) return `Καλημέρα, ${name}! ☀️`
+  if (h < 17) return `Καλό απόγευμα, ${name}! 📚`
+  return `Καλησπέρα, ${name}! 🌙`
+}
+
+function PersonalizedDashboard({ user, onboarding, streak, xp, getChapterProgress, navigate, setUpgradeModal, isPro }) {
+  const name = user?.user_metadata?.display_name || user?.email?.split('@')[0] || 'Μαθητή'
+  const grade = getGrade(onboarding.grade)
+  const hint = FRUSTRATION_HINT[onboarding.frustration]
+
+  // Find the first unmastered chapter in their grade
+  const mission = grade?.chapters?.find(c => {
+    const p = getChapterProgress(grade.id, c.id)
+    return (p.completedExercises || 0) < 8
+  }) || grade?.chapters?.[0]
+
+  const totalCompleted = grade?.chapters?.filter(c => {
+    const p = getChapterProgress(grade?.id, c.id)
+    return (p.completedExercises || 0) >= 8
+  }).length || 0
+
+  return (
+    <div className="max-w-4xl mx-auto px-4 py-8">
+
+      {/* Greeting row */}
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+        transition={{ ease: [0.16, 1, 0.3, 1], duration: 0.5 }}
+        className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+        <div>
+          <h1 className="font-display font-black text-3xl sm:text-4xl text-white leading-tight">
+            {getGreeting(name)}
+          </h1>
+          {onboarding.goal && (
+            <p className="text-sm mt-1" style={{ color: 'var(--fg-3)' }}>
+              Στόχος: <span style={{ color: '#a78bfa' }}>{GOAL_LABEL[onboarding.goal]}</span>
+            </p>
+          )}
+        </div>
+
+        {/* Streak + XP badges */}
+        <div className="flex gap-3">
+          <div className="flex items-center gap-2 px-4 py-2.5 rounded-2xl"
+            style={{ background: '#16161f', border: '1px solid rgba(245,158,11,0.2)' }}>
+            <span className="text-xl">🔥</span>
+            <div>
+              <p className="font-black text-white text-lg leading-none font-display">{streak.current}</p>
+              <p className="text-[10px]" style={{ color: 'var(--fg-3)' }}>Μέρες streak</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 px-4 py-2.5 rounded-2xl"
+            style={{ background: '#16161f', border: '1px solid rgba(124,58,237,0.2)' }}>
+            <span className="text-xl">⚡</span>
+            <div>
+              <p className="font-black text-white text-lg leading-none font-display">{xp}</p>
+              <p className="text-[10px]" style={{ color: 'var(--fg-3)' }}>XP</p>
+            </div>
+          </div>
+        </div>
+      </motion.div>
+
+      {/* Today's mission — the hero card */}
+      {grade && mission && (
+        <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}
+          transition={{ ease: [0.16, 1, 0.3, 1], duration: 0.5, delay: 0.08 }}
+          className="relative overflow-hidden rounded-3xl p-6 sm:p-8 mb-6 cursor-pointer group"
+          style={{
+            background: `linear-gradient(135deg, ${grade.color}18 0%, #16161f 60%)`,
+            border: `1px solid ${grade.color}30`,
+          }}
+          onClick={() => navigate(`/grade/${grade.id}/chapter/${mission.id}`)}>
+
+          <div className="absolute top-0 left-12 right-12 h-px"
+            style={{ background: `linear-gradient(90deg, transparent, ${grade.color}70, transparent)` }} />
+
+          {/* Hover glow */}
+          <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
+            style={{ background: `radial-gradient(ellipse at top left, ${grade.color}10, transparent 60%)` }} />
+
+          <div className="relative">
+            <div className="flex items-center gap-2 mb-4">
+              <span className="text-xs font-black tracking-widest uppercase px-3 py-1 rounded-full"
+                style={{ background: `${grade.color}20`, color: grade.color, border: `1px solid ${grade.color}30` }}>
+                🎯 Σημερινή αποστολή
+              </span>
+              <span className="text-xs" style={{ color: 'var(--fg-3)' }}>~{onboarding.time || '20'} λεπτά</span>
+            </div>
+
+            <div className="flex items-start gap-4">
+              <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-3xl shrink-0"
+                style={{ background: `${grade.color}18`, border: `1.5px solid ${grade.color}25` }}>
+                {mission.emoji}
+              </div>
+              <div className="flex-1 min-w-0">
+                <h2 className="font-display font-black text-xl text-white mb-1 leading-tight">
+                  {mission.title}
+                </h2>
+                <p className="text-sm" style={{ color: 'var(--fg-2)' }}>
+                  {grade.label}
+                </p>
+              </div>
+              <motion.div whileHover={{ x: 4 }} className="shrink-0 self-center">
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center"
+                  style={{ background: `${grade.color}25`, border: `1px solid ${grade.color}30` }}>
+                  <ArrowRight size={18} style={{ color: grade.color }} />
+                </div>
+              </motion.div>
+            </div>
+
+            {/* AI hint based on frustration */}
+            {hint && (
+              <div className="mt-5 flex items-center gap-2 pt-4"
+                style={{ borderTop: `1px solid ${grade.color}15` }}>
+                <span className="text-base">{hint.icon}</span>
+                <p className="text-sm" style={{ color: '#a78bfa' }}>{hint.text}</p>
+              </div>
+            )}
+          </div>
+        </motion.div>
+      )}
+
+      {/* Stats row */}
+      <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
+        transition={{ ease: [0.16, 1, 0.3, 1], duration: 0.5, delay: 0.15 }}
+        className="grid grid-cols-3 gap-3 mb-8">
+        {[
+          { val: totalCompleted, label: 'Κεφάλαια ολοκλ.', icon: '✅', color: '#10b981' },
+          { val: grade?.chapters?.length || 0, label: 'Σύνολο κεφαλαίων', icon: '📚', color: grade?.color || '#7c3aed' },
+          { val: `${onboarding.time || '?'}΄`, label: 'Στόχος/μέρα', icon: '⏰', color: '#f59e0b' },
+        ].map(({ val, label, icon, color }) => (
+          <div key={label} className="text-center p-4 rounded-2xl"
+            style={{ background: '#16161f', border: '1px solid rgba(255,255,255,0.06)' }}>
+            <span className="text-lg block mb-1">{icon}</span>
+            <p className="font-black text-xl text-white font-display">{val}</p>
+            <p className="text-[10px] mt-0.5 leading-tight" style={{ color: 'var(--fg-3)' }}>{label}</p>
+          </div>
+        ))}
+      </motion.div>
+
+      {/* Quick grade access */}
+      {grade && (
+        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
+          transition={{ ease: [0.16, 1, 0.3, 1], duration: 0.5, delay: 0.2 }}
+          className="mb-8">
+          <p className="text-xs font-black tracking-widest uppercase mb-3" style={{ color: 'var(--fg-3)' }}>
+            Η τάξη σου
+          </p>
+          <motion.div whileHover={{ y: -2 }} whileTap={{ scale: 0.98 }}
+            onClick={() => navigate(`/grade/${grade.id}`)}
+            className="flex items-center gap-4 p-4 rounded-2xl cursor-pointer"
+            style={{ background: '#16161f', border: `1px solid ${grade.color}25` }}>
+            <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl"
+              style={{ background: `${grade.color}15` }}>
+              {grade.icon}
+            </div>
+            <div className="flex-1">
+              <p className="font-bold text-white">{grade.label}</p>
+              <p className="text-xs" style={{ color: 'var(--fg-3)' }}>{grade.chapters.length} κεφάλαια</p>
+            </div>
+            <ChevronRight size={18} style={{ color: grade.color }} />
+          </motion.div>
+        </motion.div>
+      )}
+
+      {/* All grades compact */}
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+        transition={{ duration: 0.4, delay: 0.28 }}>
+        <p className="text-xs font-black tracking-widest uppercase mb-3" style={{ color: 'var(--fg-3)' }}>
+          Όλες οι τάξεις
+        </p>
+        <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 mb-3">
+          {DIMOTIKO_GRADES.map(g => (
+            <motion.button key={g.id} whileHover={{ y: -2 }} whileTap={{ scale: 0.96 }}
+              onClick={() => navigate(`/grade/${g.id}`)}
+              className="flex flex-col items-center p-3 rounded-xl cursor-pointer transition-all"
+              style={{
+                background: g.id === grade?.id ? `${g.color}15` : '#16161f',
+                border: `1px solid ${g.id === grade?.id ? g.color + '35' : 'rgba(255,255,255,0.07)'}`,
+              }}>
+              <span className="text-lg mb-1">{g.icon}</span>
+              <span className="text-[10px] font-bold text-white">{g.shortLabel}</span>
+            </motion.button>
+          ))}
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+          {GRADES.filter(g => !g.comingSoon).map(g => (
+            <motion.button key={g.id} whileHover={{ y: -2 }} whileTap={{ scale: 0.96 }}
+              onClick={() => navigate(`/grade/${g.id}`)}
+              className="flex items-center gap-2 px-3 py-2.5 rounded-xl cursor-pointer transition-all text-left"
+              style={{
+                background: g.id === grade?.id ? `${g.color}15` : '#16161f',
+                border: `1px solid ${g.id === grade?.id ? g.color + '35' : 'rgba(255,255,255,0.07)'}`,
+              }}>
+              <span className="text-base">{g.icon}</span>
+              <span className="text-xs font-bold text-white truncate">{g.shortLabel}</span>
+            </motion.button>
+          ))}
+        </div>
+      </motion.div>
+
+      {/* Pro upgrade nudge if not pro */}
+      {!isPro && (
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }}
+          className="mt-8 flex items-center gap-4 p-4 rounded-2xl cursor-pointer"
+          style={{ background: 'rgba(124,58,237,0.08)', border: '1px solid rgba(124,58,237,0.2)' }}
+          onClick={() => setUpgradeModal(true)}>
+          <Crown size={20} className="text-amber-400 shrink-0" />
+          <div className="flex-1 min-w-0">
+            <p className="font-bold text-white text-sm">Αποκτήσε Pro — 2€/μήνα</p>
+            <p className="text-xs" style={{ color: 'var(--fg-3)' }}>AI Tutor, ασκήσεις, Study Battles, τα πάντα χωρίς όρια</p>
+          </div>
+          <ArrowRight size={16} className="text-violet-400 shrink-0" />
+        </motion.div>
+      )}
     </div>
   )
 }

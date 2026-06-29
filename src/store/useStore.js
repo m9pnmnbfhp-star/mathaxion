@@ -79,6 +79,13 @@ const useStore = create(
           wrongAnswers: [entry, ...state.wrongAnswers].slice(0, 50),
         })),
 
+      // Onboarding
+      onboarding: null,
+      onboardingCompleted: false,
+      setOnboarding: (data) => set({ onboarding: data }),
+      setOnboardingCompleted: (val) => set({ onboardingCompleted: val }),
+      completeOnboarding: (data) => set({ onboarding: data, onboardingCompleted: true }),
+
       // Modal state
       authModalOpen: false,
       authModalMode: 'login',
@@ -105,6 +112,8 @@ const useStore = create(
         xp: state.xp,
         totalXP: state.totalXP,
         wrongAnswers: state.wrongAnswers,
+        onboarding: state.onboarding,
+        onboardingCompleted: state.onboardingCompleted,
       }),
     }
   )

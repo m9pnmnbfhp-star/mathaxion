@@ -6,6 +6,7 @@ import useStore from './store/useStore'
 import Header from './components/layout/Header'
 import AuthModal from './components/auth/AuthModal'
 import UpgradeModal from './components/layout/UpgradeModal'
+import OnboardingFlow from './components/onboarding/OnboardingFlow'
 import HomePage from './pages/HomePage'
 import GradePage from './pages/GradePage'
 import ChapterPage from './pages/ChapterPage'
@@ -15,13 +16,20 @@ import PanelliniesPage from './pages/PanelliniesPage'
 import LeaderboardPage from './pages/LeaderboardPage'
 
 export default function App() {
-  const { setUser, setProfile, setAuthModal } = useStore()
+  const { setUser, setProfile, setAuthModal, setOnboardingCompleted, setOnboarding, user, onboardingCompleted } = useStore()
 
   useEffect(() => {
     const loadUser = (user) => {
       setUser(user)
       if (user) {
-        getProfile(user.id).then(({ data }) => setProfile(data))
+        getProfile(user.id).then(({ data }) => {
+          setProfile(data)
+          // Sync onboarding state from Supabase so returning users skip it
+          if (data?.onboarding_completed) {
+            setOnboardingCompleted(true)
+            if (data?.onboarding) setOnboarding(data.onboarding)
+          }
+        })
       } else {
         setProfile(null)
       }
@@ -60,6 +68,9 @@ export default function App() {
             <Route path="/auth/callback" element={<AuthCallback />} />
           </Routes>
         </main>
+
+        {/* Onboarding overlay — shown once to new users */}
+        {user && !onboardingCompleted && <OnboardingFlow />}
 
         {/* Global modals */}
         <AuthModal />
