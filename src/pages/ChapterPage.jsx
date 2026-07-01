@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useParams, Link } from 'react-router-dom'
+import { useParams, Link, useSearchParams } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ArrowLeft, RefreshCw, Sparkles, BookOpen, Pencil, Layers, Bot, Zap, Camera, Swords, Search, Clock } from 'lucide-react'
 import { getGrade, getChapter, SIMPLICITY_LABELS, SIMPLICITY_DESCRIPTIONS } from '../data/curriculum'
@@ -32,7 +32,8 @@ export default function ChapterPage() {
   const grade = getGrade(gradeId)
   const chapter = getChapter(gradeId, chapterId)
 
-  const [activeTab, setActiveTab] = useState('theory')
+  const [searchParams] = useSearchParams()
+  const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'theory')
   const [selectedConcept, setSelectedConcept] = useState(chapter?.concepts?.[0] || '')
   const { user, isPro, setAuthModal, setUpgradeModal, addXP, updateStreak, onboarding, setLastStudied } = useStore()
 

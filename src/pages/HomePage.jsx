@@ -131,6 +131,84 @@ function getGreeting(name) {
   return `Καλησπέρα, ${name}! 🌙`
 }
 
+function getDayContext({ streak, weeklyXP, lastStudied, chaptersThisWeek }) {
+  const now = new Date()
+  const dow = now.getDay()   // 0=Sun, 1=Mon ... 6=Sat
+  const h   = now.getHours()
+
+  const daysSinceStudy = lastStudied
+    ? Math.round((Date.now() - lastStudied.ts) / 86400000)
+    : null
+
+  // Highest priority: inactivity
+  if (daysSinceStudy >= 2) return {
+    icon: '😴', color: '#f59e0b',
+    title: `${daysSinceStudy} μέρες χωρίς μελέτη`,
+    subtitle: 'Ξεκίνα με μόνο 5 λεπτά σήμερα — το streak σε περιμένει!',
+    missionLabel: '🔄 Επανεκκίνηση',
+  }
+
+  // Streak milestones (7, 14, 30 ...)
+  if (streak.current > 0 && streak.current % 7 === 0) return {
+    icon: '🎉', color: '#f59e0b',
+    title: `${streak.current} μέρες streak! Απίστευτο!`,
+    subtitle: 'Είσαι στο top 5% των μαθητών. Συνέχισε!',
+    missionLabel: '🏆 Σημερινή αποστολή',
+  }
+
+  // Monday — new week energy
+  if (dow === 1) {
+    const lastWeekXP = weeklyXP?.lastWeek || 0
+    return {
+      icon: '🚀', color: '#7c3aed',
+      title: 'Νέα εβδομάδα, νέα αρχή!',
+      subtitle: lastWeekXP > 0
+        ? `Την περασμένη εβδομάδα έκανες ${lastWeekXP} XP. Ξεπέρνα το σήμερα!`
+        : 'Ξεκίνα δυνατά τη νέα εβδομάδα!',
+      missionLabel: '🎯 Εβδομαδιαίος στόχος',
+    }
+  }
+
+  // Friday — weekly wrap-up
+  if (dow === 5) return {
+    icon: chaptersThisWeek > 0 ? '🎊' : '💪', color: '#10b981',
+    title: chaptersThisWeek > 0
+      ? `Μπράβο! ${chaptersThisWeek} κεφάλαια αυτή την εβδομάδα!`
+      : 'Ολοκλήρωσε την εβδομάδα δυνατά!',
+    subtitle: chaptersThisWeek > 0
+      ? `${weeklyXP?.thisWeek || 0} XP — καλή δουλειά! Ένα ακόμα;`
+      : 'Έχεις ακόμα σήμερα και αύριο!',
+    missionLabel: '🏁 Τελευταία ευκαιρία της εβδομάδας',
+  }
+
+  // Weekend
+  if (dow === 6 || dow === 0) return {
+    icon: '⚡', color: '#8b5cf6',
+    title: 'Σαββατοκύριακο = πλεονέκτημα',
+    subtitle: 'Μπες μπροστά από την τάξη σου. Οι υπόλοιποι ξεκουράζονται.',
+    missionLabel: '💪 Σαββατοκυριακό boost',
+  }
+
+  // Morning
+  if (h < 10) return {
+    icon: '☀️', color: '#f59e0b',
+    title: 'Καλή αρχή!',
+    subtitle: 'Η πρωινή μελέτη αφομοιώνεται 30% καλύτερα.',
+    missionLabel: '🌅 Πρωινή αποστολή',
+  }
+
+  // Evening
+  if (h >= 20) return {
+    icon: '🌙', color: '#6366f1',
+    title: 'Βραδινό session',
+    subtitle: 'Λίγα flashcards πριν κοιμηθείς σφραγίζουν τη γνώση.',
+    missionLabel: '🌙 Βραδινή επανάληψη',
+    suggestTab: 'flashcards',
+  }
+
+  return null
+}
+
 function getInsight(streak, weeklyXP, totalCompleted, name) {
   const w = weeklyXP?.thisWeek || 0
   const prev = weeklyXP?.lastWeek || 0
@@ -181,6 +259,15 @@ function PersonalizedDashboard({ user, onboarding, streak, xp, weeklyXP, lastStu
   const missionProgress = mission ? (getChapterProgress(grade?.id, mission.id)?.completedExercises || 0) : 0
 
   const topStruggle = getTopStruggles(1).find(s => s.count >= 2)
+
+  // Chapters completed this week (updatedAt within last 7 days)
+  const oneWeekAgo = Date.now() - 7 * 86400000
+  const chaptersThisWeek = grade?.chapters?.filter(c => {
+    const p = getChapterProgress(grade.id, c.id)
+    return (p.completedExercises || 0) >= 8 && (p.updatedAt || 0) > oneWeekAgo
+  }).length || 0
+
+  const dayCtx = getDayContext({ streak, weeklyXP, lastStudied, chaptersThisWeek })
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
@@ -267,6 +354,20 @@ function PersonalizedDashboard({ user, onboarding, streak, xp, weeklyXP, lastStu
         </motion.div>
       )}
 
+      {/* Daily context banner */}
+      {dayCtx && (
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
+          transition={{ ease: [0.16, 1, 0.3, 1], duration: 0.45, delay: 0.07 }}
+          className="flex items-center gap-3 p-4 rounded-2xl mb-5"
+          style={{ background: `${dayCtx.color}0d`, border: `1px solid ${dayCtx.color}25` }}>
+          <span className="text-2xl shrink-0">{dayCtx.icon}</span>
+          <div>
+            <p className="text-sm font-bold text-white leading-tight">{dayCtx.title}</p>
+            <p className="text-xs mt-0.5" style={{ color: 'var(--fg-3)' }}>{dayCtx.subtitle}</p>
+          </div>
+        </motion.div>
+      )}
+
       {/* Continue where you left off */}
       {showContinue && (
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
@@ -295,7 +396,7 @@ function PersonalizedDashboard({ user, onboarding, streak, xp, weeklyXP, lastStu
             background: `linear-gradient(135deg, ${grade.color}18 0%, #16161f 60%)`,
             border: `1px solid ${grade.color}30`,
           }}
-          onClick={() => navigate(`/grade/${grade.id}/chapter/${mission.id}`)}>
+          onClick={() => navigate(`/grade/${grade.id}/chapter/${mission.id}${dayCtx?.suggestTab ? `?tab=${dayCtx.suggestTab}` : ''}`)}>
 
           <div className="absolute top-0 left-12 right-12 h-px"
             style={{ background: `linear-gradient(90deg, transparent, ${grade.color}70, transparent)` }} />
@@ -308,7 +409,7 @@ function PersonalizedDashboard({ user, onboarding, streak, xp, weeklyXP, lastStu
             <div className="flex items-center gap-2 mb-4">
               <span className="text-xs font-black tracking-widest uppercase px-3 py-1 rounded-full"
                 style={{ background: `${grade.color}20`, color: grade.color, border: `1px solid ${grade.color}30` }}>
-                🎯 Σημερινή αποστολή
+                {dayCtx?.missionLabel || '🎯 Σημερινή αποστολή'}
               </span>
               <span className="text-xs" style={{ color: 'var(--fg-3)' }}>~{onboarding.time || '20'} λεπτά</span>
             </div>
