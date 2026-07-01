@@ -5,6 +5,7 @@ import { Toaster } from 'react-hot-toast'
 import { supabase, getProfile, updateProfile } from './lib/supabase'
 import useStore from './store/useStore'
 import Header from './components/layout/Header'
+import SearchModal from './components/ui/SearchModal'
 import AuthModal from './components/auth/AuthModal'
 import UpgradeModal from './components/layout/UpgradeModal'
 import OnboardingFlow from './components/onboarding/OnboardingFlow'
@@ -90,6 +91,15 @@ function AppContent({ user, onboardingCompleted, preAuthOnboardingOpen }) {
   const location = useLocation()
   const { scrollYProgress } = useScroll()
   const spotlightRef = useRef(null)
+  const [searchOpen, setSearchOpen] = useState(false)
+
+  useEffect(() => {
+    const handler = (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') { e.preventDefault(); setSearchOpen(s => !s) }
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [])
 
   useEffect(() => {
     let raf
@@ -115,7 +125,8 @@ function AppContent({ user, onboardingCompleted, preAuthOnboardingOpen }) {
         className="fixed top-0 left-0 right-0 z-[200] h-[2px] origin-left"
         style={{ scaleX: scrollYProgress, background: 'linear-gradient(90deg,#7c3aed,#a78bfa,#10b981)' }}
       />
-      <Header />
+      <Header onSearchOpen={() => setSearchOpen(true)} />
+      <SearchModal open={searchOpen} onClose={() => setSearchOpen(false)} />
 
       <main>
         <AnimatePresence mode="wait" initial={false}>

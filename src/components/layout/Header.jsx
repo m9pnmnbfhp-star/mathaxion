@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Flame, Star, User, Settings, LogOut, Crown, ChevronDown, Menu, X } from 'lucide-react'
+import { Flame, Star, User, Settings, LogOut, Crown, ChevronDown, Menu, X, Search } from 'lucide-react'
 import useStore from '../../store/useStore'
 import { signOut } from '../../lib/supabase'
 import toast from 'react-hot-toast'
@@ -10,7 +10,7 @@ function getLevel(xp) {
   return Math.floor(Math.sqrt(Math.max(0, xp) / 8)) + 1
 }
 
-export default function Header() {
+export default function Header({ onSearchOpen }) {
   const { user, profile, streak, xp, isPro, setAuthModal, setUser, setUpgradeModal } = useStore()
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
@@ -65,6 +65,20 @@ export default function Header() {
 
         {/* Right actions */}
         <div className="flex items-center gap-2">
+          {/* Search button */}
+          <motion.button
+            whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+            onClick={onSearchOpen}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-xl text-sm transition-colors"
+            style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', color: 'var(--fg-3)' }}
+          >
+            <Search size={14} />
+            <span className="hidden sm:inline text-xs">Αναζήτηση</span>
+            <kbd className="hidden md:flex items-center gap-0.5 text-[10px] font-bold px-1.5 py-0.5 rounded"
+              style={{ background: 'rgba(255,255,255,0.06)', color: 'var(--fg-3)' }}>
+              ⌘K
+            </kbd>
+          </motion.button>
           {user ? (
             <>
               {/* Streak */}
