@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useParams, Link, useSearchParams } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ArrowLeft, RefreshCw, Sparkles, BookOpen, Pencil, Layers, Bot, Zap, Camera, Swords, Search, Clock } from 'lucide-react'
@@ -14,6 +14,7 @@ import PanicMode from '../components/panic/PanicMode'
 import PhotoSolver from '../components/photosolver/PhotoSolver'
 import StudyBattle from '../components/battles/StudyBattle'
 import ChapterCompleteModal from '../components/ui/ChapterCompleteModal'
+import { getVisualForConcept } from '../components/visuals/mathVisualMap'
 import { explainTheory, reExplain } from '../lib/anthropic'
 import useStore from '../store/useStore'
 import toast from 'react-hot-toast'
@@ -306,6 +307,7 @@ function ExplanationFeedback({ onLoad, onReload, simplicity, theorySimplicity, s
 }
 
 function TheoryTab({ chapter, selectedConcept, setSelectedConcept, simplicity, setSimplicity, content, loading, onLoad, onReload, theorySimplicity, addXP, recordStruggle, gradeId, chapterId }) {
+  const VisualComponent = getVisualForConcept(selectedConcept)
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
       {/* Left panel */}
@@ -348,6 +350,16 @@ function TheoryTab({ chapter, selectedConcept, setSelectedConcept, simplicity, s
 
       {/* Right panel */}
       <div className="lg:col-span-2 space-y-4">
+        {/* Math visual — shown when concept matches */}
+        {VisualComponent && (
+          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
+            transition={{ ease: [0.16, 1, 0.3, 1], duration: 0.4 }}>
+            <Suspense fallback={null}>
+              <VisualComponent />
+            </Suspense>
+          </motion.div>
+        )}
+
         {!content && !loading && (
           <div className="flex flex-col items-center justify-center py-20 bg-[#16161f] rounded-2xl border border-dashed border-[#2a2a3a]">
             <div className="w-16 h-16 rounded-2xl bg-violet-600/10 border border-violet-500/20 flex items-center justify-center text-3xl mb-5">
