@@ -35,7 +35,7 @@ export default function ChapterPage() {
   const [searchParams] = useSearchParams()
   const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'theory')
   const [selectedConcept, setSelectedConcept] = useState(chapter?.concepts?.[0] || '')
-  const { user, isPro, setAuthModal, setUpgradeModal, addXP, updateStreak, onboarding, setLastStudied } = useStore()
+  const { user, isPro, setAuthModal, setUpgradeModal, addXP, updateStreak, onboarding, setLastStudied, recordStruggle } = useStore()
 
   useEffect(() => {
     if (grade && chapter) {
@@ -46,6 +46,7 @@ export default function ChapterPage() {
   const [simplicity, setSimplicity] = useState(confidenceSimplicity[onboarding?.confidence] ?? 2)
   const [theoryContent, setTheoryContent] = useState(null)
   const [theoryLoading, setTheoryLoading] = useState(false)
+  const [theorySimplicity, setTheorySimplicity] = useState(simplicity)
 
   if (!grade || !chapter) {
     return (
@@ -59,13 +60,14 @@ export default function ChapterPage() {
 
   const activeTabData = TABS.find(t => t.id === activeTab)
 
-  const loadTheory = async (concept = selectedConcept) => {
+  const loadTheory = async (concept = selectedConcept, atSimplicity = simplicity) => {
     if (!user) { setAuthModal(true); return }
     if (!isPro) { setUpgradeModal(true); return }
     setTheoryLoading(true)
     setTheoryContent(null)
+    setTheorySimplicity(atSimplicity)
     try {
-      await explainTheory(concept, grade, simplicity, chapter.title, (text) => {
+      await explainTheory(concept, grade, atSimplicity, chapter.title, (text) => {
         setTheoryContent(text)
         setTheoryLoading(false)
       })
@@ -188,6 +190,11 @@ export default function ChapterPage() {
               loading={theoryLoading}
               onLoad={loadTheory}
               onReload={reloadTheory}
+              theorySimplicity={theorySimplicity}
+              addXP={addXP}
+              recordStruggle={recordStruggle}
+              gradeId={grade?.id}
+              chapterId={chapter?.id}
             />
           )}
           {activeTab === 'exercises' && (
@@ -206,7 +213,81 @@ export default function ChapterPage() {
   )
 }
 
-function TheoryTab({ chapter, selectedConcept, setSelectedConcept, simplicity, setSimplicity, content, loading, onLoad, onReload }) {
+function ExplanationFeedback({ onLoad, onReload, simplicity, theorySimplicity, selectedConcept, addXP, recordStruggle, gradeId, chapterId }) {
+  const [state, setState] = useState(null) // null | 'good' | 'partial' | 'bad'
+
+  const handleGood = () => {
+    setState('good')
+    addXP(10)
+  }
+
+  const handlePartial = () => setState('partial')
+
+  const handleBad = () => {
+    setState('bad')
+    recordStruggle(selectedConcept, gradeId, chapterId)
+    const lower = Math.max(0, theorySimplicity - 1)
+    onLoad(selectedConcept, lower)
+  }
+
+  if (state === 'good') return (
+    <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
+      className="flex items-center gap-3 p-4 rounded-2xl"
+      style={{ background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.2)' }}>
+      <span className="text-xl">🎉</span>
+      <div>
+        <p className="text-sm font-bold text-emerald-400">Τέλεια! +10 XP</p>
+        <p className="text-xs" style={{ color: 'var(--fg-3)' }}>Συνέχισε με τις ασκήσεις για να εδραιώσεις τη γνώση.</p>
+      </div>
+    </motion.div>
+  )
+
+  if (state === 'partial') return (
+    <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
+      className="p-4 rounded-2xl space-y-3"
+      style={{ background: 'rgba(245,158,11,0.07)', border: '1px solid rgba(245,158,11,0.2)' }}>
+      <p className="text-sm font-bold text-amber-400">Θέλεις πιο απλή εξήγηση;</p>
+      <p className="text-xs" style={{ color: 'var(--fg-3)' }}>Θα ξαναεξηγήσω με πιο καθημερινά παραδείγματα.</p>
+      <div className="flex gap-2">
+        <button onClick={() => { setState(null); onLoad(selectedConcept, Math.max(0, theorySimplicity - 1)) }}
+          className="text-xs font-bold px-3 py-1.5 rounded-xl"
+          style={{ background: 'rgba(245,158,11,0.15)', color: '#fbbf24', border: '1px solid rgba(245,158,11,0.3)' }}>
+          Ναι, πιο απλά →
+        </button>
+        <button onClick={onReload}
+          className="text-xs px-3 py-1.5 rounded-xl"
+          style={{ color: 'var(--fg-3)', border: '1px solid rgba(255,255,255,0.07)' }}>
+          Εξήγησε αλλιώς
+        </button>
+      </div>
+    </motion.div>
+  )
+
+  return (
+    <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+      transition={{ ease: [0.16, 1, 0.3, 1], duration: 0.4 }}
+      className="p-4 rounded-2xl"
+      style={{ background: '#16161f', border: '1px solid rgba(255,255,255,0.06)' }}>
+      <p className="text-sm font-semibold text-white mb-3">😊 Σε βοήθησε η εξήγηση;</p>
+      <div className="flex gap-2">
+        {[
+          { label: '👍 Ναι!', fn: handleGood, color: '#10b981', bg: 'rgba(16,185,129,0.1)', border: 'rgba(16,185,129,0.25)' },
+          { label: '🤔 Λίγο', fn: handlePartial, color: '#f59e0b', bg: 'rgba(245,158,11,0.1)', border: 'rgba(245,158,11,0.25)' },
+          { label: '😕 Όχι', fn: handleBad, color: '#ef4444', bg: 'rgba(239,68,68,0.1)', border: 'rgba(239,68,68,0.25)' },
+        ].map(({ label, fn, color, bg, border }) => (
+          <motion.button key={label} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+            onClick={fn}
+            className="flex-1 py-2 px-3 rounded-xl text-sm font-bold transition-all"
+            style={{ background: bg, color, border: `1px solid ${border}` }}>
+            {label}
+          </motion.button>
+        ))}
+      </div>
+    </motion.div>
+  )
+}
+
+function TheoryTab({ chapter, selectedConcept, setSelectedConcept, simplicity, setSimplicity, content, loading, onLoad, onReload, theorySimplicity, addXP, recordStruggle, gradeId, chapterId }) {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
       {/* Left panel */}
@@ -279,16 +360,18 @@ function TheoryTab({ chapter, selectedConcept, setSelectedConcept, simplicity, s
         )}
 
         {content && !loading && (
-          <div className="p-4 bg-violet-500/5 border border-violet-500/20 rounded-2xl flex items-start gap-3">
-            <Sparkles size={16} className="text-violet-400 shrink-0 mt-0.5" />
-            <div>
-              <p className="text-sm text-violet-300 font-semibold mb-1">Δεν κατάλαβες;</p>
-              <p className="text-xs text-slate-400 mb-3">Το Axi AI θα εξηγήσει με εντελώς νέα παραδείγματα.</p>
-              <Button variant="outline" size="sm" onClick={onReload} loading={loading} icon={<RefreshCw size={14} />}>
-                Εξήγησε αλλιώς
-              </Button>
-            </div>
-          </div>
+          <ExplanationFeedback
+            key={content.slice(0, 40)}
+            onLoad={onLoad}
+            onReload={onReload}
+            simplicity={simplicity}
+            theorySimplicity={theorySimplicity}
+            selectedConcept={selectedConcept}
+            addXP={addXP}
+            recordStruggle={recordStruggle}
+            gradeId={gradeId}
+            chapterId={chapterId}
+          />
         )}
       </div>
     </div>
