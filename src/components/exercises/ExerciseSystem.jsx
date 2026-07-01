@@ -9,6 +9,8 @@ import { generateExercise, explainWrongAnswer, generateSimilarExercises } from '
 import { correctMessage, levelUpMessage, streakMessage, proximityMessage } from '../../lib/personalizedMessages'
 import { showXPFloat } from '../../lib/xpFloat'
 import { flashCorrect, flashWrong, levelUpBurst, streakMilestoneBurst } from '../../lib/gsapAnimations'
+import { EGG, getRandom } from '../../lib/easterEggs'
+import confetti from 'canvas-confetti'
 import useStore from '../../store/useStore'
 import toast from 'react-hot-toast'
 
@@ -33,6 +35,7 @@ export default function ExerciseSystem({ grade, chapter, topic, onXPGained, onCh
   const [correctStreak, setCorrectStreak] = useState(0)
   const [totalCorrect, setTotalCorrect] = useState(0)
   const [wrongCount, setWrongCount] = useState(0)
+  const [hadWrong, setHadWrong] = useState(false)
   const [usedExercises, setUsedExercises] = useState([])
   const [similarExercises, setSimilarExercises] = useState([])
   const [showConfetti, setShowConfetti] = useState(false)
@@ -118,6 +121,29 @@ export default function ExerciseSystem({ grade, chapter, topic, onXPGained, onCh
           gradeId: grade?.id,
           chapterId: chapter?.id,
         })
+
+        // Perfect score Easter egg — no wrong answers in this session
+        if (!hadWrong) {
+          setTimeout(() => {
+            confetti({ particleCount: 220, spread: 120, origin: { y: 0.5 }, colors: ['#7c3aed','#a78bfa','#10b981','#fbbf24','#ef4444'] })
+            const msg = getRandom(EGG.perfectScore)
+            toast.custom(() => (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.85, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                className="flex items-start gap-3 px-4 py-3 rounded-2xl shadow-2xl max-w-xs"
+                style={{ background: '#16161f', border: '1.5px solid rgba(124,58,237,0.5)', boxShadow: '0 0 32px rgba(124,58,237,0.35)' }}
+              >
+                <span className="text-2xl shrink-0">🤖</span>
+                <div>
+                  <p className="text-[11px] font-black text-violet-400 mb-1 uppercase tracking-wider">Axi</p>
+                  <p className="text-sm text-white leading-snug">{msg}</p>
+                </div>
+              </motion.div>
+            ), { duration: 7000 })
+          }, 600)
+        }
+
         setTimeout(() => onChapterComplete?.({ xpEarned: xp, level: currentLevel }), 700)
       }
 
@@ -144,6 +170,7 @@ export default function ExerciseSystem({ grade, chapter, topic, onXPGained, onCh
     } else {
       setCorrectStreak(0)
       setWrongCount(prev => prev + 1)
+      setHadWrong(true)
 
       addWrongAnswer({
         gradeId: grade?.id,

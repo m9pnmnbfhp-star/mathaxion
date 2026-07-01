@@ -1,8 +1,10 @@
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, useCallback } from 'react'
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom'
 import { AnimatePresence, motion, useScroll } from 'framer-motion'
 import { Toaster } from 'react-hot-toast'
 import { supabase, getProfile, updateProfile } from './lib/supabase'
+import { KONAMI_SEQ, EGG } from './lib/easterEggs'
+import confetti from 'canvas-confetti'
 import useStore from './store/useStore'
 import Header from './components/layout/Header'
 import SearchModal from './components/ui/SearchModal'
@@ -103,10 +105,26 @@ function AppContent({ user, onboardingCompleted, preAuthOnboardingOpen }) {
   const spotlightRef = useRef(null)
   const [searchOpen, setSearchOpen] = useState(false)
   const [reviewOpen, setReviewOpen] = useState(false)
+  const [konamiOpen, setKonamiOpen] = useState(false)
+  const konamiBuffer = useRef([])
+
+  // Close Konami overlay after 8s
+  useEffect(() => {
+    if (!konamiOpen) return
+    const t = setTimeout(() => setKonamiOpen(false), 8000)
+    return () => clearTimeout(t)
+  }, [konamiOpen])
 
   useEffect(() => {
     const handler = (e) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'k') { e.preventDefault(); setSearchOpen(s => !s) }
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') { e.preventDefault(); setSearchOpen(s => !s); return }
+      // Konami code
+      konamiBuffer.current = [...konamiBuffer.current, e.key].slice(-KONAMI_SEQ.length)
+      if (konamiBuffer.current.join(',') === KONAMI_SEQ.join(',')) {
+        konamiBuffer.current = []
+        setKonamiOpen(true)
+        confetti({ particleCount: 200, spread: 130, origin: { y: 0.55 }, colors: ['#7c3aed','#a78bfa','#10b981','#fbbf24','#f472b6'] })
+      }
     }
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
@@ -154,6 +172,7 @@ function AppContent({ user, onboardingCompleted, preAuthOnboardingOpen }) {
       <Header onSearchOpen={() => setSearchOpen(true)} onReviewOpen={() => setReviewOpen(true)} />
       <SearchModal open={searchOpen} onClose={() => setSearchOpen(false)} />
       <WeeklyReview open={reviewOpen} onClose={() => setReviewOpen(false)} />
+      <KonamiOverlay open={konamiOpen} onClose={() => setKonamiOpen(false)} />
 
       <main>
         <AnimatePresence mode="wait" initial={false}>
@@ -195,6 +214,60 @@ function AppContent({ user, onboardingCompleted, preAuthOnboardingOpen }) {
         }}
       />
     </div>
+  )
+}
+
+function KonamiOverlay({ open, onClose }) {
+  return (
+    <AnimatePresence>
+      {open && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.3 }}
+          className="fixed inset-0 z-[400] flex items-center justify-center p-6"
+          style={{ background: 'rgba(0,0,0,0.92)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)' }}
+          onClick={onClose}
+        >
+          <motion.div
+            initial={{ scale: 0.4, rotate: -15, opacity: 0 }}
+            animate={{ scale: 1, rotate: 0, opacity: 1 }}
+            exit={{ scale: 0.8, opacity: 0 }}
+            transition={{ type: 'spring', stiffness: 260, damping: 18 }}
+            className="text-center max-w-md"
+            onClick={e => e.stopPropagation()}
+          >
+            <motion.div
+              animate={{ rotate: [0, -12, 12, -12, 12, 0] }}
+              transition={{ delay: 0.4, duration: 0.7 }}
+              className="text-8xl mb-6 select-none"
+            >
+              🤖
+            </motion.div>
+            <motion.h2
+              initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.35, ease: [0.16, 1, 0.3, 1] }}
+              className="font-display font-black text-3xl text-white mb-4">
+              {EGG.konami.title}
+            </motion.h2>
+            <motion.p
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+              transition={{ delay: 0.55 }}
+              className="text-slate-300 text-base leading-relaxed whitespace-pre-line">
+              {EGG.konami.body}
+            </motion.p>
+            <motion.p
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+              transition={{ delay: 1.1 }}
+              className="mt-8 text-xs text-slate-600 cursor-pointer"
+              onClick={onClose}>
+              Κάνε click οπουδήποτε για να κλείσεις
+            </motion.p>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   )
 }
 

@@ -1,6 +1,8 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { supabase } from '../lib/supabase'
+import toast from 'react-hot-toast'
+import { EGG, getRandom } from '../lib/easterEggs'
 
 function getMondayStr() {
   const d = new Date()
@@ -62,6 +64,12 @@ const useStore = create(
           get().addMilestone({ type: 'streak', key: `streak-${newCurrent}`, days: newCurrent,
             title: `${newCurrent} μέρες συνεχόμενα!`, emoji: newCurrent >= 30 ? '🔥' : '🏅',
             desc: newCurrent >= 30 ? 'Απίστευτη συνέπεια!' : 'Συνέχισε έτσι!' })
+        }
+        // Easter egg toasts at memorable streak milestones
+        const STREAK_EGGS = { 7: EGG.streak7, 30: EGG.streak30, 100: EGG.streak100 }
+        if (STREAK_EGGS[newCurrent]) {
+          const msg = getRandom(STREAK_EGGS[newCurrent])
+          setTimeout(() => toast(msg, { icon: '🔥', duration: 6000 }), 1200)
         }
       },
 

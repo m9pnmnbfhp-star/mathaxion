@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom'
 import { motion, useInView } from 'framer-motion'
 import MagneticButton from '../components/ui/MagneticButton'
 import { countUpEl } from '../lib/gsapAnimations'
+import { getTimeEgg } from '../lib/easterEggs'
 import {
   ArrowRight, Sparkles, Zap, BookOpen, Pencil, Layers,
   Bot, Camera, Swords, Crown, Flame, Star,
@@ -341,6 +342,14 @@ function PersonalizedDashboard({ user, onboarding, streak, xp, weeklyXP, lastStu
   const dayCtx = getDayContext({ streak, weeklyXP, lastStudied, chaptersThisWeek })
   const recommendations = getRecommendations({ grade, getChapterProgress, struggles, lastStudied })
 
+  // Time-based Easter egg — shows once per browser session
+  const [timeEgg, setTimeEgg] = useState(null)
+  useEffect(() => {
+    if (sessionStorage.getItem('axi-time-egg')) return
+    const egg = getTimeEgg()
+    if (egg) { setTimeEgg(egg); sessionStorage.setItem('axi-time-egg', '1') }
+  }, [])
+
   // Improvement: this week significantly better than last (≥15%)
   const improvPct = weeklyXP?.lastWeek > 0
     ? Math.round(((weeklyXP.thisWeek - weeklyXP.lastWeek) / weeklyXP.lastWeek) * 100)
@@ -411,6 +420,23 @@ function PersonalizedDashboard({ user, onboarding, streak, xp, weeklyXP, lastStu
           <span className="text-base">{showImprovement ? '🔥' : '👋'}</span>
           <p className="text-sm font-bold" style={{ color: showImprovement ? '#f87171' : '#a78bfa' }}>
             {showImprovement ? improvementMessage(improvPct) : comebackMessage(daysSinceStudy)}
+          </p>
+        </motion.div>
+      )}
+
+      {/* Time-based Easter egg — late night / early bird */}
+      {timeEgg && (
+        <motion.div
+          initial={{ opacity: 0, x: -16 }} animate={{ opacity: 1, x: 0 }}
+          transition={{ ease: [0.16, 1, 0.3, 1], duration: 0.45, delay: 0.08 }}
+          className="flex items-center gap-3 px-4 py-3 rounded-2xl mb-4 w-fit"
+          style={{
+            background: timeEgg.type === 'lateNight' ? 'rgba(99,102,241,0.1)' : 'rgba(245,158,11,0.08)',
+            border: `1px solid ${timeEgg.type === 'lateNight' ? 'rgba(99,102,241,0.25)' : 'rgba(245,158,11,0.22)'}`,
+          }}>
+          <span className="text-lg">🤖</span>
+          <p className="text-sm font-bold" style={{ color: timeEgg.type === 'lateNight' ? '#a5b4fc' : '#fbbf24' }}>
+            {timeEgg.msg}
           </p>
         </motion.div>
       )}
