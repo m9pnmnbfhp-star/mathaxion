@@ -22,7 +22,8 @@ const SPRING = { ease: [0.16, 1, 0.3, 1], duration: 0.45 }
 export default function GradePage() {
   const { gradeId } = useParams()
   const navigate = useNavigate()
-  const { getChapterProgress, isPro, setUpgradeModal, user, setAuthModal } = useStore()
+  const { getChapterProgress, isPro, setUpgradeModal, user, setAuthModal, onboarding } = useStore()
+  const userName = user?.user_metadata?.display_name || user?.email?.split('@')[0] || null
 
   const grade = getGrade(gradeId)
   if (!grade) return <NotFound />
@@ -87,6 +88,18 @@ export default function GradePage() {
               </div>
 
               <div className="flex-1">
+                {userName && masteredCount === 0 && startedCount === 0 && (
+                  <p className="text-xs font-semibold mb-1" style={{ color: 'var(--fg-3)' }}>
+                    {userName}, ξεκίνα από οποιοδήποτε κεφάλαιο 👇
+                  </p>
+                )}
+                {userName && (startedCount > 0 || masteredCount > 0) && (
+                  <p className="text-xs font-semibold mb-1" style={{ color: 'var(--fg-3)' }}>
+                    {masteredCount > 0
+                      ? `${userName} — ${masteredCount}/${totalChapters} κεφάλαια ολοκληρωμένα 🎯`
+                      : `${userName} — ${startedCount} κεφάλαια σε εξέλιξη`}
+                  </p>
+                )}
                 <div className="flex items-center gap-2 flex-wrap mb-1">
                   <h1 className="text-3xl font-black text-white font-display">{grade.label}</h1>
                   {grade.isPanellinies && (

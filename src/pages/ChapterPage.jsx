@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ArrowLeft, RefreshCw, Sparkles, BookOpen, Pencil, Layers, Bot, Zap, Camera, Swords, Search, Clock } from 'lucide-react'
@@ -34,7 +34,13 @@ export default function ChapterPage() {
 
   const [activeTab, setActiveTab] = useState('theory')
   const [selectedConcept, setSelectedConcept] = useState(chapter?.concepts?.[0] || '')
-  const { user, isPro, setAuthModal, setUpgradeModal, addXP, updateStreak, onboarding } = useStore()
+  const { user, isPro, setAuthModal, setUpgradeModal, addXP, updateStreak, onboarding, setLastStudied } = useStore()
+
+  useEffect(() => {
+    if (grade && chapter) {
+      setLastStudied({ gradeId: grade.id, chapterId: chapter.id, title: chapter.title, emoji: chapter.emoji, gradeName: grade.label })
+    }
+  }, [grade?.id, chapter?.id])
   const confidenceSimplicity = { love: 3, ok: 2, struggle: 1, hard: 0 }
   const [simplicity, setSimplicity] = useState(confidenceSimplicity[onboarding?.confidence] ?? 2)
   const [theoryContent, setTheoryContent] = useState(null)

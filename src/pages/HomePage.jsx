@@ -74,7 +74,7 @@ function MathAtmosphere() {
 }
 
 export default function HomePage() {
-  const { user, setAuthModal, setUpgradeModal, isPro, onboarding, onboardingCompleted, streak, xp, getChapterProgress } = useStore()
+  const { user, setAuthModal, setUpgradeModal, isPro, onboarding, onboardingCompleted, streak, xp, weeklyXP, lastStudied, getChapterProgress } = useStore()
   const navigate = useNavigate()
 
   const showDashboard = user && onboardingCompleted && onboarding
@@ -86,6 +86,7 @@ export default function HomePage() {
         {showDashboard
           ? <PersonalizedDashboard
               user={user} onboarding={onboarding} streak={streak} xp={xp}
+              weeklyXP={weeklyXP} lastStudied={lastStudied}
               getChapterProgress={getChapterProgress} navigate={navigate}
               setUpgradeModal={setUpgradeModal} isPro={isPro}
             />
@@ -129,7 +130,21 @@ function getGreeting(name) {
   return `Καλησπέρα, ${name}! 🌙`
 }
 
-function PersonalizedDashboard({ user, onboarding, streak, xp, getChapterProgress, navigate, setUpgradeModal, isPro }) {
+function getInsight(streak, weeklyXP, totalCompleted, name) {
+  const w = weeklyXP?.thisWeek || 0
+  const prev = weeklyXP?.lastWeek || 0
+  if (streak.current >= 7)  return { icon: '🔥', text: `${streak.current} μέρες streak! Ασταμάτητος${name ? ', ' + name : ''}!`, color: '#f59e0b' }
+  if (streak.current >= 3)  return { icon: '🔥', text: `${streak.current} μέρες streak — συνέχισε έτσι!`, color: '#f59e0b' }
+  if (prev > 0 && w > prev) {
+    const pct = Math.round(((w - prev) / prev) * 100)
+    return { icon: '📈', text: `+${pct}% XP αυτή την εβδομάδα σε σχέση με την προηγούμενη!`, color: '#10b981' }
+  }
+  if (w > 0) return { icon: '⚡', text: `${w} XP κερδίσατε αυτή την εβδομάδα — συνέχισε!`, color: '#a78bfa' }
+  if (totalCompleted >= 1) return { icon: '✅', text: `${totalCompleted} κεφάλαια ολοκληρωμένα — μπράβο!`, color: '#10b981' }
+  return null
+}
+
+function PersonalizedDashboard({ user, onboarding, streak, xp, weeklyXP, lastStudied, getChapterProgress, navigate, setUpgradeModal, isPro }) {
   const name = user?.user_metadata?.display_name || user?.email?.split('@')[0] || 'Μαθητή'
   const grade = getGrade(onboarding.grade)
   const hint = FRUSTRATION_HINT[onboarding.frustration]
@@ -146,7 +161,6 @@ function PersonalizedDashboard({ user, onboarding, streak, xp, getChapterProgres
     }
   }, [xp])
 
-  // Find the first unmastered chapter in their grade
   const mission = grade?.chapters?.find(c => {
     const p = getChapterProgress(grade.id, c.id)
     return (p.completedExercises || 0) < 8
@@ -157,22 +171,31 @@ function PersonalizedDashboard({ user, onboarding, streak, xp, getChapterProgres
     return (p.completedExercises || 0) >= 8
   }).length || 0
 
+  const insight = getInsight(streak, weeklyXP, totalCompleted, name)
+
+  // Show "continue" card only if lastStudied is different from mission
+  const showContinue = lastStudied && lastStudied.gradeId === grade?.id &&
+    mission && lastStudied.chapterId !== mission.id
+
+  const missionProgress = mission ? (getChapterProgress(grade?.id, mission.id)?.completedExercises || 0) : 0
+
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
 
       {/* Greeting row */}
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
         transition={{ ease: [0.16, 1, 0.3, 1], duration: 0.5 }}
-        className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+        className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-5">
         <div>
           <h1 className="font-display font-black text-3xl sm:text-4xl text-white leading-tight">
             {getGreeting(name)}
           </h1>
-          {onboarding.goal && (
-            <p className="text-sm mt-1" style={{ color: 'var(--fg-3)' }}>
-              Στόχος: <span style={{ color: '#a78bfa' }}>{GOAL_LABEL[onboarding.goal]}</span>
-            </p>
-          )}
+          <p className="text-sm mt-1" style={{ color: 'var(--fg-3)' }}>
+            {onboarding.goal
+              ? <>Στόχος: <span style={{ color: '#a78bfa' }}>{GOAL_LABEL[onboarding.goal]}</span></>
+              : <span style={{ color: 'var(--fg-3)' }}>{grade?.label}</span>
+            }
+          </p>
         </div>
 
         {/* Streak + XP badges */}
@@ -195,6 +218,36 @@ function PersonalizedDashboard({ user, onboarding, streak, xp, getChapterProgres
           </div>
         </div>
       </motion.div>
+
+      {/* Dynamic insight chip */}
+      {insight && (
+        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+          transition={{ ease: [0.16, 1, 0.3, 1], duration: 0.4, delay: 0.05 }}
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold mb-6"
+          style={{ background: `${insight.color}12`, border: `1px solid ${insight.color}30`, color: insight.color }}>
+          <span>{insight.icon}</span>
+          <span>{insight.text}</span>
+        </motion.div>
+      )}
+
+      {/* Continue where you left off */}
+      {showContinue && (
+        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
+          transition={{ ease: [0.16, 1, 0.3, 1], duration: 0.45, delay: 0.08 }}
+          className="flex items-center gap-3 p-4 rounded-2xl mb-4 cursor-pointer group"
+          style={{ background: '#16161f', border: '1px solid rgba(255,255,255,0.07)' }}
+          onClick={() => navigate(`/grade/${lastStudied.gradeId}/chapter/${lastStudied.chapterId}`)}>
+          <span className="text-2xl shrink-0">{lastStudied.emoji}</span>
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-black tracking-widest uppercase mb-0.5" style={{ color: 'var(--fg-3)' }}>Συνέχισε εδώ</p>
+            <p className="text-sm font-bold text-white truncate">{lastStudied.title}</p>
+            <p className="text-[11px]" style={{ color: 'var(--fg-3)' }}>{lastStudied.gradeName}</p>
+          </div>
+          <motion.div whileHover={{ x: 3 }} className="shrink-0">
+            <ArrowRight size={16} className="text-slate-500 group-hover:text-violet-400 transition-colors" />
+          </motion.div>
+        </motion.div>
+      )}
 
       {/* Today's mission — the hero card */}
       {grade && mission && (
@@ -232,9 +285,20 @@ function PersonalizedDashboard({ user, onboarding, streak, xp, getChapterProgres
                 <h2 className="font-display font-black text-xl text-white mb-1 leading-tight">
                   {mission.title}
                 </h2>
-                <p className="text-sm" style={{ color: 'var(--fg-2)' }}>
+                <p className="text-sm mb-2" style={{ color: 'var(--fg-2)' }}>
                   {grade.label}
                 </p>
+                {/* Progress bar */}
+                <div className="flex items-center gap-2">
+                  <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)' }}>
+                    <motion.div className="h-full rounded-full"
+                      style={{ background: grade.color }}
+                      initial={{ width: 0 }}
+                      animate={{ width: `${Math.min(100, (missionProgress / 8) * 100)}%` }}
+                      transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1], delay: 0.3 }} />
+                  </div>
+                  <span className="text-[10px] font-bold shrink-0" style={{ color: 'var(--fg-3)' }}>{missionProgress}/8</span>
+                </div>
               </div>
               <motion.div whileHover={{ x: 4 }} className="shrink-0 self-center">
                 <div className="w-10 h-10 rounded-xl flex items-center justify-center"
@@ -259,17 +323,19 @@ function PersonalizedDashboard({ user, onboarding, streak, xp, getChapterProgres
       {/* Stats row */}
       <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
         transition={{ ease: [0.16, 1, 0.3, 1], duration: 0.5, delay: 0.15 }}
-        className="grid grid-cols-3 gap-3 mb-8">
+        className="grid grid-cols-4 gap-3 mb-8">
         {[
-          { val: totalCompleted, label: 'Κεφάλαια ολοκλ.', icon: '✅', color: '#10b981' },
-          { val: grade?.chapters?.length || 0, label: 'Σύνολο κεφαλαίων', icon: '📚', color: grade?.color || '#7c3aed' },
-          { val: `${onboarding.time || '?'}΄`, label: 'Στόχος/μέρα', icon: '⏰', color: '#f59e0b' },
-        ].map(({ val, label, icon, color }) => (
+          { val: totalCompleted, label: 'Κεφάλαια', icon: '✅', color: '#10b981' },
+          { val: streak.longest > 0 ? streak.longest : streak.current, label: 'Καλύτερο streak', icon: '🏆', color: '#f59e0b' },
+          { val: `${weeklyXP?.thisWeek || 0}`, label: 'XP αυτή την εβδ.', icon: '📈', color: '#a78bfa', sub: weeklyXP?.lastWeek > 0 ? (weeklyXP.thisWeek >= weeklyXP.lastWeek ? `↑ vs προηγ.` : `↓ vs προηγ.`) : null, subColor: weeklyXP?.thisWeek >= weeklyXP?.lastWeek ? '#10b981' : '#ef4444' },
+          { val: `${onboarding.time || '?'}΄`, label: 'Στόχος/μέρα', icon: '⏰', color: '#06b6d4' },
+        ].map(({ val, label, icon, color, sub, subColor }) => (
           <div key={label} className="text-center p-4 rounded-2xl"
             style={{ background: '#16161f', border: '1px solid rgba(255,255,255,0.06)' }}>
             <span className="text-lg block mb-1">{icon}</span>
             <p className="font-black text-xl text-white font-display">{val}</p>
             <p className="text-[10px] mt-0.5 leading-tight" style={{ color: 'var(--fg-3)' }}>{label}</p>
+            {sub && <p className="text-[9px] mt-0.5 font-bold" style={{ color: subColor }}>{sub}</p>}
           </div>
         ))}
       </motion.div>

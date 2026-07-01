@@ -2,6 +2,12 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { supabase } from '../lib/supabase'
 
+function getMondayStr() {
+  const d = new Date()
+  d.setDate(d.getDate() - ((d.getDay() + 6) % 7))
+  return d.toDateString()
+}
+
 const useStore = create(
   persist(
     (set, get) => ({
@@ -61,7 +67,7 @@ const useStore = create(
           xp: state.xp + amount,
           totalXP: state.totalXP + amount,
         }))
-        // Fire-and-forget XP sync to Supabase for leaderboard
+        get().addWeeklyXP(amount)
         const userId = get().user?.id
         if (userId) {
           supabase.rpc('increment_xp', { uid: userId, delta: amount }).catch(() => {})
@@ -71,6 +77,23 @@ const useStore = create(
       canUseAI: () => get().isPro,
       useAIMessage: () => {},
       remainingAIMessages: () => get().isPro ? Infinity : 0,
+
+      // Last studied chapter (for "continue here" card)
+      lastStudied: null,
+      setLastStudied: ({ gradeId, chapterId, title, emoji, gradeName }) =>
+        set({ lastStudied: { gradeId, chapterId, title, emoji, gradeName, ts: Date.now() } }),
+
+      // Weekly XP tracking
+      weeklyXP: { thisWeek: 0, lastWeek: 0, weekStart: null },
+      addWeeklyXP: (amount) =>
+        set((state) => {
+          const monday = getMondayStr()
+          const w = state.weeklyXP
+          if (w.weekStart !== monday) {
+            return { weeklyXP: { thisWeek: amount, lastWeek: w.thisWeek, weekStart: monday } }
+          }
+          return { weeklyXP: { ...w, thisWeek: w.thisWeek + amount } }
+        }),
 
       // Wrong answers (for adaptive quiz)
       wrongAnswers: [],
@@ -119,6 +142,8 @@ const useStore = create(
         streak: state.streak,
         xp: state.xp,
         totalXP: state.totalXP,
+        weeklyXP: state.weeklyXP,
+        lastStudied: state.lastStudied,
         wrongAnswers: state.wrongAnswers,
         onboarding: state.onboarding,
         onboardingCompleted: state.onboardingCompleted,
