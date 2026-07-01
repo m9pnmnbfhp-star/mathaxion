@@ -74,7 +74,7 @@ function MathAtmosphere() {
 }
 
 export default function HomePage() {
-  const { user, setAuthModal, setUpgradeModal, isPro, onboarding, onboardingCompleted, streak, xp, weeklyXP, lastStudied, getChapterProgress, getTopStruggles, dismissStruggle } = useStore()
+  const { user, setAuthModal, setUpgradeModal, isPro, onboarding, onboardingCompleted, streak, xp, weeklyXP, lastStudied, getChapterProgress, getTopStruggles, dismissStruggle, struggles } = useStore()
   const navigate = useNavigate()
 
   const showDashboard = user && onboardingCompleted && onboarding
@@ -84,7 +84,7 @@ export default function HomePage() {
       <MathAtmosphere />
       <div className="relative" style={{ zIndex: 1 }}>
         {showDashboard
-          ? <PersonalizedDashboard
+          ? <PersonalizedDashboard struggles={struggles}
               user={user} onboarding={onboarding} streak={streak} xp={xp}
               weeklyXP={weeklyXP} lastStudied={lastStudied}
               getChapterProgress={getChapterProgress} navigate={navigate}
@@ -129,6 +129,76 @@ function getGreeting(name) {
   if (h < 12) return `Καλημέρα, ${name}! ☀️`
   if (h < 17) return `Καλό απόγευμα, ${name}! 📚`
   return `Καλησπέρα, ${name}! 🌙`
+}
+
+function getRecommendations({ grade, getChapterProgress, struggles, lastStudied }) {
+  if (!grade?.chapters) return []
+
+  const now = Date.now()
+  const dow = new Date().getDay()
+  const recs = []
+
+  // 1. Struggle-based: chapters where they recently got wrong answers
+  const activeStruggles = Object.values(struggles || {})
+    .filter(s => s.count >= 2 && (now - s.lastSeen) < 10 * 86400000)
+    .sort((a, b) => b.count - a.count || b.lastSeen - a.lastSeen)
+
+  for (const s of activeStruggles.slice(0, 2)) {
+    const chapter = grade.chapters.find(c => c.id === s.chapterId)
+    if (!chapter) continue
+    const dAgo = Math.round((now - s.lastSeen) / 86400000)
+    const when = dAgo === 0 ? 'σήμερα' : dAgo === 1 ? 'χθες' : `${dAgo} μέρες πριν`
+    recs.push({ chapter, reason: `Δυσκολεύτηκες ${when} με "${s.concept}"`, reasonIcon: '🧠', reasonColor: '#8b5cf6', tab: 'theory', priority: 100 - dAgo * 3 })
+  }
+
+  // 2. In-progress: started but not done
+  for (const chapter of grade.chapters) {
+    const p = getChapterProgress(grade.id, chapter.id)
+    const done = p.completedExercises || 0
+    if (done > 0 && done < 8) {
+      recs.push({ chapter, reason: `Ξεκίνησες αλλά δεν τελείωσες — ${done}/8`, reasonIcon: '▶️', reasonColor: '#10b981', tab: 'exercises', priority: 90 + done })
+    }
+  }
+
+  // 3. Long absence: touched >1 week ago and not finished
+  const oneWeekAgo = now - 7 * 86400000
+  for (const chapter of grade.chapters) {
+    const p = getChapterProgress(grade.id, chapter.id)
+    const done = p.completedExercises || 0
+    if (done === 0 || done >= 8) continue
+    if (!p.updatedAt || p.updatedAt > oneWeekAgo) continue
+    const dAgo = Math.round((now - p.updatedAt) / 86400000)
+    recs.push({ chapter, reason: `Δεν έχεις μελετήσει αυτό εδώ και ${dAgo} μέρες`, reasonIcon: '⏰', reasonColor: '#f59e0b', tab: 'theory', priority: 70 })
+  }
+
+  // 4. Test-week panic suggestion (Tue/Wed/Thu = middle of school week)
+  if (dow >= 2 && dow <= 4) {
+    const incomplete = grade.chapters.find(c => {
+      const p = getChapterProgress(grade.id, c.id)
+      return (p.completedExercises || 0) < 8 && (p.completedExercises || 0) > 0
+    })
+    if (incomplete && !recs.find(r => r.chapter.id === incomplete.id)) {
+      recs.push({ chapter: incomplete, reason: 'Μέσα στη σχολική βδομάδα — ώρα για Panic Mode', reasonIcon: '⚡', reasonColor: '#ef4444', tab: 'panic', priority: 65 })
+    }
+  }
+
+  // 5. Next chapter: the unstarted one after lastStudied
+  if (lastStudied) {
+    const lastIdx = grade.chapters.findIndex(c => c.id === lastStudied.chapterId)
+    if (lastIdx >= 0 && lastIdx + 1 < grade.chapters.length) {
+      const next = grade.chapters[lastIdx + 1]
+      if ((getChapterProgress(grade.id, next.id).completedExercises || 0) === 0) {
+        recs.push({ chapter: next, reason: 'Επόμενο κεφάλαιο — έτοιμο να ξεκινήσεις', reasonIcon: '🚀', reasonColor: '#3b82f6', tab: 'theory', priority: 50 })
+      }
+    }
+  }
+
+  // Deduplicate by chapter + sort + cap
+  const seen = new Set()
+  return recs
+    .filter(r => { if (seen.has(r.chapter.id)) return false; seen.add(r.chapter.id); return true })
+    .sort((a, b) => b.priority - a.priority)
+    .slice(0, 5)
 }
 
 function getDayContext({ streak, weeklyXP, lastStudied, chaptersThisWeek }) {
@@ -223,7 +293,7 @@ function getInsight(streak, weeklyXP, totalCompleted, name) {
   return null
 }
 
-function PersonalizedDashboard({ user, onboarding, streak, xp, weeklyXP, lastStudied, getChapterProgress, navigate, setUpgradeModal, isPro, getTopStruggles, dismissStruggle }) {
+function PersonalizedDashboard({ user, onboarding, streak, xp, weeklyXP, lastStudied, getChapterProgress, navigate, setUpgradeModal, isPro, getTopStruggles, dismissStruggle, struggles }) {
   const name = user?.user_metadata?.display_name || user?.email?.split('@')[0] || 'Μαθητή'
   const grade = getGrade(onboarding.grade)
   const hint = FRUSTRATION_HINT[onboarding.frustration]
@@ -268,6 +338,7 @@ function PersonalizedDashboard({ user, onboarding, streak, xp, weeklyXP, lastStu
   }).length || 0
 
   const dayCtx = getDayContext({ streak, weeklyXP, lastStudied, chaptersThisWeek })
+  const recommendations = getRecommendations({ grade, getChapterProgress, struggles, lastStudied })
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
@@ -477,6 +548,77 @@ function PersonalizedDashboard({ user, onboarding, streak, xp, weeklyXP, lastStu
           </div>
         ))}
       </motion.div>
+
+      {/* Recommendations — Netflix style */}
+      {recommendations.length > 0 && (
+        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
+          transition={{ ease: [0.16, 1, 0.3, 1], duration: 0.5, delay: 0.18 }}
+          className="mb-8">
+          <p className="text-xs font-black tracking-widest uppercase mb-3" style={{ color: 'var(--fg-3)' }}>
+            Προτεινόμενα για σένα
+          </p>
+          <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1" style={{ scrollbarWidth: 'none' }}>
+            {recommendations.map((rec, i) => (
+              <motion.div key={rec.chapter.id}
+                initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}
+                transition={{ ease: [0.16, 1, 0.3, 1], duration: 0.4, delay: 0.05 * i }}
+                whileHover={{ y: -3, scale: 1.01 }} whileTap={{ scale: 0.98 }}
+                className="shrink-0 w-60 rounded-2xl cursor-pointer group"
+                style={{ background: '#14141e', border: `1px solid ${rec.reasonColor}22` }}
+                onClick={() => navigate(`/grade/${grade.id}/chapter/${rec.chapter.id}?tab=${rec.tab}`)}>
+
+                {/* Top: emoji + chapter name */}
+                <div className="p-4 pb-3">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl shrink-0"
+                      style={{ background: `${rec.reasonColor}15` }}>
+                      {rec.chapter.emoji}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-bold text-white leading-tight truncate">{rec.chapter.title}</p>
+                      <p className="text-[11px] mt-0.5 truncate" style={{ color: 'var(--fg-3)' }}>{grade.label}</p>
+                    </div>
+                  </div>
+
+                  {/* Progress bar if in-progress */}
+                  {(() => {
+                    const done = getChapterProgress(grade.id, rec.chapter.id).completedExercises || 0
+                    return done > 0 && done < 8 ? (
+                      <div className="h-1 rounded-full overflow-hidden mb-3" style={{ background: 'rgba(255,255,255,0.06)' }}>
+                        <div className="h-full rounded-full transition-all"
+                          style={{ width: `${(done / 8) * 100}%`, background: rec.reasonColor }} />
+                      </div>
+                    ) : null
+                  })()}
+
+                  {/* Reason badge — the Netflix "because..." */}
+                  <div className="flex items-start gap-1.5 p-2.5 rounded-xl"
+                    style={{ background: `${rec.reasonColor}0e`, border: `1px solid ${rec.reasonColor}18` }}>
+                    <span className="text-xs shrink-0 mt-px">{rec.reasonIcon}</span>
+                    <p className="text-[11px] font-bold leading-snug" style={{ color: rec.reasonColor }}>
+                      {rec.reason}
+                    </p>
+                  </div>
+                </div>
+
+                {/* CTA */}
+                <div className="px-4 pb-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-black tracking-widest uppercase" style={{ color: 'var(--fg-3)' }}>
+                      {rec.tab === 'theory' ? 'Θεωρία' : rec.tab === 'exercises' ? 'Ασκήσεις' : rec.tab === 'panic' ? 'Panic Mode' : rec.tab}
+                    </span>
+                    <motion.div whileHover={{ x: 2 }}
+                      className="w-7 h-7 rounded-lg flex items-center justify-center"
+                      style={{ background: `${rec.reasonColor}18` }}>
+                      <ArrowRight size={13} style={{ color: rec.reasonColor }} />
+                    </motion.div>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </motion.div>
+      )}
 
       {/* Quick grade access */}
       {grade && (
