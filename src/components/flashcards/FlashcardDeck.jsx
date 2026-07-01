@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ChevronLeft, ChevronRight, Shuffle, RefreshCw } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Shuffle } from 'lucide-react'
 import Button from '../ui/Button'
 import { generateFlashcards } from '../../lib/anthropic'
 import toast from 'react-hot-toast'
@@ -45,11 +45,22 @@ export default function FlashcardDeck({ grade, chapter, topic }) {
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center py-16 space-y-4">
-        <div className="w-16 h-16 rounded-2xl bg-violet-600/20 border border-violet-500/30 flex items-center justify-center">
-          <RefreshCw size={24} className="text-violet-400 animate-spin" />
+      <div className="space-y-5">
+        <div className="flex items-center justify-between">
+          <div className="shimmer h-3.5 rounded-full w-20" />
+          <div className="shimmer h-3.5 rounded-full w-14" />
+          <div className="shimmer h-3.5 rounded-full w-20" />
         </div>
-        <p className="text-slate-400 text-sm">Δημιουργία flashcards...</p>
+        <div className="rounded-2xl p-8 space-y-4 min-h-[200px] flex flex-col items-center justify-center"
+          style={{ background: '#16161f', border: '1px solid #2a2a3a' }}>
+          <div className="shimmer h-3 rounded-full w-16" />
+          <div className="shimmer h-5 rounded-full w-3/4 mt-3" />
+          <div className="shimmer h-5 rounded-full w-1/2" />
+        </div>
+        <div className="flex justify-center gap-3">
+          <div className="shimmer h-11 rounded-2xl w-32" />
+          <div className="shimmer h-11 rounded-2xl w-32" />
+        </div>
       </div>
     )
   }

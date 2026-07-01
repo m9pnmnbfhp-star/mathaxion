@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Flame, Star, User, Settings, LogOut, Crown, ChevronDown, Menu, X, Search } from 'lucide-react'
@@ -17,6 +17,38 @@ export default function Header({ onSearchOpen, onReviewOpen }) {
   const navigate = useNavigate()
   const location = useLocation()
   const level = getLevel(xp)
+
+  // Animate XP count-up and pulse the pill when XP increases
+  const xpRef = useRef(null)
+  const xpPillRef = useRef(null)
+  const prevXPRef = useRef(xp)
+
+  useEffect(() => {
+    const from = prevXPRef.current
+    const to = xp
+    prevXPRef.current = to
+    if (from === to || !xpRef.current) return
+
+    // Pop the pill
+    const pill = xpPillRef.current
+    if (pill) {
+      pill.classList.remove('xp-pop')
+      void pill.offsetWidth // reflow to restart
+      pill.classList.add('xp-pop')
+    }
+
+    // Count up the number
+    const duration = 700
+    const startTime = performance.now()
+    const step = (now) => {
+      const t = Math.min((now - startTime) / duration, 1)
+      const eased = 1 - Math.pow(1 - t, 3)
+      const val = Math.round(from + (to - from) * eased)
+      if (xpRef.current) xpRef.current.textContent = val.toLocaleString('el')
+      if (t < 1) requestAnimationFrame(step)
+    }
+    requestAnimationFrame(step)
+  }, [xp])
 
   const handleSignOut = async () => {
     setDropdownOpen(false)
@@ -97,6 +129,7 @@ export default function Header({ onSearchOpen, onReviewOpen }) {
               {/* XP + Level */}
               <Link to="/profile" className="hidden sm:flex">
                 <motion.div
+                  ref={xpPillRef}
                   whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-full cursor-pointer"
                   style={{ background: '#1c1c28', border: '1px solid rgba(255,255,255,0.07)' }}
@@ -104,7 +137,7 @@ export default function Header({ onSearchOpen, onReviewOpen }) {
                   <span className="text-[11px] font-black text-violet-400">Lv.{level}</span>
                   <div className="w-px h-3" style={{ background: 'rgba(255,255,255,0.1)' }} />
                   <Star size={12} className="text-amber-400" />
-                  <span className="text-sm font-bold text-amber-300 tabular-nums">{xp.toLocaleString('el')}</span>
+                  <span ref={xpRef} className="text-sm font-bold text-amber-300 tabular-nums">{xp.toLocaleString('el')}</span>
                 </motion.div>
               </Link>
 
