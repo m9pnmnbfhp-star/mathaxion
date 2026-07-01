@@ -15,12 +15,17 @@ const QUICK_QUESTIONS = [
 ]
 
 export default function PythagorasTutor({ grade, topic, compact = false }) {
-  const { user, isPro, setAuthModal, setUpgradeModal } = useStore()
+  const { user, isPro, setAuthModal, setUpgradeModal, getTopStruggles } = useStore()
+
+  const topStruggle = getTopStruggles(1).find(s => s.count >= 2)
+  const userName = user?.user_metadata?.display_name || user?.email?.split('@')[0] || null
+
+  const initialGreeting = topStruggle
+    ? `Γεια${userName ? ` ${userName}` : ''}! Είμαι το **Axi AI** 🤖\n\n🧠 Παρατήρησα ότι **"${topStruggle.concept}"** σου δυσκολεύει λίγο τελευταία. Θέλεις να ξεκινήσουμε με μια σύντομη επανάληψη πριν συνεχίσεις;\n\nΉ ρώτα με ό,τι θέλεις! 💪`
+    : `Γεια${userName ? ` ${userName}` : ''}! Είμαι το **Axi AI** 🤖, ο AI βοηθός σου για τα μαθηματικά!\n\nΜπορείς να με ρωτήσεις οτιδήποτε για ${topic ? `το θέμα **${topic}**` : 'τα μαθηματικά'}. Δεν κρίνω — μόνο εξηγώ! 💪`
+
   const [messages, setMessages] = useState([
-    {
-      role: 'assistant',
-      content: `Γεια! Είμαι το **Axi AI** 🤖, ο AI βοηθός σου για τα μαθηματικά!\n\nΜπορείς να με ρωτήσεις οτιδήποτε για ${topic ? `το θέμα **${topic}**` : 'τα μαθηματικά'}. Δεν κρίνω — μόνο εξηγώ! 💪`,
-    },
+    { role: 'assistant', content: initialGreeting },
   ])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)

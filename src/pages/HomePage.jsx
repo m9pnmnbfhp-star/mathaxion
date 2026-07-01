@@ -74,7 +74,7 @@ function MathAtmosphere() {
 }
 
 export default function HomePage() {
-  const { user, setAuthModal, setUpgradeModal, isPro, onboarding, onboardingCompleted, streak, xp, weeklyXP, lastStudied, getChapterProgress } = useStore()
+  const { user, setAuthModal, setUpgradeModal, isPro, onboarding, onboardingCompleted, streak, xp, weeklyXP, lastStudied, getChapterProgress, getTopStruggles, dismissStruggle } = useStore()
   const navigate = useNavigate()
 
   const showDashboard = user && onboardingCompleted && onboarding
@@ -89,6 +89,7 @@ export default function HomePage() {
               weeklyXP={weeklyXP} lastStudied={lastStudied}
               getChapterProgress={getChapterProgress} navigate={navigate}
               setUpgradeModal={setUpgradeModal} isPro={isPro}
+              getTopStruggles={getTopStruggles} dismissStruggle={dismissStruggle}
             />
           : <>
               <HeroSection user={user} setAuthModal={setAuthModal} navigate={navigate} />
@@ -144,7 +145,7 @@ function getInsight(streak, weeklyXP, totalCompleted, name) {
   return null
 }
 
-function PersonalizedDashboard({ user, onboarding, streak, xp, weeklyXP, lastStudied, getChapterProgress, navigate, setUpgradeModal, isPro }) {
+function PersonalizedDashboard({ user, onboarding, streak, xp, weeklyXP, lastStudied, getChapterProgress, navigate, setUpgradeModal, isPro, getTopStruggles, dismissStruggle }) {
   const name = user?.user_metadata?.display_name || user?.email?.split('@')[0] || 'Μαθητή'
   const grade = getGrade(onboarding.grade)
   const hint = FRUSTRATION_HINT[onboarding.frustration]
@@ -178,6 +179,8 @@ function PersonalizedDashboard({ user, onboarding, streak, xp, weeklyXP, lastStu
     mission && lastStudied.chapterId !== mission.id
 
   const missionProgress = mission ? (getChapterProgress(grade?.id, mission.id)?.completedExercises || 0) : 0
+
+  const topStruggle = getTopStruggles(1).find(s => s.count >= 2)
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
@@ -227,6 +230,40 @@ function PersonalizedDashboard({ user, onboarding, streak, xp, weeklyXP, lastStu
           style={{ background: `${insight.color}12`, border: `1px solid ${insight.color}30`, color: insight.color }}>
           <span>{insight.icon}</span>
           <span>{insight.text}</span>
+        </motion.div>
+      )}
+
+      {/* AI Memory card — struggle reminder */}
+      {topStruggle && (
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
+          transition={{ ease: [0.16, 1, 0.3, 1], duration: 0.45, delay: 0.06 }}
+          className="relative p-4 rounded-2xl mb-5"
+          style={{ background: 'rgba(139,92,246,0.07)', border: '1px solid rgba(139,92,246,0.2)' }}>
+          <div className="flex items-start gap-3">
+            <span className="text-xl shrink-0 mt-0.5">🧠</span>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-bold text-white mb-0.5">
+                Παρατήρησα ότι <span style={{ color: '#a78bfa' }}>"{topStruggle.concept}"</span> σου δυσκολεύει.
+              </p>
+              <p className="text-xs mb-3" style={{ color: 'var(--fg-3)' }}>
+                Πριν από τη σημερινή μελέτη, θέλεις να το επαναλάβουμε 5 λεπτά;
+              </p>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => navigate(`/grade/${topStruggle.gradeId}/chapter/${topStruggle.chapterId}`)}
+                  className="text-xs font-bold px-3 py-1.5 rounded-xl transition-all"
+                  style={{ background: 'rgba(139,92,246,0.2)', color: '#a78bfa', border: '1px solid rgba(139,92,246,0.3)' }}>
+                  Ναι, ας το δούμε →
+                </button>
+                <button
+                  onClick={() => dismissStruggle(topStruggle.concept)}
+                  className="text-xs px-3 py-1.5 rounded-xl transition-all"
+                  style={{ color: 'var(--fg-3)', border: '1px solid rgba(255,255,255,0.07)' }}>
+                  Αργότερα
+                </button>
+              </div>
+            </div>
+          </div>
         </motion.div>
       )}
 

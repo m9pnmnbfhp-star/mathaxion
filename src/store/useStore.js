@@ -95,12 +95,40 @@ const useStore = create(
           return { weeklyXP: { ...w, thisWeek: w.thisWeek + amount } }
         }),
 
+      // AI Memory — struggle tracking
+      struggles: {},
+      recordStruggle: (concept, gradeId, chapterId) =>
+        set((state) => {
+          const prev = state.struggles[concept] || { count: 0, gradeId, chapterId, firstSeen: Date.now() }
+          return {
+            struggles: {
+              ...state.struggles,
+              [concept]: { ...prev, count: prev.count + 1, gradeId, chapterId, lastSeen: Date.now() },
+            },
+          }
+        }),
+      dismissStruggle: (concept) =>
+        set((state) => {
+          const next = { ...state.struggles }
+          delete next[concept]
+          return { struggles: next }
+        }),
+      getTopStruggles: (n = 3) => {
+        const s = get().struggles
+        return Object.entries(s)
+          .map(([concept, data]) => ({ concept, ...data }))
+          .sort((a, b) => b.count - a.count)
+          .slice(0, n)
+      },
+
       // Wrong answers (for adaptive quiz)
       wrongAnswers: [],
-      addWrongAnswer: (entry) =>
+      addWrongAnswer: (entry) => {
+        get().recordStruggle(entry.concept, entry.gradeId, entry.chapterId)
         set((state) => ({
           wrongAnswers: [entry, ...state.wrongAnswers].slice(0, 50),
-        })),
+        }))
+      },
 
       // Onboarding
       onboarding: null,
@@ -145,6 +173,7 @@ const useStore = create(
         weeklyXP: state.weeklyXP,
         lastStudied: state.lastStudied,
         wrongAnswers: state.wrongAnswers,
+        struggles: state.struggles,
         onboarding: state.onboarding,
         onboardingCompleted: state.onboardingCompleted,
       }),

@@ -89,8 +89,16 @@ const TIME_PROMPTS = {
   '60': 'ΧΡΟΝΟΣ ΜΕΛΕΤΗΣ: 60 λεπτά/μέρα — ο μαθητής έχει χρόνο για βαθιά κατανόηση. Αναλυτικές εξηγήσεις, πολλά παραδείγματα, επεκτάσεις.',
 }
 
+function daysAgo(ts) {
+  if (!ts) return ''
+  const d = Math.round((Date.now() - ts) / 86400000)
+  if (d === 0) return 'σήμερα'
+  if (d === 1) return 'χθες'
+  return `πριν ${d} μέρες`
+}
+
 function buildPersonalizedSystem() {
-  const onboarding = useStore.getState().onboarding
+  const { onboarding, getTopStruggles } = useStore.getState()
   if (!onboarding) return BASE_SYSTEM
 
   const parts = [BASE_SYSTEM]
@@ -109,6 +117,13 @@ function buildPersonalizedSystem() {
   if (onboarding.time && TIME_PROMPTS[String(onboarding.time)]) {
     parts.push(TIME_PROMPTS[String(onboarding.time)])
   }
+
+  const topStruggles = getTopStruggles(3).filter(s => s.count >= 2)
+  if (topStruggles.length > 0) {
+    const lines = topStruggles.map(s => `- "${s.concept}" (${s.count} λάθη, τελευταίο ${daysAgo(s.lastSeen)})`)
+    parts.push(`🧠 ΜΝΗΜΗ ΜΑΘΗΤΗ — θέματα που δυσκολεύεται:\n${lines.join('\n')}\nΑν εμφανιστεί σχετικό θέμα, αναφέρσου με ευαισθησία και προσφέρσου να εξηγήσεις ξανά.`)
+  }
+
   return parts.join('\n\n')
 }
 
