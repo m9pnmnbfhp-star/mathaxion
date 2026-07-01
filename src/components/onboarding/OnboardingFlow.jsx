@@ -515,79 +515,103 @@ const PERSONALITY_LABEL = {
   motivational: '🚀 Με ενθάρρυνση',
 }
 
+// What Axi commits to, built from the student's answers
+function buildAxiPromises(answers) {
+  const items = []
+
+  const personalityLine = {
+    funny:        { emoji: '😄', text: 'Θα μαθαίνουμε μαθηματικά — αλλά θα γελάμε και λίγο.' },
+    friendly:     { emoji: '😊', text: 'Θα σου εξηγώ τα πάντα σαν φίλος, ζεστά και απλά.' },
+    serious:      { emoji: '📚', text: 'Κατευθείαν στο θέμα, χωρίς χαμένο χρόνο.' },
+    professional: { emoji: '👔', text: 'Σωστή ορολογία, δομημένες εξηγήσεις, ακρίβεια.' },
+    motivational: { emoji: '🚀', text: 'Κάθε σωστή απάντηση είναι νίκη — θα το ζεις αυτό!' },
+  }[answers.personality] || { emoji: '🤝', text: 'Θα συνεργαζόμαστε με τον δικό σου ρυθμό.' }
+  items.push(personalityLine)
+
+  if (answers.time) {
+    items.push({ emoji: '⏰', text: `Θα μελετάμε περίπου ${answers.time} λεπτά τη μέρα.` })
+  }
+
+  const goalLine = {
+    grades:      { emoji: '💯', text: 'Θα σε βοηθήσω να βελτιώσεις τους βαθμούς σου.' },
+    tests:       { emoji: '📝', text: 'Θα εστιάσουμε στην προετοιμασία για διαγωνίσματα.' },
+    panellinies: { emoji: '🎓', text: 'Μαζί θα ετοιμαστούμε για τις Πανελλήνιες.' },
+    lesson:      { emoji: '📖', text: 'Θα σε βοηθώ να καταλαβαίνεις κάθε σημερινό μάθημα.' },
+    love:        { emoji: '❤️', text: 'Θα κάνουμε τα μαθηματικά ακόμα πιο ενδιαφέροντα.' },
+  }[answers.goal]
+  if (goalLine) items.push(goalLine)
+
+  const frustLine = {
+    theory:   { emoji: '🔎', text: 'Θα εξηγώ κάθε έννοια από την αρχή, βήμα-βήμα.' },
+    mistakes: { emoji: '🎯', text: 'Θα δίνουμε extra προσοχή στα επαναλαμβανόμενα λάθη.' },
+    forget:   { emoji: '🔁', text: 'Κάθε session ξεκινά με γρήγορη επανάληψη.' },
+    time:     { emoji: '⚡', text: 'Θα είμαι συνοπτικός — σεβόμαστε τον χρόνο σου.' },
+    start:    { emoji: '🧭', text: 'Θα σου δίνω πάντα το πρώτο βήμα όταν κολλάς.' },
+  }[answers.frustration]
+  if (frustLine) items.push(frustLine)
+
+  return items
+}
+
 function FinishScreen({ name, answers, onDone }) {
-  const grade = ALL_GRADES.find(g => g.id === answers.grade)
+  const items = buildAxiPromises(answers)
+  // Each item appears after a base delay + stagger
+  const BASE = 0.85  // greeting finishes around here
+  const STAGGER = 0.28
 
   return (
-    <div className="text-center px-2">
-      <motion.div initial={{ scale: 0, rotate: -20 }} animate={{ scale: 1, rotate: 0 }}
-        transition={{ type: 'spring', stiffness: 300, damping: 18, delay: 0.1 }}
-        className="text-6xl mb-5 select-none">
-        🎉
+    <div className="px-2">
+
+      {/* Axi avatar */}
+      <motion.div
+        initial={{ scale: 0, rotate: -15 }} animate={{ scale: 1, rotate: 0 }}
+        transition={{ type: 'spring', stiffness: 260, damping: 16, delay: 0.05 }}
+        className="w-16 h-16 rounded-3xl flex items-center justify-center text-4xl mb-5 mx-auto select-none"
+        style={{ background: 'rgba(124,58,237,0.15)', border: '1.5px solid rgba(124,58,237,0.35)', boxShadow: '0 0 32px rgba(124,58,237,0.25)' }}>
+        🤖
       </motion.div>
 
-      <motion.h2 initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
-        className="font-display font-black text-3xl text-white mb-2">
-        Το πρόγραμμά σου είναι έτοιμο!
+      {/* Greeting */}
+      <motion.h2
+        initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+        transition={{ ease: [0.16, 1, 0.3, 1], duration: 0.45, delay: 0.2 }}
+        className="font-display font-black text-2xl text-white mb-1 leading-tight">
+        Γεια σου, {name}!<br />
+        <span style={{ color: '#a78bfa' }}>Χάρηκα για τη γνωριμία.</span>
       </motion.h2>
 
-      <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }}
-        className="text-base mb-6" style={{ color: 'var(--fg-2)' }}>
-        Φτιάξαμε το προσωπικό σου learning plan, {name}.
+      <motion.p
+        initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+        transition={{ delay: 0.5 }}
+        className="text-sm mb-6" style={{ color: 'var(--fg-3)' }}>
+        Βάσει αυτά που μου είπες, να τι θα κάνουμε:
       </motion.p>
 
-      <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}
-        className="text-left rounded-2xl p-5 mb-6 space-y-3"
-        style={{ background: '#16161f', border: '1px solid rgba(124,58,237,0.25)' }}>
+      {/* Staggered promise cards */}
+      <div className="space-y-2 mb-7">
+        {items.map((item, i) => (
+          <motion.div key={i}
+            initial={{ opacity: 0, x: -16 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ ease: [0.16, 1, 0.3, 1], duration: 0.4, delay: BASE + i * STAGGER }}
+            className="flex items-start gap-3 p-3.5 rounded-2xl"
+            style={{ background: '#14141e', border: '1px solid rgba(124,58,237,0.15)' }}>
+            <span className="text-xl shrink-0 mt-px">{item.emoji}</span>
+            <p className="text-sm font-bold text-white leading-snug">{item.text}</p>
+          </motion.div>
+        ))}
+      </div>
 
-        {grade && (
-          <div className="flex items-center gap-3">
-            <span className="text-2xl">{grade.icon}</span>
-            <div>
-              <p className="text-[11px]" style={{ color: 'var(--fg-3)' }}>Τάξη</p>
-              <p className="font-bold text-white text-sm">{grade.label}</p>
-            </div>
-          </div>
-        )}
-
-        {answers.personality && (
-          <div className="flex items-center gap-3 pt-2"
-            style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-            <span className="text-lg">🤖</span>
-            <div>
-              <p className="text-[11px]" style={{ color: 'var(--fg-3)' }}>Ύφος Axi</p>
-              <p className="font-bold text-white text-sm">{PERSONALITY_LABEL[answers.personality]}</p>
-            </div>
-          </div>
-        )}
-
-        {answers.frustration && (
-          <div className="flex items-center gap-3 pt-2"
-            style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-            <span className="text-lg">💡</span>
-            <p className="text-sm font-medium" style={{ color: '#a78bfa' }}>
-              {FRUSTRATION_AI[answers.frustration]}
-            </p>
-          </div>
-        )}
-
-        <div className="flex items-center gap-3 pt-2"
-          style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-          <span className="text-lg">⏰</span>
-          <div>
-            <p className="text-[11px]" style={{ color: 'var(--fg-3)' }}>Στόχος ημέρας</p>
-            <p className="font-bold text-white text-sm">{answers.time} λεπτά μελέτης</p>
-          </div>
-        </div>
-      </motion.div>
-
+      {/* CTA — appears after all items */}
       <motion.button
-        initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.55 }}
-        whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}
+        initial={{ opacity: 0, y: 14 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ ease: [0.16, 1, 0.3, 1], duration: 0.45, delay: BASE + items.length * STAGGER + 0.15 }}
+        whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
         onClick={onDone}
         className="w-full py-4 rounded-2xl font-black text-lg text-white cursor-pointer flex items-center justify-center gap-2"
         style={{ background: 'linear-gradient(135deg, #7c3aed, #6d28d9)', boxShadow: '0 0 40px rgba(124,58,237,0.45)' }}>
-        Αρχίζουμε <ArrowRight size={20} />
+        Έτοιμος; Αρχίζουμε! <ArrowRight size={20} />
       </motion.button>
     </div>
   )
