@@ -57,17 +57,29 @@ const useStore = create(
             lastStudyDate: today,
           },
         })
+        const STREAK_MILESTONES = [3, 7, 14, 30, 60, 100]
+        if (STREAK_MILESTONES.includes(newCurrent)) {
+          get().addMilestone({ type: 'streak', key: `streak-${newCurrent}`, days: newCurrent,
+            title: `${newCurrent} μέρες συνεχόμενα!`, emoji: newCurrent >= 30 ? '🔥' : '🏅',
+            desc: newCurrent >= 30 ? 'Απίστευτη συνέπεια!' : 'Συνέχισε έτσι!' })
+        }
       },
 
       // XP
       xp: 0,
       totalXP: 0,
       addXP: (amount) => {
-        set((state) => ({
-          xp: state.xp + amount,
-          totalXP: state.totalXP + amount,
-        }))
+        const prevXP = get().xp
+        set((state) => ({ xp: state.xp + amount, totalXP: state.totalXP + amount }))
         get().addWeeklyXP(amount)
+        const newXP = get().xp
+        const getLevel = (x) => Math.floor(Math.sqrt(Math.max(0, x) / 8)) + 1
+        const prevLvl = getLevel(prevXP), newLvl = getLevel(newXP)
+        if (newLvl > prevLvl) {
+          get().addMilestone({ type: 'level_up', key: `level_up-${newLvl}`, level: newLvl,
+            title: `Έφτασες στο Επίπεδο ${newLvl}!`, emoji: newLvl >= 10 ? '🏆' : '⬆️',
+            desc: `${newXP} XP συνολικά` })
+        }
         const userId = get().user?.id
         if (userId) {
           supabase.rpc('increment_xp', { uid: userId, delta: amount }).catch(() => {})
@@ -152,6 +164,16 @@ const useStore = create(
       setPreAuthOnboarding: (open) => set({ preAuthOnboardingOpen: open }),
       setUpgradeModal: (open) => set({ upgradeModalOpen: open }),
 
+      // Journey milestones
+      milestones: [],
+      addMilestone: (m) =>
+        set((state) => {
+          // Deduplicate by type+key so we never double-record the same event
+          const key = m.key || `${m.type}-${m.ts}`
+          if (state.milestones.some(x => (x.key || `${x.type}-${x.ts}`) === key)) return {}
+          return { milestones: [...state.milestones, { ...m, ts: m.ts || Date.now(), key }] }
+        }),
+
       // Toast / notifications
       notifications: [],
       addNotification: (n) =>
@@ -176,6 +198,7 @@ const useStore = create(
         struggles: state.struggles,
         onboarding: state.onboarding,
         onboardingCompleted: state.onboardingCompleted,
+        milestones: state.milestones,
       }),
     }
   )

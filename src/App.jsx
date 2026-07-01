@@ -16,6 +16,7 @@ import ProfilePage from './pages/ProfilePage'
 import SettingsPage from './pages/SettingsPage'
 import PanelliniesPage from './pages/PanelliniesPage'
 import LeaderboardPage from './pages/LeaderboardPage'
+import JourneyPage from './pages/JourneyPage'
 
 const PAGE_VARIANTS = {
   initial: { opacity: 0, y: 10 },
@@ -138,6 +139,7 @@ function AppContent({ user, onboardingCompleted, preAuthOnboardingOpen }) {
             <Route path="/settings" element={<PageFade><SettingsPage /></PageFade>} />
             <Route path="/panellinies" element={<PageFade><PanelliniesPage /></PageFade>} />
             <Route path="/leaderboard" element={<PageFade><LeaderboardPage /></PageFade>} />
+            <Route path="/journey"     element={<PageFade><JourneyPage /></PageFade>} />
             <Route path="/auth/callback" element={<PageFade><AuthCallback /></PageFade>} />
           </Routes>
         </AnimatePresence>

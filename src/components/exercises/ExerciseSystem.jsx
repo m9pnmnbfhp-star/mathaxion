@@ -18,7 +18,7 @@ const REQUIRED_CORRECT_TO_ADVANCE = 3
 const CONFIDENCE_START_LEVEL = { love: 3, ok: 2, struggle: 1, hard: 1 }
 
 export default function ExerciseSystem({ grade, chapter, topic, onXPGained, onChapterComplete }) {
-  const { isPro, addXP, setUpgradeModal, addWrongAnswer, onboarding, updateChapterProgress, getChapterProgress } = useStore()
+  const { isPro, addXP, setUpgradeModal, addWrongAnswer, onboarding, updateChapterProgress, getChapterProgress, addMilestone } = useStore()
   const startLevel = CONFIDENCE_START_LEVEL[onboarding?.confidence] ?? 1
   const [currentLevel, setCurrentLevel] = useState(startLevel)
   const [exercise, setExercise] = useState(null)
@@ -108,6 +108,15 @@ export default function ExerciseSystem({ grade, chapter, topic, onXPGained, onCh
 
       // Chapter mastered threshold
       if (prevCount < 8 && newCount >= 8) {
+        addMilestone({
+          type: 'chapter_complete',
+          key: `chapter-${grade?.id}-${chapter?.id}`,
+          title: `Ολοκλήρωσες "${chapter?.title}"`,
+          emoji: chapter?.emoji || '📚',
+          desc: grade?.label || '',
+          gradeId: grade?.id,
+          chapterId: chapter?.id,
+        })
         setTimeout(() => onChapterComplete?.({ xpEarned: xp, level: currentLevel }), 700)
       }
 

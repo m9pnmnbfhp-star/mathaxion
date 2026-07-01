@@ -48,6 +48,7 @@ export default function Header({ onSearchOpen }) {
             { href: '/grade/a-lykeiou', label: 'Λύκειο' },
             { href: '/panellinies', label: 'Πανελλήνιες' },
             { href: '/leaderboard', label: 'Leaderboard' },
+            { href: '/journey', label: '🗺️ Ταξίδι' },
           ].map(({ href, label }) => (
             <Link
               key={href}
