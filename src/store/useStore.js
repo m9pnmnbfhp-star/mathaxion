@@ -107,6 +107,24 @@ const useStore = create(
           return { weeklyXP: { ...w, thisWeek: w.thisWeek + amount } }
         }),
 
+      // Weekly question stats (for end-of-week accuracy report)
+      weeklyStats: { answered: 0, correct: 0, weekStart: null, prevAccuracy: null },
+      recordQuestion: (isCorrect) =>
+        set((state) => {
+          const monday = getMondayStr()
+          const s = state.weeklyStats
+          if (s.weekStart !== monday) {
+            // New week — roll over: compute last week's accuracy and save it
+            const prevAcc = s.answered > 0 ? Math.round((s.correct / s.answered) * 100) : null
+            return { weeklyStats: { answered: 1, correct: isCorrect ? 1 : 0, weekStart: monday, prevAccuracy: prevAcc } }
+          }
+          return { weeklyStats: { ...s, answered: s.answered + 1, correct: s.correct + (isCorrect ? 1 : 0) } }
+        }),
+
+      // Track whether we've shown the review this week
+      lastReviewWeek: null,
+      setLastReviewWeek: (w) => set({ lastReviewWeek: w }),
+
       // AI Memory — struggle tracking
       struggles: {},
       recordStruggle: (concept, gradeId, chapterId) =>
@@ -199,6 +217,8 @@ const useStore = create(
         onboarding: state.onboarding,
         onboardingCompleted: state.onboardingCompleted,
         milestones: state.milestones,
+        weeklyStats: state.weeklyStats,
+        lastReviewWeek: state.lastReviewWeek,
       }),
     }
   )

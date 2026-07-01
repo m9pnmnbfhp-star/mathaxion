@@ -6,6 +6,7 @@ import { supabase, getProfile, updateProfile } from './lib/supabase'
 import useStore from './store/useStore'
 import Header from './components/layout/Header'
 import SearchModal from './components/ui/SearchModal'
+import WeeklyReview from './components/ui/WeeklyReview'
 import AuthModal from './components/auth/AuthModal'
 import UpgradeModal from './components/layout/UpgradeModal'
 import OnboardingFlow from './components/onboarding/OnboardingFlow'
@@ -88,11 +89,20 @@ export default function App() {
   )
 }
 
+function getMondayStr() {
+  const d = new Date()
+  const day = d.getDay() === 0 ? 6 : d.getDay() - 1
+  const mon = new Date(d); mon.setDate(d.getDate() - day)
+  return mon.toDateString()
+}
+
 function AppContent({ user, onboardingCompleted, preAuthOnboardingOpen }) {
   const location = useLocation()
   const { scrollYProgress } = useScroll()
+  const { lastReviewWeek, weeklyStats, setLastReviewWeek } = useStore()
   const spotlightRef = useRef(null)
   const [searchOpen, setSearchOpen] = useState(false)
+  const [reviewOpen, setReviewOpen] = useState(false)
 
   useEffect(() => {
     const handler = (e) => {
@@ -101,6 +111,21 @@ function AppContent({ user, onboardingCompleted, preAuthOnboardingOpen }) {
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
   }, [])
+
+  // Auto-show Sunday review (Sunday ≥17:00, not yet shown this week, has activity)
+  useEffect(() => {
+    if (!user || !onboardingCompleted) return
+    const now = new Date()
+    const isSunday = now.getDay() === 0
+    const isEvening = now.getHours() >= 17
+    const thisMonday = getMondayStr()
+    const alreadyShown = lastReviewWeek === thisMonday
+    const hasActivity = (weeklyStats?.answered || 0) > 0
+    if (isSunday && isEvening && !alreadyShown && hasActivity) {
+      const t = setTimeout(() => setReviewOpen(true), 1800)
+      return () => clearTimeout(t)
+    }
+  }, [user, onboardingCompleted, lastReviewWeek, weeklyStats])
 
   useEffect(() => {
     let raf
@@ -126,8 +151,9 @@ function AppContent({ user, onboardingCompleted, preAuthOnboardingOpen }) {
         className="fixed top-0 left-0 right-0 z-[200] h-[2px] origin-left"
         style={{ scaleX: scrollYProgress, background: 'linear-gradient(90deg,#7c3aed,#a78bfa,#10b981)' }}
       />
-      <Header onSearchOpen={() => setSearchOpen(true)} />
+      <Header onSearchOpen={() => setSearchOpen(true)} onReviewOpen={() => setReviewOpen(true)} />
       <SearchModal open={searchOpen} onClose={() => setSearchOpen(false)} />
+      <WeeklyReview open={reviewOpen} onClose={() => setReviewOpen(false)} />
 
       <main>
         <AnimatePresence mode="wait" initial={false}>

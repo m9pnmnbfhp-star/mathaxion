@@ -10,7 +10,7 @@ function getLevel(xp) {
   return Math.floor(Math.sqrt(Math.max(0, xp) / 8)) + 1
 }
 
-export default function Header({ onSearchOpen }) {
+export default function Header({ onSearchOpen, onReviewOpen }) {
   const { user, profile, streak, xp, isPro, setAuthModal, setUser, setUpgradeModal } = useStore()
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
@@ -171,6 +171,15 @@ export default function Header({ onSearchOpen }) {
                           >
                             <User size={14} />Προφίλ
                           </Link>
+                          <button
+                            onClick={() => { setDropdownOpen(false); onReviewOpen?.() }}
+                            className="flex items-center gap-2.5 w-full px-3 py-2 text-sm rounded-xl transition-colors cursor-pointer"
+                            style={{ color: 'var(--fg-2)' }}
+                            onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
+                            onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                          >
+                            📊 Εβδομαδιαία Αναφορά
+                          </button>
                           <Link to="/settings" onClick={() => setDropdownOpen(false)}
                             className="flex items-center gap-2.5 px-3 py-2 text-sm rounded-xl transition-colors"
                             style={{ color: 'var(--fg-2)' }}

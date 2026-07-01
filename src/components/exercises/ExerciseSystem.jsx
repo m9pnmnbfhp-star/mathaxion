@@ -18,7 +18,7 @@ const REQUIRED_CORRECT_TO_ADVANCE = 3
 const CONFIDENCE_START_LEVEL = { love: 3, ok: 2, struggle: 1, hard: 1 }
 
 export default function ExerciseSystem({ grade, chapter, topic, onXPGained, onChapterComplete }) {
-  const { isPro, addXP, setUpgradeModal, addWrongAnswer, onboarding, updateChapterProgress, getChapterProgress, addMilestone } = useStore()
+  const { isPro, addXP, setUpgradeModal, addWrongAnswer, onboarding, updateChapterProgress, getChapterProgress, addMilestone, recordQuestion } = useStore()
   const startLevel = CONFIDENCE_START_LEVEL[onboarding?.confidence] ?? 1
   const [currentLevel, setCurrentLevel] = useState(startLevel)
   const [exercise, setExercise] = useState(null)
@@ -85,6 +85,7 @@ export default function ExerciseSystem({ grade, chapter, topic, onXPGained, onCh
 
     const correct = checkAnswer(answer, exercise.answer)
     setIsCorrect(correct)
+    recordQuestion(correct)
 
     if (correct) {
       const xp = XP_PER_CORRECT[currentLevel]
