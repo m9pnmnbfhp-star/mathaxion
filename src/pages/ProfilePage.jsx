@@ -11,22 +11,34 @@ import Card from '../components/ui/Card'
 import ProgressBar from '../components/ui/ProgressBar'
 import Badge from '../components/ui/Badge'
 import useStore from '../store/useStore'
+import { getPeerStats, compareLabel } from '../lib/peerStats'
 import { generateAdaptiveQuiz } from '../lib/anthropic'
 import toast from 'react-hot-toast'
 
-function StatCard({ icon: Icon, value, label, sub, color, delay }) {
+function CompareStatCard({ icon: Icon, value, label, pct, color, delay }) {
   const ref = useRef(null)
   const numRef = useRef(null)
+  const pctRef = useRef(null)
   const inView = useInView(ref, { once: true })
   const animated = useRef(false)
+
   useEffect(() => {
-    if (inView && !animated.current && numRef.current && typeof value === 'number') {
+    if (inView && !animated.current && numRef.current) {
       animated.current = true
-      countUpEl(numRef.current, 0, value, 0.85)
-    } else if (numRef.current && !animated.current && typeof value !== 'number') {
-      numRef.current.textContent = value
+      if (typeof value === 'number') countUpEl(numRef.current, 0, value, 0.85)
+      else numRef.current.textContent = value
     }
   }, [inView, value])
+
+  useEffect(() => {
+    if (inView && pctRef.current && pct != null) {
+      countUpEl(pctRef.current, 0, pct, 0.7)
+    }
+  }, [inView, pct])
+
+  const barWidth = pct != null ? `${pct}%` : '0%'
+  const barColor = pct >= 80 ? '#10b981' : pct >= 60 ? '#f59e0b' : pct >= 40 ? '#7c3aed' : '#64748b'
+
   return (
     <motion.div
       ref={ref}
@@ -38,12 +50,33 @@ function StatCard({ icon: Icon, value, label, sub, color, delay }) {
       <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
            style={{ background: `radial-gradient(ellipse at top left, ${color}08, transparent 70%)` }} />
       <div className="relative">
-        <div className="w-8 h-8 rounded-xl flex items-center justify-center mb-3" style={{ background: `${color}18` }}>
-          <Icon size={15} style={{ color }} />
+        <div className="flex items-start justify-between mb-2">
+          <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: `${color}18` }}>
+            <Icon size={15} style={{ color }} />
+          </div>
+          {pct != null && (
+            <div className="text-right">
+              <span ref={pctRef} className="text-lg font-black" style={{ color: barColor }}>0</span>
+              <span className="text-sm font-bold" style={{ color: barColor }}>%</span>
+            </div>
+          )}
         </div>
         <div ref={numRef} className="text-2xl font-black text-white mb-0.5">{value}</div>
-        <div className="text-xs font-medium text-slate-400">{label}</div>
-        {sub && <div className="text-[11px] text-slate-600 mt-0.5">{sub}</div>}
+        <div className="text-xs font-medium text-slate-400 mb-2">{label}</div>
+        {pct != null && (
+          <>
+            <div className="h-1 rounded-full overflow-hidden mb-1.5" style={{ background: 'rgba(255,255,255,0.06)' }}>
+              <motion.div className="h-full rounded-full"
+                style={{ background: barColor }}
+                initial={{ width: 0 }}
+                animate={{ width: barWidth }}
+                transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1], delay: delay + 0.2 }} />
+            </div>
+            <p className="text-[10px] leading-tight" style={{ color: 'var(--fg-3)' }}>
+              {compareLabel(pct)}
+            </p>
+          </>
+        )}
       </div>
     </motion.div>
   )
@@ -58,10 +91,11 @@ function getXPForLevel(level) {
 }
 
 export default function ProfilePage() {
-  const { user, profile, streak, xp, progress, wrongAnswers, isPro, setUpgradeModal } = useStore()
+  const { user, profile, streak, xp, progress, wrongAnswers, isPro, setUpgradeModal, onboarding, weeklyXP } = useStore()
   const [adaptiveQuiz, setAdaptiveQuiz] = useState(null)
   const [quizLoading, setQuizLoading] = useState(false)
   const [shareOpen, setShareOpen] = useState(false)
+  const [peerPct, setPeerPct] = useState(null)
 
   if (!user) {
     return (
@@ -96,6 +130,19 @@ export default function ProfilePage() {
     if (allChapters.length === 0) return 0
     return Math.round(allChapters.reduce((a, b) => a + b, 0) / allChapters.length)
   })()
+
+  // Fetch peer percentiles once on mount
+  useEffect(() => {
+    const gradeId = onboarding?.grade || null
+    getPeerStats({
+      gradeId,
+      weeklyXP: weeklyXP?.thisWeek || 0,
+      totalXP: xp,
+      streak: streak.current,
+      masteredChapters,
+      onRealData: (real) => setPeerPct(real),
+    }).then(modeled => setPeerPct(p => p || modeled))
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const shareStats = {
     name: displayName,
@@ -206,16 +253,12 @@ export default function ProfilePage() {
         </div>
       </motion.div>
 
-      {/* Stats grid */}
+      {/* Stats grid — with peer comparison */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        {[
-          { icon: Flame, value: streak.current, label: 'Streak', sub: `Μέγιστο ${streak.longest}`, color: '#f59e0b' },
-          { icon: Star, value: xp, label: 'XP', sub: `Lv.${level}`, color: '#7c3aed' },
-          { icon: BookOpen, value: startedChapters, label: 'Κεφάλαια', sub: `από ${totalChapters}`, color: '#10b981' },
-          { icon: Trophy, value: masteredChapters, label: 'Κατακτημένα', sub: 'κεφάλαια', color: '#fbbf24' },
-        ].map(({ icon: Icon, value, label, sub, color }, i) => (
-          <StatCard key={label} icon={Icon} value={value} label={label} sub={sub} color={color} delay={0.1 + i * 0.06} />
-        ))}
+        <CompareStatCard icon={Flame}    value={streak.current}  label={`Streak${streak.longest > streak.current ? ` (max ${streak.longest})` : ''}`}    pct={peerPct?.streak}   color="#f59e0b" delay={0.10} />
+        <CompareStatCard icon={Star}     value={xp}              label="Συνολικό XP"            pct={peerPct?.totalXP}  color="#7c3aed" delay={0.16} />
+        <CompareStatCard icon={TrendingUp} value={weeklyXP?.thisWeek || 0} label="XP αυτή την εβδ."  pct={peerPct?.weeklyXP} color="#10b981" delay={0.22} />
+        <CompareStatCard icon={Trophy}   value={masteredChapters} label="Κατακτημένα κεφ."     pct={peerPct?.chapters} color="#fbbf24" delay={0.28} />
       </div>
 
       {/* Skill radar */}
