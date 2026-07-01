@@ -6,7 +6,7 @@ import Card from '../ui/Card'
 import AIResponse from '../ui/AIResponse'
 import { LEVEL_DESCRIPTIONS } from '../../data/curriculum'
 import { generateExercise, explainWrongAnswer, generateSimilarExercises } from '../../lib/anthropic'
-import { correctMessage, levelUpMessage, streakMessage } from '../../lib/personalizedMessages'
+import { correctMessage, levelUpMessage, streakMessage, proximityMessage } from '../../lib/personalizedMessages'
 import { showXPFloat } from '../../lib/xpFloat'
 import { flashCorrect, flashWrong, levelUpBurst, streakMilestoneBurst } from '../../lib/gsapAnimations'
 import useStore from '../../store/useStore'
@@ -109,6 +109,12 @@ export default function ExerciseSystem({ grade, chapter, topic, onXPGained, onCh
       // Chapter mastered threshold
       if (prevCount < 8 && newCount >= 8) {
         setTimeout(() => onChapterComplete?.({ xpEarned: xp, level: currentLevel }), 700)
+      }
+
+      // Proximity toast: 1-2 exercises left
+      const remaining = 8 - newCount
+      if (remaining === 1 || remaining === 2) {
+        setTimeout(() => toast(proximityMessage(remaining), { icon: remaining === 1 ? '👏' : '💪' }), 500)
       }
 
       if (newStreak % 5 === 0) {

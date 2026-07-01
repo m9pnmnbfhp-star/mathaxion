@@ -9,6 +9,7 @@ import {
   CheckCircle2, ChevronRight, GraduationCap, Target, TrendingUp
 } from 'lucide-react'
 import { GRADES, DIMOTIKO_GRADES, getGrade } from '../data/curriculum'
+import { improvementMessage, comebackMessage } from '../lib/personalizedMessages'
 import useStore from '../store/useStore'
 import TiltCard from '../components/ui/TiltCard'
 
@@ -340,6 +341,16 @@ function PersonalizedDashboard({ user, onboarding, streak, xp, weeklyXP, lastStu
   const dayCtx = getDayContext({ streak, weeklyXP, lastStudied, chaptersThisWeek })
   const recommendations = getRecommendations({ grade, getChapterProgress, struggles, lastStudied })
 
+  // Improvement: this week significantly better than last (≥15%)
+  const improvPct = weeklyXP?.lastWeek > 0
+    ? Math.round(((weeklyXP.thisWeek - weeklyXP.lastWeek) / weeklyXP.lastWeek) * 100)
+    : null
+  const showImprovement = improvPct !== null && improvPct >= 15
+
+  // Comeback: hasn't studied in 2+ days
+  const daysSinceStudy = lastStudied ? Math.round((Date.now() - lastStudied.ts) / 86400000) : null
+  const showComeback = daysSinceStudy !== null && daysSinceStudy >= 2
+
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
 
@@ -388,6 +399,19 @@ function PersonalizedDashboard({ user, onboarding, streak, xp, weeklyXP, lastStu
           style={{ background: `${insight.color}12`, border: `1px solid ${insight.color}30`, color: insight.color }}>
           <span>{insight.icon}</span>
           <span>{insight.text}</span>
+        </motion.div>
+      )}
+
+      {/* Emotional micro-banners — improvement or comeback */}
+      {(showImprovement || showComeback) && (
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+          transition={{ ease: [0.16, 1, 0.3, 1], duration: 0.4, delay: 0.04 }}
+          className="flex items-center gap-2.5 px-4 py-2.5 rounded-2xl mb-4 w-fit"
+          style={{ background: showImprovement ? 'rgba(239,68,68,0.08)' : 'rgba(124,58,237,0.08)', border: `1px solid ${showImprovement ? 'rgba(239,68,68,0.18)' : 'rgba(124,58,237,0.18)'}` }}>
+          <span className="text-base">{showImprovement ? '🔥' : '👋'}</span>
+          <p className="text-sm font-bold" style={{ color: showImprovement ? '#f87171' : '#a78bfa' }}>
+            {showImprovement ? improvementMessage(improvPct) : comebackMessage(daysSinceStudy)}
+          </p>
         </motion.div>
       )}
 
