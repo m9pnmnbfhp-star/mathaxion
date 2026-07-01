@@ -13,6 +13,7 @@ import FlashcardDeck from '../components/flashcards/FlashcardDeck'
 import PanicMode from '../components/panic/PanicMode'
 import PhotoSolver from '../components/photosolver/PhotoSolver'
 import StudyBattle from '../components/battles/StudyBattle'
+import ChapterCompleteModal from '../components/ui/ChapterCompleteModal'
 import { explainTheory, reExplain } from '../lib/anthropic'
 import useStore from '../store/useStore'
 import toast from 'react-hot-toast'
@@ -31,6 +32,7 @@ export default function ChapterPage() {
   const { gradeId, chapterId } = useParams()
   const grade = getGrade(gradeId)
   const chapter = getChapter(gradeId, chapterId)
+  const nextChapter = grade?.chapters?.[grade.chapters.findIndex(c => c.id === chapterId) + 1] || null
 
   const [searchParams] = useSearchParams()
   const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'theory')
@@ -47,6 +49,7 @@ export default function ChapterPage() {
   const [theoryContent, setTheoryContent] = useState(null)
   const [theoryLoading, setTheoryLoading] = useState(false)
   const [theorySimplicity, setTheorySimplicity] = useState(simplicity)
+  const [completeData, setCompleteData] = useState(null) // { xpEarned, level }
 
   if (!grade || !chapter) {
     return (
@@ -94,7 +97,18 @@ export default function ChapterPage() {
   }
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-6">
+    <div className="max-w-5xl mx-auto px-4 py-6 relative">
+      <AnimatePresence>
+        {completeData && (
+          <ChapterCompleteModal
+            chapter={chapter}
+            grade={grade}
+            nextChapter={nextChapter}
+            xpEarned={completeData.xpEarned}
+            onClose={() => setCompleteData(null)}
+          />
+        )}
+      </AnimatePresence>
       {/* Breadcrumb */}
       <div className="flex items-center gap-2 text-sm text-slate-600 mb-6">
         <Link to="/" className="hover:text-slate-300 transition-colors">Αρχική</Link>
@@ -198,7 +212,11 @@ export default function ChapterPage() {
             />
           )}
           {activeTab === 'exercises' && (
-            <ExerciseSystem grade={grade} chapter={chapter} topic={selectedConcept} onXPGained={(xp) => { addXP(xp); updateStreak() }} />
+            <ExerciseSystem
+              grade={grade} chapter={chapter} topic={selectedConcept}
+              onXPGained={(xp) => { addXP(xp); updateStreak() }}
+              onChapterComplete={(data) => setCompleteData(data)}
+            />
           )}
           {activeTab === 'flashcards' && (
             <FlashcardDeck grade={grade} chapter={chapter} topic={selectedConcept} />

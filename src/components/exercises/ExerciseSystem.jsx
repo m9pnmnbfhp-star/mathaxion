@@ -17,8 +17,8 @@ const REQUIRED_CORRECT_TO_ADVANCE = 3
 
 const CONFIDENCE_START_LEVEL = { love: 3, ok: 2, struggle: 1, hard: 1 }
 
-export default function ExerciseSystem({ grade, chapter, topic, onXPGained }) {
-  const { isPro, addXP, setUpgradeModal, addWrongAnswer, onboarding } = useStore()
+export default function ExerciseSystem({ grade, chapter, topic, onXPGained, onChapterComplete }) {
+  const { isPro, addXP, setUpgradeModal, addWrongAnswer, onboarding, updateChapterProgress, getChapterProgress } = useStore()
   const startLevel = CONFIDENCE_START_LEVEL[onboarding?.confidence] ?? 1
   const [currentLevel, setCurrentLevel] = useState(startLevel)
   const [exercise, setExercise] = useState(null)
@@ -99,6 +99,17 @@ export default function ExerciseSystem({ grade, chapter, topic, onXPGained }) {
       setCorrectStreak(newStreak)
       setTotalCorrect(prev => prev + 1)
       setWrongCount(0)
+
+      // Track chapter progress persistently
+      const prev = getChapterProgress(grade?.id, chapter?.id)
+      const prevCount = prev.completedExercises || 0
+      const newCount = prevCount + 1
+      updateChapterProgress(grade?.id, chapter?.id, { completedExercises: newCount })
+
+      // Chapter mastered threshold
+      if (prevCount < 8 && newCount >= 8) {
+        setTimeout(() => onChapterComplete?.({ xpEarned: xp, level: currentLevel }), 700)
+      }
 
       if (newStreak % 5 === 0) {
         setShowConfetti(true)
