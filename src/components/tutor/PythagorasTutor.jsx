@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Send, Sparkles } from 'lucide-react'
 import Button from '../ui/Button'
+import AxiLoading, { LOADING_MSGS } from '../ui/AxiLoading'
 import useStore from '../../store/useStore'
 import { chatWithTutor } from '../../lib/anthropic'
 import toast from 'react-hot-toast'
@@ -150,6 +151,7 @@ export default function PythagorasTutor({ grade, topic, compact = false }) {
               <Sparkles size={14} className="text-violet-400 animate-spin" />
             </div>
             <div className="space-y-2 mt-1">
+              <AxiLoading messages={LOADING_MSGS.tutor} interval={2200} />
               <div className="shimmer h-4 rounded w-40" />
               <div className="shimmer h-4 rounded w-56" />
             </div>

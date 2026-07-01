@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ChevronLeft, ChevronRight, Shuffle } from 'lucide-react'
 import Button from '../ui/Button'
+import AxiLoading, { LOADING_MSGS } from '../ui/AxiLoading'
 import { generateFlashcards } from '../../lib/anthropic'
 import toast from 'react-hot-toast'
 
@@ -46,6 +47,7 @@ export default function FlashcardDeck({ grade, chapter, topic }) {
   if (loading) {
     return (
       <div className="space-y-5">
+        <AxiLoading messages={LOADING_MSGS.flashcards} className="text-center" />
         <div className="flex items-center justify-between">
           <div className="shimmer h-3.5 rounded-full w-20" />
           <div className="shimmer h-3.5 rounded-full w-14" />

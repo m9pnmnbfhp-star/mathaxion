@@ -10,6 +10,7 @@ import { correctMessage, levelUpMessage, streakMessage, proximityMessage } from 
 import { showXPFloat } from '../../lib/xpFloat'
 import { flashCorrect, flashWrong, levelUpBurst, streakMilestoneBurst } from '../../lib/gsapAnimations'
 import { EGG, getRandom } from '../../lib/easterEggs'
+import AxiLoading, { LOADING_MSGS } from '../ui/AxiLoading'
 import confetti from 'canvas-confetti'
 import useStore from '../../store/useStore'
 import toast from 'react-hot-toast'
@@ -283,6 +284,7 @@ export default function ExerciseSystem({ grade, chapter, topic, onXPGained, onCh
           <motion.div key="loading" className="py-8">
             <Card>
               <div className="space-y-3">
+                <AxiLoading messages={LOADING_MSGS.exercise} />
                 <div className="shimmer h-5 rounded w-full" />
                 <div className="shimmer h-5 rounded w-4/5" />
                 <div className="shimmer h-10 rounded w-full mt-4" />
@@ -426,7 +428,7 @@ export default function ExerciseSystem({ grade, chapter, topic, onXPGained, onCh
 
                 {/* AI explanation for wrong answer */}
                 {submitted && !isCorrect && (
-                  <AIResponse text={explanation} loading={explanationLoading} />
+                  <AIResponse text={explanation} loading={explanationLoading} loadingContext="explanation" />
                 )}
 
                 {/* Similar exercises after wrong */}

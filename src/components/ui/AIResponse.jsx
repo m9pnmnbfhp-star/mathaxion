@@ -1,7 +1,8 @@
 import { motion } from 'framer-motion'
 import { Sparkles } from 'lucide-react'
+import AxiLoading, { LOADING_MSGS } from './AxiLoading'
 
-export default function AIResponse({ text, loading = false, compact = false }) {
+export default function AIResponse({ text, loading = false, compact = false, loadingContext = 'theory' }) {
   if (loading) {
     return (
       <div className={`flex items-start gap-3 ${compact ? '' : 'p-4 bg-[#1c1c28] rounded-xl border border-violet-500/20'}`}>
@@ -9,7 +10,7 @@ export default function AIResponse({ text, loading = false, compact = false }) {
           <Sparkles size={14} className="text-violet-400" />
         </div>
         <div className="flex-1 space-y-3 pt-1">
-          <span className="t-shimmer text-sm font-medium" data-text="Το Axi σκέφτεται...">Το Axi σκέφτεται...</span>
+          <AxiLoading messages={LOADING_MSGS[loadingContext] || LOADING_MSGS.theory} />
           <div className="space-y-2">
             <div className="shimmer h-3.5 rounded-full w-3/4" />
             <div className="shimmer h-3.5 rounded-full w-full" />
