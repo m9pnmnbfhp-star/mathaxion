@@ -8,7 +8,7 @@ import toast from 'react-hot-toast'
 
 const SHIMMER_WIDTHS = [88, 76, 94, 70, 85, 79]
 
-export default function PanicMode({ chapter, topic }) {
+export default function PanicMode({ chapter, topic, grade }) {
   const [content, setContent] = useState(null)
   const [loading, setLoading] = useState(false)
   const [startTime, setStartTime] = useState(null)
@@ -24,7 +24,7 @@ export default function PanicMode({ chapter, topic }) {
     setLoading(true)
     setStartTime(Date.now())
     try {
-      const result = await panicMode(topic, chapter.title)
+      const result = await panicMode(topic, chapter.title, grade)
       setContent(result)
     } catch {
       toast.error('Σφάλμα')

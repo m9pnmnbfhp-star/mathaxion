@@ -112,6 +112,21 @@ function buildPersonalizedSystem() {
   return parts.join('\n\n')
 }
 
+const NOT_IN_BOOK = '📚 Αυτό το θέμα δεν το βρήκα στο σχολικό σου βιβλίο. Έλεγξε αν ανήκει σε διαφορετικό κεφάλαιο ή ρώτα τον καθηγητή σου.'
+
+const BOOK_ONLY = `\n\n⚠️ ΚΑΝΟΝΑΣ: Απάντα ΑΠΟΚΛΕΙΣΤΙΚΑ βασιζόμενος στα αποσπάσματα του σχολικού βιβλίου που σου δίνονται παρακάτω. Αν κάτι ΔΕΝ αναφέρεται εκεί, ΜΗΝ το συμπεριλάβεις — έστω κι αν το γνωρίζεις από αλλού.`
+
+async function getBookContext(query, gradeId, limit = 5) {
+  if (!gradeId) return null
+  const { data } = await searchBookChunks(query, gradeId, limit)
+  if (!data?.length) return null
+  return data.map((c, i) => `[${i + 1}] ${c.content.slice(0, 700)}`).join('\n\n')
+}
+
+function bookSection(ctx, gradeLabel) {
+  return `\n\n---\nΑΠΟΣΠΑΣΜΑΤΑ ΑΠΟ ΤΟ ΣΧΟΛΙΚΟ ΒΙΒΛΙΟ (${gradeLabel}):\n${ctx}\n---${BOOK_ONLY}`
+}
+
 export async function explainTheory(topic, grade, simplicity, chapterTitle, onChunk) {
   const simplicityMap = {
     0: 'Εξήγησε σαν να μιλάς σε 10χρονο. Χρησιμοποίησε αναλογίες από καθημερινή ζωή (φαγητό, παιχνίδια, αθλητισμός). Μηδέν μαθηματική ορολογία.',
@@ -123,18 +138,30 @@ export async function explainTheory(topic, grade, simplicity, chapterTitle, onCh
 
   const gradeLabel = grade?.label || 'Γυμνάσιο'
 
+  const bookCtx = await getBookContext(`${topic} ${chapterTitle}`, grade?.id)
+  if (!bookCtx) {
+    if (onChunk) onChunk(NOT_IN_BOOK)
+    return NOT_IN_BOOK
+  }
+
   return callAI(
     [{ role: 'user', content: `Εξήγησέ μου το θέμα "${topic}" από το κεφάλαιο "${chapterTitle}" (${gradeLabel}). ${simplicityMap[simplicity]}` }],
-    `${buildPersonalizedSystem()}\n\nΕπίπεδο εξήγησης: ${simplicityMap[simplicity]}\nΤάξη μαθητή: ${gradeLabel}\n\nΔόμησε την απάντησή σου με:\n1. Σύντομη εισαγωγή (1-2 προτάσεις)\n2. Κύρια εξήγηση με παραδείγματα\n3. Σημαντικά να θυμάσαι (bullet points)\n\nΧρησιμοποίησε markdown για μορφοποίηση.`,
+    `${buildPersonalizedSystem()}${bookSection(bookCtx, gradeLabel)}\n\nΕπίπεδο εξήγησης: ${simplicityMap[simplicity]}\nΤάξη μαθητή: ${gradeLabel}\n\nΔόμησε την απάντησή σου με:\n1. Σύντομη εισαγωγή (1-2 προτάσεις)\n2. Κύρια εξήγηση με παραδείγματα\n3. Σημαντικά να θυμάσαι (bullet points)\n\nΧρησιμοποίησε markdown για μορφοποίηση.`,
     1500,
     onChunk
   )
 }
 
 export async function reExplain(topic, chapterTitle, grade, previousExplanation, onChunk) {
+  const gradeLabel = grade?.label || 'Γυμνάσιο'
+  const bookCtx = await getBookContext(`${topic} ${chapterTitle}`, grade?.id)
+  if (!bookCtx) {
+    if (onChunk) onChunk(NOT_IN_BOOK)
+    return NOT_IN_BOOK
+  }
   return callAI(
     [{ role: 'user', content: `Δεν κατάλαβα την εξήγηση για "${topic}". Εξήγησέ μου με εντελώς διαφορετικό τρόπο, με νέα παραδείγματα που δεν χρησιμοποίησες πριν. Η προηγούμενη εξήγηση ήταν: "${previousExplanation.slice(0, 200)}..."` }],
-    `${buildPersonalizedSystem()}\n\nΟ μαθητής δεν κατάλαβε. ΠΡΕΠΕΙ να χρησιμοποιήσεις εντελώς διαφορετικό τρόπο και νέα παραδείγματα. Τάξη: ${grade?.label}`,
+    `${buildPersonalizedSystem()}${bookSection(bookCtx, gradeLabel)}\n\nΟ μαθητής δεν κατάλαβε. ΠΡΕΠΕΙ να χρησιμοποιήσεις εντελώς διαφορετικό τρόπο και νέα παραδείγματα. Τάξη: ${gradeLabel}`,
     1500,
     onChunk
   )
@@ -183,10 +210,13 @@ export async function generateFlashcards(topic, chapterTitle, grade, count = 5) 
   )
 }
 
-export async function panicMode(topic, chapterTitle) {
+export async function panicMode(topic, chapterTitle, grade) {
+  const bookCtx = await getBookContext(`${topic} ${chapterTitle}`, grade?.id)
+  if (!bookCtx) return NOT_IN_BOOK
+
   return callAI(
     [{ role: 'user', content: `ΕΧΩ ΤΕΣΤ ΑΥΡΙΟ για "${topic}" (${chapterTitle}). Δώσε μου τα 5 πιο κρίσιμα πράγματα να θυμάμαι, τις 3 κυριότερες φόρμουλες, και 2 συνηθισμένα λάθη που κάνουν οι μαθητές.` }],
-    `${buildPersonalizedSystem()}\n\nΟ μαθητής έχει τεστ αύριο! Δώσε συμπυκνωμένες πληροφορίες. Χρησιμοποίησε emojis και bullet points. Μορφή:\n\n🔑 **5 Κρίσιμα Σημεία:**\n\n📐 **3 Βασικές Φόρμουλες:**\n\n⚠️ **2 Συνηθισμένα Λάθη:**`,
+    `${buildPersonalizedSystem()}${bookSection(bookCtx, grade?.label || 'Γυμνάσιο')}\n\nΟ μαθητής έχει τεστ αύριο! Δώσε συμπυκνωμένες πληροφορίες ΜΟΝΟ από το βιβλίο. Χρησιμοποίησε emojis και bullet points. Μορφή:\n\n🔑 **5 Κρίσιμα Σημεία:**\n\n📐 **3 Βασικές Φόρμουλες:**\n\n⚠️ **2 Συνηθισμένα Λάθη:**`,
     1000
   )
 }
@@ -217,23 +247,18 @@ export async function solvePhotoExercise(imageBase64, mimeType = 'image/jpeg') {
 
 export async function chatWithTutor(messages, grade, topic, onChunk) {
   const history = messages.slice(-8).map(m => ({ role: m.role, content: m.content }))
-
-  // Search school book for relevant context
   const lastUserMsg = [...messages].reverse().find(m => m.role === 'user')
   const query = lastUserMsg?.content || topic || ''
-  let bookContext = ''
-  if (grade?.id && query) {
-    const { data } = await searchBookChunks(query, grade.id, 4)
-    if (data?.length) {
-      bookContext = `\n\n---\nΑΠΟΣΠΑΣΜΑΤΑ ΑΠΟ ΤΟ ΣΧΟΛΙΚΟ ΒΙΒΛΙΟ (${grade.label}):\n` +
-        data.map((c, i) => `[${i + 1}] ${c.content.slice(0, 600)}`).join('\n\n') +
-        `\n---\nΒΑΣΙΣΟΥ ΚΥΡΙΩΣ ΣΤΑ ΠΑΡΑΠΑΝΩ ΑΠΟΣΠΑΣΜΑΤΑ. Αν η απάντηση δεν βρίσκεται σε αυτά, πες το ειλικρινά.`
-    }
+
+  const bookCtx = await getBookContext(query, grade?.id, 5)
+  if (!bookCtx) {
+    if (onChunk) onChunk(NOT_IN_BOOK)
+    return NOT_IN_BOOK
   }
 
   return callAI(
     history,
-    `${buildPersonalizedSystem()}\n\nΟ μαθητής είναι στην τάξη ${grade?.label || 'Γυμνάσιο'} και συζητά για "${topic || 'μαθηματικά'}".\nΑπάντα φιλικά και παροτρυντικά.${bookContext}`,
+    `${buildPersonalizedSystem()}${bookSection(bookCtx, grade?.label || 'Γυμνάσιο')}\n\nΟ μαθητής είναι στην τάξη ${grade?.label || 'Γυμνάσιο'} και συζητά για "${topic || 'μαθηματικά'}".\nΑπάντα φιλικά και παροτρυντικά.`,
     1200,
     onChunk
   )

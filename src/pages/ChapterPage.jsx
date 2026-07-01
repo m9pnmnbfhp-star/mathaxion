@@ -190,7 +190,7 @@ export default function ChapterPage() {
             <FlashcardDeck grade={grade} chapter={chapter} topic={selectedConcept} />
           )}
           {activeTab === 'tutor' && <PythagorasTutor grade={grade} topic={selectedConcept} />}
-          {activeTab === 'panic' && <PanicMode chapter={chapter} topic={selectedConcept} />}
+          {activeTab === 'panic' && <PanicMode chapter={chapter} topic={selectedConcept} grade={grade} />}
           {activeTab === 'photo' && <PhotoSolver />}
           {activeTab === 'battle' && <StudyBattle grade={grade} chapter={chapter} />}
         </motion.div>
